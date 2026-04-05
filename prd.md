@@ -52,7 +52,9 @@ Berikut adalah dokumen **Product Requirements Document (PRD)** yang komprehensif
 - **Product Discovery:**
   - Search bar untuk Nama Produk atau SKU.
   - **Barcode Support:** Fokus otomatis pada search bar; ketika SKU di-scan (diakhiri karakter `Enter`), produk otomatis masuk ke keranjang.
-  - Filter berdasarkan Kategori.
+  - **Kategori & Paginasi (Load More):**
+    - Filter berdasarkan Kategori menggunakan daftar tombol kategori yang dapat digeser (horizontal scroll).
+    - Menampilkan semua produk dengan sistem paginasi (menggunakan pendekatan tombol "Load More Products"). Default menampilkan 20 item per halaman.
   - Toggle tampilan: **List View** atau **Card View** (dengan gambar/ikon).
 - **Keranjang Belanja (Cart):**
   - List produk, quantity, subtotal.
@@ -341,7 +343,7 @@ Catatan: Implementasi RBAC di level API Route Handlers dan server components; si
   - GET /api/suppliers?search= → 200 \[{id,name,phone,address}]
   - POST /api/suppliers → {name, phone?, address?} → 201 {id}
 - POS
-  - GET /api/pos/search?query=\&category_id= → 200 \[{id, sku, name, price, stock, tiers\[]}]
+  - GET /api/pos/search?query=\&categoryId=\&limit=\&offset= → 200 \[{id, sku, name, price, stock, categoryId, categoryName, tiers\[]}]
   - POST /api/pos/checkout → {items:\[{product_id, qty}], payment_method, amount_received?, customer_id?} →
     - Validasi:
       • Jika amount_received < total_amount → customer_id wajib; status='hutang'.
