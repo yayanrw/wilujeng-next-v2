@@ -83,10 +83,10 @@ export function AppShell({
   return (
     <div className="min-h-dvh bg-zinc-50 text-zinc-900 dark:bg-zinc-950 dark:text-zinc-50">
       {/* Mobile sidebar overlay backdrop */}
-      <div 
+      <div
         className={cn(
-          "fixed inset-0 z-40 bg-zinc-950/50 backdrop-blur-sm transition-opacity lg:hidden",
-          !sidebarCollapsed ? "opacity-100" : "opacity-0 pointer-events-none"
+          'fixed inset-0 z-40 bg-zinc-950/50 backdrop-blur-sm transition-opacity lg:hidden',
+          !sidebarCollapsed ? 'opacity-100' : 'opacity-0 pointer-events-none',
         )}
         onClick={() => toggleSidebar()}
       />
@@ -97,10 +97,12 @@ export function AppShell({
           sidebarCollapsed ? 'lg:pl-[72px]' : 'lg:pl-[260px]',
         )}
       >
-        <aside 
+        <aside
           className={cn(
-            "fixed inset-y-0 left-0 z-50 flex flex-col border-r border-zinc-200 bg-white dark:border-zinc-800 dark:bg-zinc-900 transition-all duration-300 ease-in-out",
-            sidebarCollapsed ? "-translate-x-full lg:translate-x-0 lg:w-[72px]" : "translate-x-0 w-[260px]"
+            'fixed inset-y-0 left-0 z-50 flex flex-col border-r border-zinc-200 bg-white dark:border-zinc-800 dark:bg-zinc-900 transition-all duration-300 ease-in-out',
+            sidebarCollapsed
+              ? '-translate-x-full lg:translate-x-0 lg:w-[72px]'
+              : 'translate-x-0 w-[260px]',
           )}
         >
           <div className="flex h-16 shrink-0 items-center justify-between px-4">
@@ -108,10 +110,10 @@ export function AppShell({
               <div className="grid h-9 w-9 shrink-0 place-items-center rounded-lg bg-zinc-900 text-white dark:bg-zinc-100 dark:text-zinc-900">
                 <IconComponent className="h-5 w-5" />
               </div>
-              <div 
+              <div
                 className={cn(
-                  "flex min-w-0 flex-col transition-opacity duration-200",
-                  sidebarCollapsed ? "lg:opacity-0 lg:hidden" : "opacity-100"
+                  'flex min-w-0 flex-col transition-opacity duration-200',
+                  sidebarCollapsed ? 'lg:opacity-0 lg:hidden' : 'opacity-100',
                 )}
               >
                 <div className="truncate text-sm font-semibold">
@@ -123,7 +125,7 @@ export function AppShell({
               </div>
             </div>
           </div>
-          
+
           <nav className="flex-1 overflow-y-auto p-3 space-y-1 custom-scrollbar">
             {navItems
               .filter((i) => (i.adminOnly ? role === 'admin' : true))
@@ -135,7 +137,9 @@ export function AppShell({
                     href={i.href}
                     className={cn(
                       'flex items-center rounded-lg transition-colors relative group',
-                      sidebarCollapsed ? 'lg:justify-center lg:px-0 lg:py-3 px-3 py-2' : 'px-3 py-2 gap-3',
+                      sidebarCollapsed
+                        ? 'lg:justify-center lg:px-0 lg:py-3 px-3 py-2'
+                        : 'px-3 py-2 gap-3',
                       active
                         ? 'bg-zinc-900 text-white dark:bg-zinc-100 dark:text-zinc-900'
                         : 'text-zinc-600 hover:bg-zinc-100 hover:text-zinc-900 dark:text-zinc-400 dark:hover:bg-zinc-800/50 dark:hover:text-zinc-50',
@@ -148,13 +152,20 @@ export function AppShell({
                       }
                     }}
                   >
-                    <div className={cn("shrink-0", active ? "" : "text-zinc-500 dark:text-zinc-400 group-hover:text-zinc-900 dark:group-hover:text-zinc-50")}>
+                    <div
+                      className={cn(
+                        'shrink-0',
+                        active
+                          ? ''
+                          : 'text-zinc-500 dark:text-zinc-400 group-hover:text-zinc-900 dark:group-hover:text-zinc-50',
+                      )}
+                    >
                       {i.icon}
                     </div>
-                    <span 
+                    <span
                       className={cn(
-                        "text-sm font-medium whitespace-nowrap transition-all duration-200",
-                        sidebarCollapsed ? "lg:hidden block" : "block"
+                        'text-sm font-medium whitespace-nowrap transition-all duration-200',
+                        sidebarCollapsed ? 'lg:hidden block' : 'block',
                       )}
                     >
                       {i.label}
@@ -176,7 +187,7 @@ export function AppShell({
               >
                 <Icons.Menu className="h-4 w-4" />
               </button>
-              
+
               <div className="hidden sm:block min-w-0">
                 <div className="truncate text-sm font-medium">{userName}</div>
                 <div className="truncate text-xs text-zinc-500 dark:text-zinc-400">
@@ -200,7 +211,9 @@ export function AppShell({
               <span className="hidden sm:inline">Sign out</span>
             </button>
           </header>
-          <main className="flex-1 p-4 md:p-6 overflow-x-hidden">{children}</main>
+          <main className="flex-1 p-4 md:p-6 overflow-x-hidden">
+            {children}
+          </main>
         </div>
       </div>
     </div>

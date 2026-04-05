@@ -172,7 +172,14 @@ export function BrandingSettings() {
             </Button>
           </form>
         ) : (
-          <div className="text-sm text-zinc-500 dark:text-zinc-400">Loading...</div>
+          <div className="flex items-center justify-center p-12">
+            <div className="flex flex-col items-center gap-3">
+              <div className="h-6 w-6 animate-spin rounded-full border-2 border-zinc-200 border-t-zinc-900 dark:border-zinc-800 dark:border-t-zinc-100" />
+              <div className="text-sm font-medium text-zinc-500 dark:text-zinc-400">
+                Loading store branding...
+              </div>
+            </div>
+          </div>
         )}
       </CardContent>
     </Card>
