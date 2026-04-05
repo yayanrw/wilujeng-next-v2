@@ -90,9 +90,10 @@ export function ProductPicker({
   }, [query, isOpen]);
 
   return (
-    <div ref={wrapperRef} className="relative flex flex-col gap-2">
+    <div ref={wrapperRef} className="relative flex flex-col gap-2 h-full">
       {!value ? (
         <Input
+          className="h-full"
           placeholder="Search product by name or SKU"
           value={query}
           onChange={(e) => {
@@ -105,7 +106,7 @@ export function ProductPicker({
       ) : null}
 
       {value ? (
-        <div className="flex items-center justify-between rounded-lg border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-950 px-3 py-2 text-sm">
+        <div className="flex h-full items-center justify-between rounded-lg border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-950 px-3 py-1.5 text-sm">
           <div className="min-w-0">
             <div className="truncate font-medium">
               {selectedProduct?.name ?? 'Selected Product'}
@@ -132,7 +133,9 @@ export function ProductPicker({
       {isOpen && query.trim().length > 0 && !value && (
         <div className="absolute top-full mt-1 z-50 max-h-60 w-full overflow-auto rounded-md border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-950 p-1 text-sm shadow-md">
           {loading ? (
-            <div className="px-2 py-1.5 text-zinc-500 dark:text-zinc-400">Searching...</div>
+            <div className="px-2 py-1.5 text-zinc-500 dark:text-zinc-400">
+              Searching...
+            </div>
           ) : options.length > 0 ? (
             options.map((o) => (
               <button

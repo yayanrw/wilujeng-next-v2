@@ -49,6 +49,7 @@ export function StockClient() {
   const todayStr = useMemo(() => new Date().toISOString().slice(0, 10), []);
   const [dateFrom, setDateFrom] = useState(todayStr);
   const [dateTo, setDateTo] = useState(todayStr);
+  const [filterProductId, setFilterProductId] = useState<string | null>(null);
   const [loadingLogs, setLoadingLogs] = useState(false);
   const [selectedLogId, setSelectedLogId] = useState<string | null>(null);
 
@@ -60,6 +61,7 @@ export function StockClient() {
       params.append('offset', (p * LIMIT).toString());
       if (dateFrom) params.append('from', dateFrom);
       if (dateTo) params.append('to', dateTo);
+      if (filterProductId) params.append('productId', filterProductId);
 
       const res = await fetch(`/api/stock/logs?${params.toString()}`);
       const body = (await res.json().catch(() => [])) as StockLog[];
@@ -325,6 +327,17 @@ export function StockClient() {
               </div>
             </div>
             <div className="flex flex-wrap items-end gap-3">
+              <div className="w-[200px]">
+                <label className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-zinc-500 dark:text-zinc-400">
+                  Filter Product
+                </label>
+                <div className="h-9">
+                  <ProductPicker
+                    value={filterProductId}
+                    onChange={setFilterProductId}
+                  />
+                </div>
+              </div>
               <div>
                 <label className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-zinc-500 dark:text-zinc-400">
                   From

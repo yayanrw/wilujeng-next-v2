@@ -85,7 +85,7 @@ Berikut adalah dokumen **Product Requirements Document (PRD)** yang komprehensif
 
 ### 3.5 Kelola Stok
 
-- **Stock Log:** Histori perubahan stok (Opname, In, Out). Dilengkapi dengan paginasi (Load More), filter berdasarkan rentang tanggal, penambahan kolom nama produk, serta kolom aksi untuk melihat detail histori (Modal Detail).
+- **Stock Log:** Histori perubahan stok (Opname, In, Out). Dilengkapi dengan paginasi (Load More), filter berdasarkan rentang tanggal dan filter spesifik berdasarkan Produk (menggunakan komponen Product Picker autocomplete), penambahan kolom nama produk, serta kolom aksi untuk melihat detail histori (Modal Detail).
 - **Stock Opname:** Fitur untuk menyesuaikan stok sistem dengan stok fisik (Replace quantity). Kolom pencarian produk menggunakan Autocomplete/Typeahead dropdown, dan ditambahkan input Brand yang menggunakan fitur serupa.
 - **Stock Masuk (In):** Input stok baru, harga beli (bisa berbeda dari sebelumnya), Supplier (menggunakan fitur Autocomplete/Type to Create), Brand (menggunakan fitur Autocomplete/Type to Create), dan Tanggal Kadaluarsa. Kolom pencarian produk menggunakan Autocomplete/Typeahead dropdown.
 - **Stock Keluar (Out):** Pengurangan stok manual (misal: barang rusak/retur). Kolom pencarian produk menggunakan Autocomplete/Typeahead dropdown, dan ditambahkan input Brand yang menggunakan fitur serupa.
