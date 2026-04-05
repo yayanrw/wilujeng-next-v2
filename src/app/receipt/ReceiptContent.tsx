@@ -28,11 +28,11 @@ export function ReceiptContent({
 
       <div className="mt-4 border-t border-zinc-200 pt-3 text-xs">
         <div className="flex items-center justify-between">
-          <span>{t.customers.transaction}</span>
+          <span>{t.pos.transaction}</span>
           <span className="font-mono">{tx.id.slice(0, 8)}</span>
         </div>
         <div className="flex items-center justify-between">
-          <span>{t.customers.date}</span>
+          <span>{t.pos.date}</span>
           <span>
             {new Date(tx.createdAt).toLocaleString(
               t.common.all === 'Semua' ? 'id-ID' : 'en-US',
@@ -40,7 +40,7 @@ export function ReceiptContent({
           </span>
         </div>
         <div className="flex items-center justify-between">
-          <span>{t.customers.status}</span>
+          <span>{t.pos.status}</span>
           <span>{tx.status}</span>
         </div>
       </div>
@@ -71,11 +71,11 @@ export function ReceiptContent({
           <span className="tabular-nums">{formatIdr(tx.totalAmount)}</span>
         </div>
         <div className="flex items-center justify-between">
-          <span>{t.customers.paid}</span>
+          <span>{t.pos.paid}</span>
           <span className="tabular-nums">{formatIdr(tx.amountReceived)}</span>
         </div>
         <div className="flex items-center justify-between">
-          <span>{t.customers.change}</span>
+          <span>{t.pos.change}</span>
           <span className="tabular-nums">{formatIdr(tx.change)}</span>
         </div>
       </div>

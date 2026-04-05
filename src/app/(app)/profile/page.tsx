@@ -2,8 +2,8 @@ import { db } from '@/db';
 import { users } from '@/db/schema';
 import { eq } from 'drizzle-orm';
 import { requireSession } from '@/lib/server-session';
-import { ProfileClient } from '@/components/pages/ProfileClient';
 import { notFound } from 'next/navigation';
+import { ProfileClient } from '@/components/pages/ProfileClient';
 
 export default async function ProfilePage() {
   const session = await requireSession();

@@ -17,7 +17,7 @@ import { useTranslation } from '@/i18n/useTranslation';
 export function ProfileClient({
   user,
 }: {
-  user: { email: string; name: string };
+  user: { email: string; name: string | null };
 }) {
   const { t } = useTranslation();
   const [name, setName] = useState(user.name || '');

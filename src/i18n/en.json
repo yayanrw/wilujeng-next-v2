@@ -145,7 +145,11 @@
     "newTransaction": "New Transaction",
     "cannotAdd": "Cannot add",
     "payRp": "Pay Rp",
-    "payDebt": "Pay Debt"
+    "payDebt": "Pay Debt",
+    "transaction": "Transaction",
+    "date": "Date",
+    "status": "Status",
+    "paid": "Paid"
   },
   "products": {
     "title": "Products",

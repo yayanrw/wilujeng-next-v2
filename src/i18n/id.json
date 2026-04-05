@@ -278,7 +278,14 @@
     "amountExceedsDebt": "Jumlah melebihi total hutang",
     "totalOutstanding": "Total Tunggakan",
     "paymentAmount": "Jumlah Pembayaran",
-    "confirmPayment": "Konfirmasi Pembayaran"
+    "confirmPayment": "Konfirmasi Pembayaran",
+    "change": "Kembalian",
+    "transaction": "Transaksi",
+    "date": "Tanggal",
+    "status": "Status",
+    "paid": "Dibayar",
+    "initialDebt": "Hutang Awal",
+    "initialDebtDesc": "Isi bidang ini jika pelanggan memiliki hutang sebelum menggunakan sistem ini."
   },
   "reports": {
     "title": "Laporan",
