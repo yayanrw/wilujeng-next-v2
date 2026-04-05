@@ -162,8 +162,8 @@ export function StockClient() {
       ) : null}
 
       {tab !== 'logs' ? (
-        <Card className="max-w-3xl overflow-hidden">
-          <CardHeader className="border-b border-zinc-100 dark:border-zinc-800 bg-zinc-50/50 dark:bg-zinc-900/50 pb-4">
+        <Card className="max-w-3xl overflow-visible">
+          <CardHeader className="rounded-t-xl border-b border-zinc-100 dark:border-zinc-800 bg-zinc-50/50 dark:bg-zinc-900/50 pb-4">
             <div className="text-base font-semibold text-zinc-900 dark:text-zinc-100">
               Stock {tab.toUpperCase()}
             </div>
@@ -331,12 +331,11 @@ export function StockClient() {
                 <label className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-zinc-500 dark:text-zinc-400">
                   Filter Product
                 </label>
-                <div className="h-9">
-                  <ProductPicker
-                    value={filterProductId}
-                    onChange={setFilterProductId}
-                  />
-                </div>
+                <ProductPicker
+                  value={filterProductId}
+                  onChange={setFilterProductId}
+                  className="h-9"
+                />
               </div>
               <div>
                 <label className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-zinc-500 dark:text-zinc-400">

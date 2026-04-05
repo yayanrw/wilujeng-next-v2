@@ -8,9 +8,11 @@ type ProductRow = { id: string; sku: string; name: string; stock: number };
 export function ProductPicker({
   value,
   onChange,
+  className,
 }: {
   value: string | null;
   onChange: (id: string | null) => void;
+  className?: string;
 }) {
   const [query, setQuery] = useState('');
   const [options, setOptions] = useState<ProductRow[]>([]);
@@ -90,10 +92,10 @@ export function ProductPicker({
   }, [query, isOpen]);
 
   return (
-    <div ref={wrapperRef} className="relative flex flex-col gap-2 h-full">
+    <div ref={wrapperRef} className="relative flex flex-col gap-2">
       {!value ? (
         <Input
-          className="h-full"
+          className={className}
           placeholder="Search product by name or SKU"
           value={query}
           onChange={(e) => {
@@ -106,7 +108,11 @@ export function ProductPicker({
       ) : null}
 
       {value ? (
-        <div className="flex h-full items-center justify-between rounded-lg border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-950 px-3 py-1.5 text-sm">
+        <div
+          className={`flex items-center justify-between rounded-lg border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-950 px-3 py-1 text-sm ${
+            className || 'min-h-10'
+          }`}
+        >
           <div className="min-w-0">
             <div className="truncate font-medium">
               {selectedProduct?.name ?? 'Selected Product'}
