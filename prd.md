@@ -49,7 +49,7 @@ Berikut adalah dokumen **Product Requirements Document (PRD)** yang komprehensif
 
 ### 3.3 Menu Kasir (Point of Sale)
 
-- **Penjualan Kasir (POS):** Antarmuka utama untuk melakukan transaksi. Terdiri dari panel pencarian produk dan panel keranjang belanja. Menggunakan _full height_ layout agar kedua panel dapat di-scroll secara independen tanpa memotong modal checkout.
+- **Penjualan Kasir (POS):** Antarmuka utama untuk melakukan transaksi. Terdiri dari panel pencarian produk dan panel keranjang belanja. Menggunakan _full height_ layout agar kedua panel dapat di-scroll secara independen tanpa memotong modal checkout. Pencarian produk menggunakan _debounce_ 500ms untuk performa. Setelah checkout berhasil, daftar produk akan di-_refresh_ secara otomatis untuk memperbarui sisa stok yang ditampilkan. Tampilan list produk dikemas dalam model "Card" grid yang menampilkan nama, SKU, badge indikator sisa stok, kategori, dan harga dengan jelas. Sistem menolak penambahan produk dengan stok `0` ke dalam keranjang dan menampilkan peringatan (Toast).
 - **Product Discovery:**
   - Search bar untuk Nama Produk atau SKU.
   - **Barcode Support:** Fokus otomatis pada search bar; ketika SKU di-scan (diakhiri karakter `Enter`), produk otomatis masuk ke keranjang.

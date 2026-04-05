@@ -21,6 +21,7 @@ export function PosClient() {
   const [amountReceived, setAmountReceived] = useState(0);
   const [checkoutPending, setCheckoutPending] = useState(false);
   const [lastTxId, setLastTxId] = useState<string | null>(null);
+  const [refreshKey, setRefreshKey] = useState(0);
 
   const items = usePosStore((s) => s.items);
   const customerId = usePosStore((s) => s.customerId);
@@ -86,6 +87,7 @@ export function PosClient() {
     clear();
     setAmountReceived(0);
     setPaymentMethod('cash');
+    setRefreshKey((k) => k + 1);
     inputRef.current?.focus();
   }
 
@@ -111,7 +113,11 @@ export function PosClient() {
       </div>
 
       <div className="grid flex-1 min-h-0 grid-cols-1 gap-4 lg:grid-cols-[1fr_420px]">
-        <SearchPanel inputRef={inputRef} onToast={setToast} />
+        <SearchPanel
+          inputRef={inputRef}
+          onToast={setToast}
+          refreshKey={refreshKey}
+        />
         <CartPanel total={total} onCheckout={() => setCheckoutOpen(true)} />
       </div>
 

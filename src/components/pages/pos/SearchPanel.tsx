@@ -18,9 +18,11 @@ type SearchResult = PosProduct & {
 export function SearchPanel({
   inputRef,
   onToast,
+  refreshKey,
 }: {
   inputRef: React.RefObject<HTMLInputElement | null>;
   onToast: (m: string) => void;
+  refreshKey?: number;
 }) {
   const [query, setQuery] = useState('');
   const [categoryId, setCategoryId] = useState('all');
@@ -84,10 +86,10 @@ export function SearchPanel({
 
     const timeoutId = setTimeout(() => {
       fetchProducts(q, categoryId, 0, false);
-    }, 300);
+    }, 500);
 
     return () => clearTimeout(timeoutId);
-  }, [query, categoryId, fetchProducts]);
+  }, [query, categoryId, fetchProducts, refreshKey]);
 
   const loadMore = () => {
     if (loading || !hasMore) return;
@@ -112,6 +114,10 @@ export function SearchPanel({
               if (!q) return;
               const exact = results.find((r) => r.sku === q);
               if (exact) {
+                if (exact.stock <= 0) {
+                  onToast(`Cannot add ${exact.name}, out of stock!`);
+                  return;
+                }
                 addProduct(exact, 1);
                 onToast(`${exact.name} added`);
                 setQuery('');
@@ -148,50 +154,56 @@ export function SearchPanel({
       </CardHeader>
 
       <CardContent className="flex-1 overflow-y-auto min-h-0 custom-scrollbar">
-        <div className="grid grid-cols-1 gap-2 md:grid-cols-2">
+        <div className="grid grid-cols-2 gap-3 md:grid-cols-3 xl:grid-cols-4 pb-4">
           {results.map((p) => (
             <button
               key={p.id}
               type="button"
-              className="flex items-start justify-between gap-2 rounded-lg border border-zinc-200 bg-white p-3 text-left hover:bg-zinc-50 focus:outline-none focus:ring-2 focus:ring-zinc-900 dark:border-zinc-800 dark:bg-zinc-950 dark:hover:bg-zinc-900 dark:focus:ring-zinc-500"
+              className="group relative flex h-full flex-col justify-between overflow-hidden rounded-xl border border-zinc-200 bg-white p-4 text-left transition-all hover:border-zinc-300 hover:shadow-md focus:outline-none focus:ring-2 focus:ring-zinc-900 dark:border-zinc-800 dark:bg-zinc-950 dark:hover:border-zinc-700 dark:hover:shadow-zinc-900/20 dark:focus:ring-zinc-500"
               onClick={() => {
+                if (p.stock <= 0) {
+                  onToast(`Cannot add ${p.name}, out of stock!`);
+                  return;
+                }
                 addProduct(p, 1);
                 onToast(`${p.name} added`);
                 inputRef.current?.focus();
               }}
             >
-              <div className="min-w-0 flex-1">
-                <div className="truncate text-sm font-medium">{p.name}</div>
-                <div className="mt-1 flex flex-wrap items-center gap-1.5">
-                  <Badge className="text-xs py-0 h-5 font-normal bg-zinc-100 dark:bg-zinc-800 text-zinc-800 dark:text-zinc-200">
-                    {p.sku}
+              <div className="w-full">
+                <div className="mb-2 flex items-start justify-between gap-2">
+                  <Badge
+                    tone={
+                      p.stock <= 0
+                        ? 'danger'
+                        : p.stock <= 5
+                          ? 'warning'
+                          : 'success'
+                    }
+                    className="h-5 px-1.5 py-0 text-[10px] font-semibold uppercase tracking-wider"
+                  >
+                    {p.stock} Qty
                   </Badge>
                   {p.category && p.category.id !== categoryId ? (
-                    <Badge
-                      tone="neutral"
-                      className="text-xs py-0 h-5 font-normal truncate max-w-[100px]"
-                    >
+                    <span className="truncate text-[10px] font-medium text-zinc-400 dark:text-zinc-500">
                       {p.category.name}
-                    </Badge>
+                    </span>
                   ) : null}
                 </div>
+                <h3 className="line-clamp-2 text-sm font-semibold leading-snug text-zinc-900 dark:text-zinc-100">
+                  {p.name}
+                </h3>
+                <p className="mt-1 font-mono text-[10px] text-zinc-500 dark:text-zinc-400">
+                  {p.sku}
+                </p>
               </div>
-              <div className="flex shrink-0 flex-col items-end gap-1">
-                <div className="text-sm font-semibold tabular-nums">
+              <div className="mt-4 flex w-full items-end justify-between">
+                <div className="text-sm font-bold tracking-tight text-emerald-600 dark:text-emerald-400 tabular-nums">
                   {formatIdr(p.basePrice)}
                 </div>
-                <Badge
-                  tone={
-                    p.stock <= 0
-                      ? 'danger'
-                      : p.stock <= 5
-                        ? 'warning'
-                        : 'success'
-                  }
-                  className="text-[10px] px-1.5 py-0 h-4"
-                >
-                  {p.stock} in stock
-                </Badge>
+                <div className="flex h-6 w-6 items-center justify-center rounded-full bg-zinc-100 text-zinc-600 transition-colors group-hover:bg-zinc-900 group-hover:text-white dark:bg-zinc-800 dark:text-zinc-300 dark:group-hover:bg-zinc-100 dark:group-hover:text-zinc-900">
+                  <span className="text-lg leading-none">+</span>
+                </div>
               </div>
             </button>
           ))}
