@@ -1,12 +1,13 @@
-import { getSessionCookie } from "better-auth/cookies";
-import { NextResponse, type NextRequest } from "next/server";
+import { getSessionCookie } from 'better-auth/cookies';
+import { NextResponse, type NextRequest } from 'next/server';
 
 function isPublicPath(pathname: string): boolean {
-  if (pathname === "/login" || pathname === "/setup") return true;
-  if (pathname.startsWith("/api/auth")) return true;
-  if (pathname.startsWith("/_next")) return true;
-  if (pathname.startsWith("/public")) return true;
-  if (pathname === "/favicon.ico") return true;
+  if (pathname === '/login' || pathname === '/setup') return true;
+  if (pathname === '/api/setup-admin') return true;
+  if (pathname.startsWith('/api/auth')) return true;
+  if (pathname.startsWith('/_next')) return true;
+  if (pathname.startsWith('/public')) return true;
+  if (pathname === '/favicon.ico') return true;
   return false;
 }
 
@@ -17,8 +18,8 @@ export function middleware(request: NextRequest) {
 
   const sessionCookie = getSessionCookie(request);
   if (!sessionCookie) {
-    const url = new URL("/login", request.url);
-    url.searchParams.set("redirectTo", request.nextUrl.pathname);
+    const url = new URL('/login', request.url);
+    url.searchParams.set('redirectTo', request.nextUrl.pathname);
     return NextResponse.redirect(url);
   }
 
@@ -26,6 +27,5 @@ export function middleware(request: NextRequest) {
 }
 
 export const config = {
-  matcher: ["/:path*"],
+  matcher: ['/:path*'],
 };
-
