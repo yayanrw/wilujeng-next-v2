@@ -2,7 +2,7 @@
 
 import { useEffect, useState, useCallback } from 'react';
 
-import { Search, ChevronDown } from 'lucide-react';
+import { Search, ChevronDown, LayoutGrid, List, X } from 'lucide-react';
 
 import { Badge } from '@/components/ui/Badge';
 import { Button } from '@/components/ui/Button';
@@ -33,6 +33,7 @@ export function SearchPanel({
   const [loading, setLoading] = useState(false);
   const [page, setPage] = useState(0);
   const [hasMore, setHasMore] = useState(true);
+  const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
 
   const LIMIT = 20;
 
@@ -82,9 +83,17 @@ export function SearchPanel({
   // Effect to handle search/filter changes (resets to page 0)
   useEffect(() => {
     const q = query.trim();
-    setPage(0);
 
     const timeoutId = setTimeout(() => {
+      // If we're clearing the query AND we are on 'all' category,
+      // ONLY skip the fetch if we have some results and we're not explicitly trying to reset a previous search
+      if (!q && categoryId === 'all' && results.length > 0 && !loading) {
+        // If the results we have currently are from a search query, we NEED to refetch
+        // We can't easily tell here without adding more state, so it's safer to always fetch
+        // when the query becomes empty to ensure we get the full un-filtered list.
+      }
+
+      setPage(0);
       fetchProducts(q, categoryId, 0, false);
     }, 500);
 
@@ -102,28 +111,73 @@ export function SearchPanel({
     <Card className="flex flex-col h-full overflow-hidden">
       <CardHeader className="shrink-0 space-y-4">
         <div className="flex items-center gap-2">
-          <Search className="h-4 w-4 text-zinc-500 dark:text-zinc-400" />
-          <Input
-            ref={inputRef}
-            placeholder="Search name or scan SKU..."
-            value={query}
-            onChange={(e) => setQuery(e.target.value)}
-            onKeyDown={(e) => {
-              if (e.key !== 'Enter') return;
-              const q = query.trim();
-              if (!q) return;
-              const exact = results.find((r) => r.sku === q);
-              if (exact) {
-                if (exact.stock <= 0) {
-                  onToast(`Cannot add ${exact.name}, out of stock!`);
-                  return;
+          <div className="relative flex-1">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-zinc-500 dark:text-zinc-400" />
+            <Input
+              ref={inputRef}
+              className="pl-9"
+              placeholder="Search name or scan SKU..."
+              value={query}
+              onChange={(e) => setQuery(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key !== 'Enter') return;
+                e.preventDefault();
+                const q = query.trim();
+                if (!q) return;
+                const exact = results.find((r) => r.sku === q);
+                if (exact) {
+                  if (exact.stock <= 0) {
+                    onToast(`Cannot add ${exact.name}, out of stock!`);
+                    return;
+                  }
+                  addProduct(exact, 1);
+                  onToast(`${exact.name} added`);
+
+                  // Reset query which clears the input without triggering the debounce API call for empty string immediately
+                  setQuery('');
                 }
-                addProduct(exact, 1);
-                onToast(`${exact.name} added`);
-                setQuery('');
-              }
-            }}
-          />
+              }}
+            />
+            {query && (
+              <button
+                type="button"
+                onClick={() => {
+                  setQuery('');
+                  inputRef.current?.focus();
+                }}
+                className="absolute right-3 top-1/2 -translate-y-1/2 rounded-full p-0.5 text-zinc-400 hover:bg-zinc-100 hover:text-zinc-600 dark:hover:bg-zinc-800 dark:hover:text-zinc-300"
+                title="Clear search"
+              >
+                <X className="h-4 w-4" />
+              </button>
+            )}
+          </div>
+          <div className="flex shrink-0 items-center rounded-md border border-zinc-200 p-1 dark:border-zinc-800">
+            <button
+              type="button"
+              onClick={() => setViewMode('grid')}
+              className={`rounded p-1.5 transition-colors ${
+                viewMode === 'grid'
+                  ? 'bg-zinc-100 text-zinc-900 dark:bg-zinc-800 dark:text-zinc-100'
+                  : 'text-zinc-500 hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-zinc-100'
+              }`}
+              title="Grid View"
+            >
+              <LayoutGrid className="h-4 w-4" />
+            </button>
+            <button
+              type="button"
+              onClick={() => setViewMode('list')}
+              className={`rounded p-1.5 transition-colors ${
+                viewMode === 'list'
+                  ? 'bg-zinc-100 text-zinc-900 dark:bg-zinc-800 dark:text-zinc-100'
+                  : 'text-zinc-500 hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-zinc-100'
+              }`}
+              title="List View"
+            >
+              <List className="h-4 w-4" />
+            </button>
+          </div>
         </div>
 
         <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-hide">
@@ -154,7 +208,7 @@ export function SearchPanel({
       </CardHeader>
 
       <CardContent className="flex-1 overflow-y-auto min-h-0 custom-scrollbar">
-        {loading && results.length === 0 ? (
+        {loading && (results.length === 0 || page === 0) ? (
           <div className="flex h-full items-center justify-center p-12">
             <div className="flex flex-col items-center gap-3">
               <div className="h-6 w-6 animate-spin rounded-full border-2 border-zinc-200 border-t-zinc-900 dark:border-zinc-800 dark:border-t-zinc-100" />
@@ -164,12 +218,22 @@ export function SearchPanel({
             </div>
           </div>
         ) : (
-          <div className="grid grid-cols-2 gap-3 md:grid-cols-3 xl:grid-cols-4 pb-4">
+          <div
+            className={
+              viewMode === 'grid'
+                ? 'grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-3 xl:grid-cols-4 pb-4'
+                : 'flex flex-col gap-2 pb-4'
+            }
+          >
             {results.map((p) => (
               <button
                 key={p.id}
                 type="button"
-                className="group relative flex h-full flex-col justify-between overflow-hidden rounded-xl border border-zinc-200 bg-white p-4 text-left transition-all hover:border-zinc-300 hover:shadow-md focus:outline-none focus:ring-2 focus:ring-zinc-900 dark:border-zinc-800 dark:bg-zinc-950 dark:hover:border-zinc-700 dark:hover:shadow-zinc-900/20 dark:focus:ring-zinc-500"
+                className={`group relative overflow-hidden rounded-xl border border-zinc-200 bg-white text-left transition-all hover:border-zinc-300 hover:shadow-md focus:outline-none focus:ring-2 focus:ring-zinc-900 dark:border-zinc-800 dark:bg-zinc-950 dark:hover:border-zinc-700 dark:hover:shadow-zinc-900/20 dark:focus:ring-zinc-500 ${
+                  viewMode === 'grid'
+                    ? 'flex h-full flex-col justify-between p-4'
+                    : 'flex items-center justify-between p-3'
+                }`}
                 onClick={() => {
                   if (p.stock <= 0) {
                     onToast(`Cannot add ${p.name}, out of stock!`);
@@ -180,41 +244,94 @@ export function SearchPanel({
                   inputRef.current?.focus();
                 }}
               >
-                <div className="w-full">
-                  <div className="mb-2 flex items-start justify-between gap-2">
-                    <Badge
-                      tone={
-                        p.stock <= 0
-                          ? 'danger'
-                          : p.stock <= 5
-                            ? 'warning'
-                            : 'success'
-                      }
-                      className="h-5 px-1.5 py-0 text-[10px] font-semibold uppercase tracking-wider"
-                    >
-                      {p.stock} Qty
-                    </Badge>
-                    {p.category && p.category.id !== categoryId ? (
-                      <span className="truncate text-[10px] font-medium text-zinc-400 dark:text-zinc-500">
-                        {p.category.name}
-                      </span>
-                    ) : null}
-                  </div>
-                  <h3 className="line-clamp-2 text-sm font-semibold leading-snug text-zinc-900 dark:text-zinc-100">
-                    {p.name}
-                  </h3>
-                  <p className="mt-1 font-mono text-[10px] text-zinc-500 dark:text-zinc-400">
-                    {p.sku}
-                  </p>
-                </div>
-                <div className="mt-4 flex w-full items-end justify-between">
-                  <div className="text-sm font-bold tracking-tight text-emerald-600 dark:text-emerald-400 tabular-nums">
-                    {formatIdr(p.basePrice)}
-                  </div>
-                  <div className="flex h-6 w-6 items-center justify-center rounded-full bg-zinc-100 text-zinc-600 transition-colors group-hover:bg-zinc-900 group-hover:text-white dark:bg-zinc-800 dark:text-zinc-300 dark:group-hover:bg-zinc-100 dark:group-hover:text-zinc-900">
-                    <span className="text-lg leading-none">+</span>
-                  </div>
-                </div>
+                {viewMode === 'grid' ? (
+                  <>
+                    <div className="w-full">
+                      <div className="mb-2 flex items-start justify-between gap-2">
+                        <Badge
+                          tone={
+                            p.stock <= 0
+                              ? 'danger'
+                              : p.stock <= 5
+                                ? 'warning'
+                                : 'success'
+                          }
+                          className="h-5 px-1.5 py-0 text-[10px] font-semibold uppercase tracking-wider"
+                        >
+                          {p.stock} Qty
+                        </Badge>
+                        {p.category && p.category.id !== categoryId ? (
+                          <span className="truncate text-[10px] font-medium text-zinc-400 dark:text-zinc-500">
+                            {p.category.name}
+                          </span>
+                        ) : null}
+                      </div>
+                      <h3 className="line-clamp-2 text-sm font-semibold leading-snug text-zinc-900 dark:text-zinc-100">
+                        {p.name}
+                      </h3>
+                      <p className="mt-1 font-mono text-[10px] text-zinc-500 dark:text-zinc-400">
+                        {p.sku}
+                      </p>
+                    </div>
+                    <div className="mt-4 flex w-full items-end justify-between">
+                      <div className="text-sm font-bold tracking-tight text-emerald-600 dark:text-emerald-400 tabular-nums">
+                        {formatIdr(p.basePrice)}
+                      </div>
+                      <div className="flex h-6 w-6 items-center justify-center rounded-full bg-zinc-100 text-zinc-600 transition-colors group-hover:bg-zinc-900 group-hover:text-white dark:bg-zinc-800 dark:text-zinc-300 dark:group-hover:bg-zinc-100 dark:group-hover:text-zinc-900">
+                        <span className="text-lg leading-none">+</span>
+                      </div>
+                    </div>
+                  </>
+                ) : (
+                  <>
+                    <div className="flex flex-1 items-center gap-3 min-w-0">
+                      <div className="flex w-12 shrink-0 flex-col gap-1">
+                        <Badge
+                          tone={
+                            p.stock <= 0
+                              ? 'danger'
+                              : p.stock <= 5
+                                ? 'warning'
+                                : 'success'
+                          }
+                          className="w-fit px-1 py-0 text-[9px] font-semibold uppercase tracking-wider"
+                        >
+                          {p.stock}
+                        </Badge>
+                      </div>
+                      <div className="flex flex-1 flex-col min-w-0 pr-2">
+                        <h3 className="truncate text-sm font-semibold leading-snug text-zinc-900 dark:text-zinc-100">
+                          {p.name}
+                        </h3>
+                        <div className="flex items-center gap-1.5 overflow-hidden">
+                          <p className="truncate font-mono text-[10px] text-zinc-500 dark:text-zinc-400">
+                            {p.sku}
+                          </p>
+                          {p.category && p.category.id !== categoryId ? (
+                            <>
+                              <span className="text-zinc-300 dark:text-zinc-700 shrink-0">
+                                •
+                              </span>
+                              <span className="truncate text-[10px] font-medium text-zinc-400 dark:text-zinc-500">
+                                {p.category.name}
+                              </span>
+                            </>
+                          ) : null}
+                        </div>
+                      </div>
+                    </div>
+                    <div className="flex shrink-0 items-center gap-2 sm:gap-4">
+                      <div className="text-xs sm:text-sm font-bold tracking-tight text-emerald-600 dark:text-emerald-400 tabular-nums">
+                        {formatIdr(p.basePrice)}
+                      </div>
+                      <div className="flex h-7 w-7 sm:h-8 sm:w-8 shrink-0 items-center justify-center rounded-full bg-zinc-100 text-zinc-600 transition-colors group-hover:bg-zinc-900 group-hover:text-white dark:bg-zinc-800 dark:text-zinc-300 dark:group-hover:bg-zinc-100 dark:group-hover:text-zinc-900">
+                        <span className="text-lg sm:text-xl leading-none">
+                          +
+                        </span>
+                      </div>
+                    </div>
+                  </>
+                )}
               </button>
             ))}
           </div>
