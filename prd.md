@@ -41,11 +41,21 @@ Berikut adalah dokumen **Product Requirements Document (PRD)** yang komprehensif
 ### 3.2 Dashboard (Ringkasan Eksekutif)
 
 - **Widget Informasi:**
-  - Total penjualan hari ini.
+  - Total penjualan hari ini (Sales).
+  - Total transaksi hari ini (Transactions).
+  - Total laba kotor hari ini (Gross Profit).
   - Jumlah produk dengan stok menipis (di bawah threshold).
   - Total piutang (hutang pelanggan) yang belum lunas.
-  - Grafik transaksi mingguan/bulanan.
-  - Top Supplier 30 hari (berdasarkan total nilai pembelian stok masuk).
+  - Setiap widget dilengkapi dengan ikon visual yang relevan dari library Lucide React (seperti ShoppingCart, TrendingUp, Banknote, dll).
+- **Grafik Laba Rugi (Sales & Profit Overview):**
+  - Menampilkan bar chart interaktif (menggunakan Recharts) yang membandingkan Total Sales vs Gross Profit.
+  - Terdapat filter untuk melihat tren berdasarkan rentang waktu: Daily (7 hari terakhir), Weekly (4 minggu terakhir), dan Monthly (6 bulan terakhir).
+- **Tabel Ringkasan (Top Lists):**
+  - **Low Stock Items:** Menampilkan 5 produk teratas yang stoknya di bawah batas minimum.
+  - **Top Receivables:** Menampilkan 5 pelanggan dengan jumlah hutang (outstanding debt) tertinggi.
+  - **Top Sales Products:** Menampilkan 5 produk terlaris sepanjang waktu (all-time best sellers) berdasarkan kuantitas yang terjual.
+  - **Top Suppliers:** Menampilkan daftar supplier teratas dalam 30 hari terakhir berdasarkan total nilai pembelian stok masuk.
+  - Semua tabel ringkasan menggunakan desain layout "Card" dengan header terpisah (border-b) dan tampilan data yang responsif.
 
 ### 3.3 Menu Kasir (Point of Sale)
 
