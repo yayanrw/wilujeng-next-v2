@@ -169,7 +169,7 @@ export function DashboardClient() {
             <Card>
               <CardHeader className="flex flex-row items-center justify-between pb-2">
                 <div className="text-sm font-medium text-zinc-500 dark:text-zinc-400">
-                  {t.dashboard.todayGrossProfit}
+                  {t.dashboard.todayNetProfit}
                 </div>
                 <Banknote className="h-4 w-4 text-emerald-500" />
               </CardHeader>
@@ -347,7 +347,7 @@ export function DashboardClient() {
                     <Area
                       type="monotone"
                       dataKey="grossProfit"
-                      name={t.reports.grossProfit}
+                      name={t.dashboard.netProfit}
                       stroke="#10b981"
                       fillOpacity={1}
                       fill="url(#colorProfit)"
