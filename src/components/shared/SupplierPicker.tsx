@@ -76,16 +76,16 @@ export function SupplierPicker({
       />
 
       {isOpen && query.trim().length > 0 && (
-        <div className="absolute z-50 mt-1 max-h-60 w-full overflow-auto rounded-md border border-zinc-200 bg-white p-1 text-sm shadow-md">
+        <div className="absolute z-50 mt-1 max-h-60 w-full overflow-auto rounded-md border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-950 p-1 text-sm shadow-md">
           {loading ? (
-            <div className="px-2 py-1.5 text-zinc-500">Searching...</div>
+            <div className="px-2 py-1.5 text-zinc-500 dark:text-zinc-400">Searching...</div>
           ) : options.length > 0 ? (
             <>
               {options.map((opt) => (
                 <button
                   key={opt.id}
                   type="button"
-                  className="flex w-full cursor-default select-none items-center rounded-sm px-2 py-1.5 outline-none hover:bg-zinc-100 hover:text-zinc-900"
+                  className="flex w-full cursor-default select-none items-center rounded-sm px-2 py-1.5 outline-none hover:bg-zinc-100 dark:hover:bg-zinc-800 dark:bg-zinc-800 hover:text-zinc-900 dark:text-zinc-50"
                   onClick={() => {
                     setQuery(opt.name);
                     onChange(opt.name);
@@ -98,13 +98,13 @@ export function SupplierPicker({
               {!options.find(
                 (o) => o.name.toLowerCase() === query.toLowerCase(),
               ) && (
-                <div className="px-2 py-1.5 text-xs text-zinc-500 border-t border-zinc-100 mt-1 pt-1.5">
+                <div className="px-2 py-1.5 text-xs text-zinc-500 dark:text-zinc-400 border-t border-zinc-100 dark:border-zinc-800 mt-1 pt-1.5">
                   Press enter to create &quot;{query}&quot;
                 </div>
               )}
             </>
           ) : (
-            <div className="px-2 py-1.5 text-zinc-500 flex flex-col gap-1">
+            <div className="px-2 py-1.5 text-zinc-500 dark:text-zinc-400 flex flex-col gap-1">
               <span>No matches found.</span>
               <span className="text-xs">
                 Press enter to create &quot;{query}&quot;

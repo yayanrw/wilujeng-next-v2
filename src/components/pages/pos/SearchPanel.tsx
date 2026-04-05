@@ -100,7 +100,7 @@ export function SearchPanel({
     <Card className="flex flex-col h-full overflow-hidden">
       <CardHeader className="shrink-0 space-y-4">
         <div className="flex items-center gap-2">
-          <Search className="h-4 w-4 text-zinc-500" />
+          <Search className="h-4 w-4 text-zinc-500 dark:text-zinc-400" />
           <Input
             ref={inputRef}
             placeholder="Search name or scan SKU..."
@@ -125,8 +125,8 @@ export function SearchPanel({
             onClick={() => setCategoryId('all')}
             className={`whitespace-nowrap rounded-full px-4 py-1.5 text-sm font-medium transition-colors ${
               categoryId === 'all'
-                ? 'bg-zinc-900 text-white'
-                : 'bg-zinc-100 text-zinc-600 hover:bg-zinc-200'
+                ? 'bg-zinc-900 text-white dark:bg-zinc-100 dark:text-zinc-900'
+                : 'bg-zinc-100 text-zinc-600 hover:bg-zinc-200 dark:bg-zinc-800 dark:text-zinc-400 dark:hover:bg-zinc-700'
             }`}
           >
             All Categories
@@ -137,8 +137,8 @@ export function SearchPanel({
               onClick={() => setCategoryId(cat.id)}
               className={`whitespace-nowrap rounded-full px-4 py-1.5 text-sm font-medium transition-colors ${
                 categoryId === cat.id
-                  ? 'bg-zinc-900 text-white'
-                  : 'bg-zinc-100 text-zinc-600 hover:bg-zinc-200'
+                  ? 'bg-zinc-900 text-white dark:bg-zinc-100 dark:text-zinc-900'
+                  : 'bg-zinc-100 text-zinc-600 hover:bg-zinc-200 dark:bg-zinc-800 dark:text-zinc-400 dark:hover:bg-zinc-700'
               }`}
             >
               {cat.name}
@@ -153,7 +153,7 @@ export function SearchPanel({
             <button
               key={p.id}
               type="button"
-              className="flex items-start justify-between gap-2 rounded-lg border border-zinc-200 bg-white p-3 text-left hover:bg-zinc-50 focus:outline-none focus:ring-2 focus:ring-zinc-900"
+              className="flex items-start justify-between gap-2 rounded-lg border border-zinc-200 bg-white p-3 text-left hover:bg-zinc-50 focus:outline-none focus:ring-2 focus:ring-zinc-900 dark:border-zinc-800 dark:bg-zinc-950 dark:hover:bg-zinc-900 dark:focus:ring-zinc-500"
               onClick={() => {
                 addProduct(p, 1);
                 onToast(`${p.name} added`);
@@ -163,7 +163,7 @@ export function SearchPanel({
               <div className="min-w-0 flex-1">
                 <div className="truncate text-sm font-medium">{p.name}</div>
                 <div className="mt-1 flex flex-wrap items-center gap-1.5">
-                  <Badge className="text-xs py-0 h-5 font-normal bg-zinc-100 text-zinc-800">
+                  <Badge className="text-xs py-0 h-5 font-normal bg-zinc-100 dark:bg-zinc-800 text-zinc-800 dark:text-zinc-200">
                     {p.sku}
                   </Badge>
                   {p.category && p.category.id !== categoryId ? (
@@ -198,13 +198,13 @@ export function SearchPanel({
         </div>
 
         {loading && (
-          <div className="py-8 text-center text-sm text-zinc-500">
+          <div className="py-8 text-center text-sm text-zinc-500 dark:text-zinc-400">
             Loading products...
           </div>
         )}
 
         {!loading && !results.length ? (
-          <div className="py-12 text-center text-sm text-zinc-500 flex flex-col items-center gap-2">
+          <div className="py-12 text-center text-sm text-zinc-500 dark:text-zinc-400 flex flex-col items-center gap-2">
             <Search className="h-8 w-8 text-zinc-300" />
             <p>No products found in this category.</p>
           </div>

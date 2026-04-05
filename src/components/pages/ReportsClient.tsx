@@ -100,8 +100,8 @@ export function ReportsClient() {
               type="button"
               className={
                 t === tab
-                  ? 'rounded-full bg-zinc-900 px-4 py-2 text-sm text-white'
-                  : 'rounded-full border border-zinc-200 bg-white px-4 py-2 text-sm hover:bg-zinc-50'
+                  ? 'rounded-full bg-zinc-900 dark:bg-zinc-100 px-4 py-2 text-sm text-white dark:text-zinc-900'
+                  : 'rounded-full border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-950 px-4 py-2 text-sm hover:bg-zinc-50 dark:hover:bg-zinc-900 dark:bg-zinc-100 dark:bg-zinc-900 dark:bg-zinc-100'
               }
               onClick={() => setTab(t)}
             >
@@ -116,13 +116,13 @@ export function ReportsClient() {
           <div className="flex flex-wrap items-end justify-between gap-3">
             <div>
               <div className="text-sm font-semibold">Filters</div>
-              <div className="text-xs text-zinc-500">Adjust and run</div>
+              <div className="text-xs text-zinc-500 dark:text-zinc-400">Adjust and run</div>
             </div>
 
             <div className="flex flex-wrap items-end gap-2">
               {tab === 'sales' ? (
                 <div>
-                  <label className="text-xs text-zinc-500">Date</label>
+                  <label className="text-xs text-zinc-500 dark:text-zinc-400">Date</label>
                   <Input
                     value={date}
                     onChange={(e) => setDate(e.target.value)}
@@ -134,7 +134,7 @@ export function ReportsClient() {
               {tab === 'pnl' || tab === 'suppliers' ? (
                 <>
                   <div>
-                    <label className="text-xs text-zinc-500">From</label>
+                    <label className="text-xs text-zinc-500 dark:text-zinc-400">From</label>
                     <Input
                       value={from}
                       onChange={(e) => setFrom(e.target.value)}
@@ -142,7 +142,7 @@ export function ReportsClient() {
                     />
                   </div>
                   <div>
-                    <label className="text-xs text-zinc-500">To</label>
+                    <label className="text-xs text-zinc-500 dark:text-zinc-400">To</label>
                     <Input
                       value={to}
                       onChange={(e) => setTo(e.target.value)}
@@ -173,7 +173,7 @@ export function ReportsClient() {
             <div className="overflow-x-auto">
               <table className="w-full text-sm">
                 <thead>
-                  <tr className="border-b border-zinc-200 text-left text-zinc-500">
+                  <tr className="border-b border-zinc-200 dark:border-zinc-800 text-left text-zinc-500 dark:text-zinc-400">
                     <th className="py-2">Date</th>
                     <th className="py-2">ID</th>
                     <th className="py-2">Customer</th>
@@ -185,15 +185,15 @@ export function ReportsClient() {
                 </thead>
                 <tbody>
                   {(data as SalesRow[]).map((t) => (
-                    <tr key={t.id} className="border-b border-zinc-100">
-                      <td className="py-2 whitespace-nowrap text-zinc-600">
+                    <tr key={t.id} className="border-b border-zinc-100 dark:border-zinc-800">
+                      <td className="py-2 whitespace-nowrap text-zinc-600 dark:text-zinc-400">
                         {new Date(t.createdAt).toLocaleDateString()}{' '}
                         {new Date(t.createdAt).toLocaleTimeString([], {
                           hour: '2-digit',
                           minute: '2-digit',
                         })}
                       </td>
-                      <td className="py-2 font-mono text-xs text-zinc-500">
+                      <td className="py-2 font-mono text-xs text-zinc-500 dark:text-zinc-400">
                         {String(t.id).slice(0, 8)}
                       </td>
                       <td className="py-2">{t.customerName ?? '-'}</td>
@@ -216,7 +216,7 @@ export function ReportsClient() {
                         <Button
                           variant="ghost"
                           size="sm"
-                          className="h-8 px-2 text-zinc-500 hover:text-zinc-900"
+                          className="h-8 px-2 text-zinc-500 dark:text-zinc-400 hover:text-zinc-900 dark:text-zinc-50"
                           onClick={() => setSelectedSalesId(t.id)}
                           title="View detail"
                         >
@@ -235,7 +235,7 @@ export function ReportsClient() {
             <div className="overflow-x-auto">
               <table className="w-full text-sm">
                 <thead>
-                  <tr className="border-b border-zinc-200 text-left text-zinc-500">
+                  <tr className="border-b border-zinc-200 dark:border-zinc-800 text-left text-zinc-500 dark:text-zinc-400">
                     <th className="py-2">SKU</th>
                     <th className="py-2">Name</th>
                     <th className="py-2">Stock</th>
@@ -244,7 +244,7 @@ export function ReportsClient() {
                 </thead>
                 <tbody>
                   {(data as StockRow[]).map((p) => (
-                    <tr key={p.id} className="border-b border-zinc-100">
+                    <tr key={p.id} className="border-b border-zinc-100 dark:border-zinc-800">
                       <td className="py-2 font-mono text-xs">{p.sku}</td>
                       <td className="py-2">{p.name}</td>
                       <td className="py-2 tabular-nums">{p.stock}</td>
@@ -262,7 +262,7 @@ export function ReportsClient() {
             <div className="overflow-x-auto">
               <table className="w-full text-sm">
                 <thead>
-                  <tr className="border-b border-zinc-200 text-left text-zinc-500">
+                  <tr className="border-b border-zinc-200 dark:border-zinc-800 text-left text-zinc-500 dark:text-zinc-400">
                     <th className="py-2">Customer</th>
                     <th className="py-2">Phone</th>
                     <th className="py-2">Debt</th>
@@ -271,7 +271,7 @@ export function ReportsClient() {
                 </thead>
                 <tbody>
                   {(data as ReceivableRow[]).map((c) => (
-                    <tr key={c.id} className="border-b border-zinc-100">
+                    <tr key={c.id} className="border-b border-zinc-100 dark:border-zinc-800">
                       <td className="py-2">{c.name}</td>
                       <td className="py-2">{c.phone ?? '-'}</td>
                       <td className="py-2 text-red-600 font-medium tabular-nums">
@@ -281,7 +281,7 @@ export function ReportsClient() {
                         <Button
                           variant="ghost"
                           size="sm"
-                          className="h-8 px-2 text-zinc-500 hover:text-zinc-900"
+                          className="h-8 px-2 text-zinc-500 dark:text-zinc-400 hover:text-zinc-900 dark:text-zinc-50"
                           onClick={() => setSelectedReceivableId(c.id)}
                           title="View detail"
                         >
@@ -298,20 +298,20 @@ export function ReportsClient() {
 
           {tab === 'pnl' && data ? (
             <div className="grid grid-cols-1 gap-3 md:grid-cols-3">
-              <div className="rounded-lg border border-zinc-200 bg-white p-3">
-                <div className="text-xs text-zinc-500">Sales</div>
+              <div className="rounded-lg border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-950 p-3">
+                <div className="text-xs text-zinc-500 dark:text-zinc-400">Sales</div>
                 <div className="mt-1 text-base font-semibold tabular-nums">
                   {formatIdr((data as PnlRow).sales ?? 0)}
                 </div>
               </div>
-              <div className="rounded-lg border border-zinc-200 bg-white p-3">
-                <div className="text-xs text-zinc-500">COGS</div>
+              <div className="rounded-lg border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-950 p-3">
+                <div className="text-xs text-zinc-500 dark:text-zinc-400">COGS</div>
                 <div className="mt-1 text-base font-semibold tabular-nums">
                   {formatIdr((data as PnlRow).cogs ?? 0)}
                 </div>
               </div>
-              <div className="rounded-lg border border-zinc-200 bg-white p-3">
-                <div className="text-xs text-zinc-500">Profit</div>
+              <div className="rounded-lg border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-950 p-3">
+                <div className="text-xs text-zinc-500 dark:text-zinc-400">Profit</div>
                 <div className="mt-1 text-base font-semibold tabular-nums">
                   {formatIdr((data as PnlRow).profit ?? 0)}
                 </div>
@@ -323,7 +323,7 @@ export function ReportsClient() {
             <div className="overflow-x-auto">
               <table className="w-full text-sm">
                 <thead>
-                  <tr className="border-b border-zinc-200 text-left text-zinc-500">
+                  <tr className="border-b border-zinc-200 dark:border-zinc-800 text-left text-zinc-500 dark:text-zinc-400">
                     <th className="py-2">Supplier</th>
                     <th className="py-2">Qty</th>
                     <th className="py-2">Value</th>
@@ -333,7 +333,7 @@ export function ReportsClient() {
                   {(data as SupplierRow[]).map((s, idx) => (
                     <tr
                       key={s.supplierId ?? s.supplierName ?? String(idx)}
-                      className="border-b border-zinc-100"
+                      className="border-b border-zinc-100 dark:border-zinc-800"
                     >
                       <td className="py-2">{s.supplierName ?? '(Unknown)'}</td>
                       <td className="py-2 tabular-nums">{s.totalQty}</td>

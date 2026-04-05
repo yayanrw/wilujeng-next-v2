@@ -102,7 +102,7 @@ export function UsersSettings() {
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
               <thead>
-                <tr className="border-b border-zinc-200 text-left text-zinc-500">
+                <tr className="border-b border-zinc-200 dark:border-zinc-800 text-left text-zinc-500 dark:text-zinc-400">
                   <th className="py-2">Email</th>
                   <th className="py-2">Name</th>
                   <th className="py-2">Role</th>
@@ -115,8 +115,8 @@ export function UsersSettings() {
                     key={u.id}
                     className={
                       u.id === selectedId
-                        ? "border-b border-zinc-100 bg-zinc-50"
-                        : "border-b border-zinc-100 hover:bg-zinc-50"
+                        ? "border-b border-zinc-100 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-900 dark:bg-zinc-100"
+                        : "border-b border-zinc-100 dark:border-zinc-800 hover:bg-zinc-50 dark:hover:bg-zinc-900 dark:bg-zinc-100 dark:bg-zinc-900 dark:bg-zinc-100"
                     }
                   >
                     <td className="py-2">
@@ -137,7 +137,7 @@ export function UsersSettings() {
                       <Button
                         variant="ghost"
                         size="sm"
-                        className="h-8 px-2 text-zinc-500 hover:text-zinc-900"
+                        className="h-8 px-2 text-zinc-500 dark:text-zinc-400 hover:text-zinc-900 dark:text-zinc-50"
                         onClick={() => {
                           setSelectedId(u.id);
                           setMode("edit");
@@ -152,7 +152,7 @@ export function UsersSettings() {
                 ))}
                 {users.length === 0 && !loading && (
                   <tr>
-                    <td colSpan={4} className="py-4 text-center text-zinc-500">
+                    <td colSpan={4} className="py-4 text-center text-zinc-500 dark:text-zinc-400">
                       No users found
                     </td>
                   </tr>
@@ -180,7 +180,7 @@ export function UsersSettings() {
           <div className="text-sm font-semibold">
             {mode === "create" ? "Create User" : "Edit User"}
           </div>
-          <div className="text-xs text-zinc-500">
+          <div className="text-xs text-zinc-500 dark:text-zinc-400">
             {mode === "create"
               ? "Add a new cashier or admin"
               : "Update user details"}

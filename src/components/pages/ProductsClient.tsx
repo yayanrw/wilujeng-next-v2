@@ -129,7 +129,7 @@ export function ProductsClient() {
           <div className="flex items-center justify-between">
             <div>
               <div className="text-lg font-semibold">Products</div>
-              <div className="text-sm text-zinc-500">
+              <div className="text-sm text-zinc-500 dark:text-zinc-400">
                 Create and edit products and tiers
               </div>
             </div>
@@ -144,7 +144,7 @@ export function ProductsClient() {
             />
             <div className="flex gap-3 sm:w-auto">
               <select
-                className="flex h-10 w-full items-center justify-between rounded-md border border-zinc-200 bg-white px-3 py-2 text-sm ring-offset-white placeholder:text-zinc-500 focus:outline-none focus:ring-2 focus:ring-zinc-950 focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                className="flex h-10 w-full items-center justify-between rounded-md border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-950 px-3 py-2 text-sm ring-offset-white placeholder:text-zinc-500 dark:text-zinc-400 focus:outline-none focus:ring-2 focus:ring-zinc-950 focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
                 value={categoryId}
                 onChange={(e) => setCategoryId(e.target.value)}
               >
@@ -156,7 +156,7 @@ export function ProductsClient() {
                 ))}
               </select>
               <select
-                className="flex h-10 w-full items-center justify-between rounded-md border border-zinc-200 bg-white px-3 py-2 text-sm ring-offset-white placeholder:text-zinc-500 focus:outline-none focus:ring-2 focus:ring-zinc-950 focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                className="flex h-10 w-full items-center justify-between rounded-md border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-950 px-3 py-2 text-sm ring-offset-white placeholder:text-zinc-500 dark:text-zinc-400 focus:outline-none focus:ring-2 focus:ring-zinc-950 focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
                 value={brandId}
                 onChange={(e) => setBrandId(e.target.value)}
               >
@@ -174,7 +174,7 @@ export function ProductsClient() {
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
               <thead>
-                <tr className="border-b border-zinc-200 text-left text-zinc-500">
+                <tr className="border-b border-zinc-200 dark:border-zinc-800 text-left text-zinc-500 dark:text-zinc-400">
                   <th className="py-2">SKU</th>
                   <th className="py-2">Name</th>
                   <th className="py-2">Price</th>
@@ -188,14 +188,14 @@ export function ProductsClient() {
                     key={p.id}
                     className={
                       p.id === selectedId
-                        ? 'border-b border-zinc-100 bg-zinc-50'
-                        : 'border-b border-zinc-100 hover:bg-zinc-50'
+                        ? 'border-b border-zinc-100 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-900 dark:bg-zinc-100'
+                        : 'border-b border-zinc-100 dark:border-zinc-800 hover:bg-zinc-50 dark:hover:bg-zinc-900 dark:bg-zinc-100 dark:bg-zinc-900 dark:bg-zinc-100'
                     }
                   >
                     <td className="py-2">
                       <button
                         type="button"
-                        className="font-mono text-xs text-zinc-700 hover:text-zinc-900"
+                        className="font-mono text-xs text-zinc-700 dark:text-zinc-300 hover:text-zinc-900 dark:text-zinc-50"
                         onClick={() => {
                           setSelectedId(p.id);
                           setMode('edit');
@@ -212,7 +212,7 @@ export function ProductsClient() {
                           <Badge tone="warning">Low</Badge>
                         ) : null}
                       </div>
-                      <div className="mt-1 flex gap-2 text-xs text-zinc-500">
+                      <div className="mt-1 flex gap-2 text-xs text-zinc-500 dark:text-zinc-400">
                         {p.category ? <span>{p.category.name}</span> : null}
                         {p.brand ? <span>{p.brand.name}</span> : null}
                       </div>
@@ -225,7 +225,7 @@ export function ProductsClient() {
                       <Button
                         variant="ghost"
                         size="sm"
-                        className="h-8 px-2 text-zinc-500 hover:text-zinc-900"
+                        className="h-8 px-2 text-zinc-500 dark:text-zinc-400 hover:text-zinc-900 dark:text-zinc-50"
                         onClick={() => {
                           setSelectedId(p.id);
                           setMode('edit');
@@ -242,10 +242,10 @@ export function ProductsClient() {
             </table>
           </div>
           {loading && products.length === 0 ? (
-            <div className="mt-3 text-sm text-zinc-500">Loading...</div>
+            <div className="mt-3 text-sm text-zinc-500 dark:text-zinc-400">Loading...</div>
           ) : null}
           {!loading && products.length === 0 && search ? (
-            <div className="mt-3 text-sm text-zinc-500 text-center py-4">
+            <div className="mt-3 text-sm text-zinc-500 dark:text-zinc-400 text-center py-4">
               No products found.
             </div>
           ) : null}
@@ -272,7 +272,7 @@ export function ProductsClient() {
               <div className="text-sm font-semibold">
                 {mode === 'create' ? 'New product' : 'Edit product'}
               </div>
-              <div className="text-xs text-zinc-500">Admin only</div>
+              <div className="text-xs text-zinc-500 dark:text-zinc-400">Admin only</div>
             </div>
             {mode === 'edit' && (
               <Button

@@ -1,6 +1,6 @@
-import type { ReactNode } from "react";
+import type { ReactNode } from 'react';
 
-import { cn } from "@/lib/cn";
+import { cn } from '@/lib/cn';
 
 export function Card({
   className,
@@ -10,7 +10,12 @@ export function Card({
   children: ReactNode;
 }) {
   return (
-    <div className={cn("rounded-xl border border-zinc-200 bg-white", className)}>
+    <div
+      className={cn(
+        'rounded-xl border border-zinc-200 bg-white dark:border-zinc-800 dark:bg-zinc-900',
+        className,
+      )}
+    >
       {children}
     </div>
   );
@@ -23,7 +28,7 @@ export function CardHeader({
   className?: string;
   children: ReactNode;
 }) {
-  return <div className={cn("px-4 py-4", className)}>{children}</div>;
+  return <div className={cn('px-4 py-4', className)}>{children}</div>;
 }
 
 export function CardContent({
@@ -33,6 +38,5 @@ export function CardContent({
   className?: string;
   children: ReactNode;
 }) {
-  return <div className={cn("px-4 pb-4", className)}>{children}</div>;
+  return <div className={cn('px-4 pb-4', className)}>{children}</div>;
 }
-

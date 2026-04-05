@@ -20,18 +20,18 @@ export function CartPanel({
   const clear = usePosStore((s) => s.clear);
 
   return (
-    <Card className="flex flex-col h-full overflow-hidden border-zinc-200 shadow-sm">
-      <CardHeader className="shrink-0 pb-4 border-b border-zinc-100 bg-white">
+    <Card className="flex flex-col h-full overflow-hidden border-zinc-200 dark:border-zinc-800 shadow-sm">
+      <CardHeader className="shrink-0 pb-4 border-b border-zinc-100 dark:border-zinc-800 bg-white dark:bg-zinc-950">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <div className="flex h-8 w-8 items-center justify-center rounded-full bg-zinc-100">
-              <ShoppingCart className="h-4 w-4 text-zinc-600" />
+            <div className="flex h-8 w-8 items-center justify-center rounded-full bg-zinc-100 dark:bg-zinc-800">
+              <ShoppingCart className="h-4 w-4 text-zinc-600 dark:text-zinc-400" />
             </div>
             <div>
-              <h2 className="text-sm font-semibold leading-none text-zinc-900">
+              <h2 className="text-sm font-semibold leading-none text-zinc-900 dark:text-zinc-50">
                 Current Order
               </h2>
-              <p className="text-xs text-zinc-500 mt-1">
+              <p className="text-xs text-zinc-500 dark:text-zinc-400 mt-1">
                 {items.length} {items.length === 1 ? 'item' : 'items'} in cart
               </p>
             </div>
@@ -48,46 +48,46 @@ export function CartPanel({
         </div>
       </CardHeader>
 
-      <div className="flex-1 overflow-y-auto bg-zinc-50/50 p-4 space-y-3 min-h-0 custom-scrollbar">
+      <div className="flex-1 overflow-y-auto bg-zinc-50/50 dark:bg-zinc-900/50 p-4 space-y-3 min-h-0 custom-scrollbar">
         {items.map((i) => (
           <div
             key={i.productId}
-            className="flex flex-col gap-3 rounded-xl border border-zinc-200/75 bg-white p-3 shadow-sm transition-all hover:shadow-md"
+            className="flex flex-col gap-3 rounded-xl border border-zinc-200 dark:border-zinc-800/75 bg-white dark:bg-zinc-950 p-3 shadow-sm transition-all hover:shadow-md"
           >
             <div className="flex justify-between items-start gap-3">
               <div className="min-w-0 flex-1">
-                <div className="font-medium text-sm text-zinc-900 leading-tight line-clamp-2">
+                <div className="font-medium text-sm text-zinc-900 dark:text-zinc-50 leading-tight line-clamp-2">
                   {i.name}
                 </div>
-                <div className="mt-1.5 flex items-center gap-2 text-xs text-zinc-500">
-                  <span className="font-mono text-[10px] bg-zinc-100 text-zinc-600 px-1.5 py-0.5 rounded border border-zinc-200">
+                <div className="mt-1.5 flex items-center gap-2 text-xs text-zinc-500 dark:text-zinc-400">
+                  <span className="font-mono text-[10px] bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-400 px-1.5 py-0.5 rounded border border-zinc-200 dark:border-zinc-800">
                     {i.sku}
                   </span>
                   <span>{formatIdr(i.unitPrice)}</span>
                 </div>
               </div>
               <div className="text-right shrink-0">
-                <div className="font-semibold text-sm tabular-nums text-zinc-900">
+                <div className="font-semibold text-sm tabular-nums text-zinc-900 dark:text-zinc-50">
                   {formatIdr(i.subtotal)}
                 </div>
               </div>
             </div>
 
-            <div className="flex items-center justify-between pt-2 border-t border-zinc-100 mt-1">
-              <div className="flex items-center rounded-md border border-zinc-200 bg-zinc-50/50">
+            <div className="flex items-center justify-between pt-2 border-t border-zinc-100 dark:border-zinc-800 mt-1">
+              <div className="flex items-center rounded-md border border-zinc-200 dark:border-zinc-800 bg-zinc-50/50 dark:bg-zinc-900/50">
                 <button
                   type="button"
-                  className="flex h-8 w-8 items-center justify-center text-zinc-500 hover:text-zinc-900 hover:bg-zinc-200 transition-colors rounded-l-md active:bg-zinc-300"
+                  className="flex h-8 w-8 items-center justify-center text-zinc-500 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-50 hover:bg-zinc-200 dark:hover:bg-zinc-700 transition-colors rounded-l-md active:bg-zinc-300"
                   onClick={() => setQty(i.productId, i.qty - 1)}
                 >
                   <Minus className="h-3.5 w-3.5" />
                 </button>
-                <div className="w-10 text-center text-sm font-medium tabular-nums bg-white border-x border-zinc-200 flex items-center justify-center h-8">
+                <div className="w-10 text-center text-sm font-medium tabular-nums bg-white dark:bg-zinc-950 border-x border-zinc-200 dark:border-zinc-800 flex items-center justify-center h-8">
                   {i.qty}
                 </div>
                 <button
                   type="button"
-                  className="flex h-8 w-8 items-center justify-center text-zinc-500 hover:text-zinc-900 hover:bg-zinc-200 transition-colors rounded-r-md active:bg-zinc-300"
+                  className="flex h-8 w-8 items-center justify-center text-zinc-500 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-50 hover:bg-zinc-200 dark:hover:bg-zinc-700 transition-colors rounded-r-md active:bg-zinc-300"
                   onClick={() => setQty(i.productId, i.qty + 1)}
                 >
                   <Plus className="h-3.5 w-3.5" />
@@ -107,14 +107,14 @@ export function CartPanel({
         ))}
 
         {!items.length ? (
-          <div className="flex h-full min-h-[250px] flex-col items-center justify-center text-center p-6 border-2 border-dashed border-zinc-200 rounded-xl bg-zinc-50/50">
-            <div className="flex h-12 w-12 items-center justify-center rounded-full bg-zinc-100 mb-3">
+          <div className="flex h-full min-h-[250px] flex-col items-center justify-center text-center p-6 border-2 border-dashed border-zinc-200 dark:border-zinc-800 rounded-xl bg-zinc-50/50 dark:bg-zinc-900/50">
+            <div className="flex h-12 w-12 items-center justify-center rounded-full bg-zinc-100 dark:bg-zinc-800 mb-3">
               <ShoppingCart className="h-6 w-6 text-zinc-300" />
             </div>
-            <p className="text-sm font-medium text-zinc-900">
+            <p className="text-sm font-medium text-zinc-900 dark:text-zinc-50">
               Your cart is empty
             </p>
-            <p className="text-xs text-zinc-500 mt-1 max-w-[200px]">
+            <p className="text-xs text-zinc-500 dark:text-zinc-400 mt-1 max-w-[200px]">
               Scan a barcode or select products from the list to start adding to
               your order.
             </p>
@@ -122,10 +122,12 @@ export function CartPanel({
         ) : null}
       </div>
 
-      <div className="shrink-0 border-t border-zinc-200 bg-white p-4 shadow-[0_-4px_15px_-3px_rgba(0,0,0,0.05)] z-10">
+      <div className="shrink-0 border-t border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-950 p-4 shadow-[0_-4px_15px_-3px_rgba(0,0,0,0.05)] z-10">
         <div className="flex items-center justify-between mb-4">
-          <span className="text-zinc-500 font-medium">Total Amount</span>
-          <span className="text-2xl font-bold tabular-nums text-zinc-900 tracking-tight">
+          <span className="text-zinc-500 dark:text-zinc-400 font-medium">
+            Total Amount
+          </span>
+          <span className="text-2xl font-bold tabular-nums text-zinc-900 dark:text-zinc-50 tracking-tight">
             {formatIdr(total)}
           </span>
         </div>

@@ -50,29 +50,29 @@ export function ReceivableDetailModal({
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
-      <div className="w-full max-w-3xl rounded-lg bg-white p-6 shadow-xl max-h-[90vh] overflow-y-auto">
+      <div className="w-full max-w-3xl rounded-lg bg-white dark:bg-zinc-950 p-6 shadow-xl max-h-[90vh] overflow-y-auto">
         <div className="flex items-center justify-between mb-4">
           <h2 className="text-xl font-semibold">Receivable Details</h2>
-          <button onClick={onClose} className="text-zinc-500 hover:text-zinc-900">
+          <button onClick={onClose} className="text-zinc-500 dark:text-zinc-400 hover:text-zinc-900 dark:text-zinc-50">
             Close
           </button>
         </div>
 
         {loading ? (
-          <div className="py-8 text-center text-zinc-500">Loading...</div>
+          <div className="py-8 text-center text-zinc-500 dark:text-zinc-400">Loading...</div>
         ) : customer ? (
           <div className="space-y-6">
             <div className="grid grid-cols-2 gap-4 text-sm">
               <div>
-                <span className="block text-zinc-500">Customer Name</span>
+                <span className="block text-zinc-500 dark:text-zinc-400">Customer Name</span>
                 <span className="font-medium">{customer.name}</span>
               </div>
               <div>
-                <span className="block text-zinc-500">Phone</span>
+                <span className="block text-zinc-500 dark:text-zinc-400">Phone</span>
                 <span>{customer.phone || "-"}</span>
               </div>
               <div>
-                <span className="block text-zinc-500">Total Debt</span>
+                <span className="block text-zinc-500 dark:text-zinc-400">Total Debt</span>
                 <span className="text-red-600 font-semibold tabular-nums">
                   {formatIdr(customer.totalDebt)}
                 </span>
@@ -81,10 +81,10 @@ export function ReceivableDetailModal({
 
             <div>
               <h3 className="mb-2 font-medium">Transaction History</h3>
-              <div className="overflow-x-auto rounded-md border border-zinc-200">
+              <div className="overflow-x-auto rounded-md border border-zinc-200 dark:border-zinc-800">
                 <table className="w-full text-sm">
-                  <thead className="bg-zinc-50">
-                    <tr className="border-b border-zinc-200 text-left text-zinc-500">
+                  <thead className="bg-zinc-50 dark:bg-zinc-900 dark:bg-zinc-100">
+                    <tr className="border-b border-zinc-200 dark:border-zinc-800 text-left text-zinc-500 dark:text-zinc-400">
                       <th className="px-3 py-2">Date</th>
                       <th className="px-3 py-2">ID</th>
                       <th className="px-3 py-2 text-right">Total Amount</th>
@@ -94,11 +94,11 @@ export function ReceivableDetailModal({
                   </thead>
                   <tbody>
                     {transactions?.map((tx) => (
-                      <tr key={tx.id} className="border-b border-zinc-100 last:border-0">
-                        <td className="px-3 py-2 text-zinc-600">
+                      <tr key={tx.id} className="border-b border-zinc-100 dark:border-zinc-800 last:border-0">
+                        <td className="px-3 py-2 text-zinc-600 dark:text-zinc-400">
                           {new Date(tx.createdAt).toLocaleDateString()}
                         </td>
-                        <td className="px-3 py-2 font-mono text-xs text-zinc-500">
+                        <td className="px-3 py-2 font-mono text-xs text-zinc-500 dark:text-zinc-400">
                           {tx.id.slice(0, 8)}
                         </td>
                         <td className="px-3 py-2 text-right tabular-nums">
@@ -120,7 +120,7 @@ export function ReceivableDetailModal({
                     ))}
                     {transactions?.length === 0 && (
                       <tr>
-                        <td colSpan={5} className="px-3 py-4 text-center text-zinc-500">
+                        <td colSpan={5} className="px-3 py-4 text-center text-zinc-500 dark:text-zinc-400">
                           No transactions found
                         </td>
                       </tr>

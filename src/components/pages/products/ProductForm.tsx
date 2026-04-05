@@ -89,7 +89,7 @@ export function ProductForm({
 
   if (missingEdit) {
     return (
-      <div className="rounded-lg border border-dashed border-zinc-200 bg-white p-4 text-sm text-zinc-500">
+      <div className="rounded-lg border border-dashed border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-950 p-4 text-sm text-zinc-500 dark:text-zinc-400">
         Select a product to edit.
       </div>
     );
@@ -243,7 +243,7 @@ export function ProductForm({
         <div className="flex items-center justify-between">
           <div>
             <div className="text-sm font-semibold">Tier pricing</div>
-            <div className="text-xs text-zinc-500">
+            <div className="text-xs text-zinc-500 dark:text-zinc-400">
               Best-match by highest min qty
             </div>
           </div>
@@ -267,7 +267,7 @@ export function ProductForm({
               className="grid grid-cols-[1fr_1fr_40px] items-end gap-2"
             >
               <div>
-                <label className="text-xs text-zinc-500">Min qty</label>
+                <label className="text-xs text-zinc-500 dark:text-zinc-400">Min qty</label>
                 <Input
                   value={String(t.minQty)}
                   onChange={(e) =>
@@ -282,7 +282,7 @@ export function ProductForm({
                 />
               </div>
               <div>
-                <label className="text-xs text-zinc-500">Price</label>
+                <label className="text-xs text-zinc-500 dark:text-zinc-400">Price</label>
                 <Input
                   value={String(t.price)}
                   onChange={(e) =>
@@ -298,7 +298,7 @@ export function ProductForm({
               </div>
               <button
                 type="button"
-                className="grid h-10 w-10 place-items-center rounded-md border border-zinc-200 hover:bg-zinc-50"
+                className="grid h-10 w-10 place-items-center rounded-md border border-zinc-200 dark:border-zinc-800 hover:bg-zinc-50 dark:hover:bg-zinc-900 dark:bg-zinc-100 dark:bg-zinc-900 dark:bg-zinc-100"
                 onClick={() =>
                   setTiers((prev) => prev.filter((_, i) => i !== idx))
                 }
@@ -310,7 +310,7 @@ export function ProductForm({
           ))}
 
           {!tiers.length ? (
-            <div className="rounded-lg border border-dashed border-zinc-200 bg-white p-4 text-sm text-zinc-500">
+            <div className="rounded-lg border border-dashed border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-950 p-4 text-sm text-zinc-500 dark:text-zinc-400">
               No tiers. Base price will be used.
             </div>
           ) : null}

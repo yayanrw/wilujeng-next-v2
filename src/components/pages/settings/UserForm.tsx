@@ -142,7 +142,7 @@ export function UserForm({
       <div>
         <label className="text-sm font-medium">Role</label>
         <select
-          className="h-10 w-full rounded-md border border-zinc-200 bg-white px-2 text-sm"
+          className="h-10 w-full rounded-md border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-950 px-2 text-sm"
           value={role}
           onChange={(e) =>
             setRole(e.target.value === 'admin' ? 'admin' : 'cashier')

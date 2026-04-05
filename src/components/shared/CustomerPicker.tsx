@@ -135,9 +135,9 @@ export function CustomerPicker({
       ) : null}
 
       {isOpen && query.trim().length > 0 && !value && (
-        <div className="absolute top-full mt-1 z-50 max-h-60 w-full overflow-auto rounded-md border border-zinc-200 bg-white p-1 text-sm shadow-lg">
+        <div className="absolute top-full mt-1 z-50 max-h-60 w-full overflow-auto rounded-md border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-950 p-1 text-sm shadow-lg">
           {loading ? (
-            <div className="px-2 py-2 text-zinc-500 text-center text-xs">
+            <div className="px-2 py-2 text-zinc-500 dark:text-zinc-400 text-center text-xs">
               Searching...
             </div>
           ) : options.length > 0 ? (
@@ -145,7 +145,7 @@ export function CustomerPicker({
               <button
                 key={o.id}
                 type="button"
-                className="flex w-full cursor-default select-none items-center justify-between rounded-sm px-3 py-2 outline-none hover:bg-zinc-100 hover:text-zinc-900 transition-colors"
+                className="flex w-full cursor-default select-none items-center justify-between rounded-sm px-3 py-2 outline-none hover:bg-zinc-100 dark:hover:bg-zinc-800 dark:bg-zinc-800 hover:text-zinc-900 dark:text-zinc-50 transition-colors"
                 onClick={() => {
                   onChange(o.id);
                   setSelectedCustomer(o);
@@ -156,7 +156,7 @@ export function CustomerPicker({
                 <div className="flex flex-col items-start">
                   <span className="font-medium">{o.name}</span>
                   {o.phone && (
-                    <span className="text-xs text-zinc-500">{o.phone}</span>
+                    <span className="text-xs text-zinc-500 dark:text-zinc-400">{o.phone}</span>
                   )}
                 </div>
                 {o.totalDebt > 0 && (
@@ -167,7 +167,7 @@ export function CustomerPicker({
               </button>
             ))
           ) : (
-            <div className="px-2 py-2 text-zinc-500 text-center text-xs">
+            <div className="px-2 py-2 text-zinc-500 dark:text-zinc-400 text-center text-xs">
               No customers found.
             </div>
           )}

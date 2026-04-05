@@ -48,13 +48,13 @@ export function BrandingSettings() {
     <Card>
       <CardHeader>
         <div className="text-sm font-semibold">Store branding</div>
-        <div className="text-xs text-zinc-500">
+        <div className="text-xs text-zinc-500 dark:text-zinc-400">
           Used in sidebar, login, and receipts
         </div>
       </CardHeader>
       <CardContent>
         {message ? (
-          <div className="mb-3 rounded-md border border-zinc-200 bg-white px-3 py-2 text-sm text-zinc-700">
+          <div className="mb-3 rounded-md border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-950 px-3 py-2 text-sm text-zinc-700 dark:text-zinc-300">
             {message}
           </div>
         ) : null}
@@ -115,8 +115,8 @@ export function BrandingSettings() {
                       type="button"
                       className={`flex items-center gap-2 rounded-lg border px-3 py-2 text-sm transition-colors ${
                         i === branding.storeIconName
-                          ? 'border-zinc-900 bg-zinc-900 text-white shadow-sm'
-                          : 'border-zinc-200 bg-white text-zinc-700 hover:bg-zinc-50 hover:text-zinc-900'
+                          ? 'border-zinc-900 bg-zinc-900 dark:bg-zinc-100 text-white dark:text-zinc-900 shadow-sm'
+                          : 'border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-950 text-zinc-700 dark:text-zinc-300 hover:bg-zinc-50 dark:hover:bg-zinc-900 dark:bg-zinc-100 dark:bg-zinc-900 dark:bg-zinc-100 hover:text-zinc-900 dark:text-zinc-50'
                       }`}
                       onClick={() =>
                         setBranding({ ...branding, storeIconName: i })
@@ -128,9 +128,9 @@ export function BrandingSettings() {
                   );
                 })}
               </div>
-              <p className="text-xs text-zinc-500 mt-2">
+              <p className="text-xs text-zinc-500 dark:text-zinc-400 mt-2">
                 Selected:{' '}
-                <span className="font-semibold text-zinc-700">
+                <span className="font-semibold text-zinc-700 dark:text-zinc-300">
                   {branding.storeIconName || 'None'}
                 </span>
               </p>
@@ -172,7 +172,7 @@ export function BrandingSettings() {
             </Button>
           </form>
         ) : (
-          <div className="text-sm text-zinc-500">Loading...</div>
+          <div className="text-sm text-zinc-500 dark:text-zinc-400">Loading...</div>
         )}
       </CardContent>
     </Card>

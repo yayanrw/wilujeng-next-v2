@@ -138,7 +138,7 @@ export function CustomersClient() {
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
               <thead>
-                <tr className="border-b border-zinc-200 text-left text-zinc-500">
+                <tr className="border-b border-zinc-200 dark:border-zinc-800 text-left text-zinc-500 dark:text-zinc-400">
                   <th className="py-2">Name</th>
                   <th className="py-2">Phone</th>
                   <th className="py-2">Points</th>
@@ -152,8 +152,8 @@ export function CustomersClient() {
                     key={c.id}
                     className={
                       c.id === selectedId
-                        ? 'border-b border-zinc-100 bg-zinc-50'
-                        : 'border-b border-zinc-100 hover:bg-zinc-50'
+                        ? 'border-b border-zinc-100 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-900 dark:bg-zinc-100'
+                        : 'border-b border-zinc-100 dark:border-zinc-800 hover:bg-zinc-50 dark:hover:bg-zinc-900 dark:bg-zinc-100 dark:bg-zinc-900 dark:bg-zinc-100'
                     }
                   >
                     <td className="py-2">
@@ -182,7 +182,7 @@ export function CustomersClient() {
                       <Button
                         variant="ghost"
                         size="sm"
-                        className="h-8 px-2 text-zinc-500 hover:text-zinc-900"
+                        className="h-8 px-2 text-zinc-500 dark:text-zinc-400 hover:text-zinc-900 dark:text-zinc-50"
                         onClick={() => {
                           setSelectedId(c.id);
                           setMode('edit');
@@ -200,10 +200,10 @@ export function CustomersClient() {
           </div>
 
           {loading && customers.length === 0 ? (
-            <div className="mt-3 text-sm text-zinc-500">Loading...</div>
+            <div className="mt-3 text-sm text-zinc-500 dark:text-zinc-400">Loading...</div>
           ) : null}
           {!loading && customers.length === 0 && search ? (
-            <div className="mt-3 text-sm text-zinc-500 text-center py-4">
+            <div className="mt-3 text-sm text-zinc-500 dark:text-zinc-400 text-center py-4">
               No customers found.
             </div>
           ) : null}
@@ -237,7 +237,7 @@ export function CustomersClient() {
               <div className="text-sm font-semibold">
                 {mode === 'create' ? 'Add customer' : 'Edit customer'}
               </div>
-              <div className="text-xs text-zinc-500">Cashier and Admin</div>
+              <div className="text-xs text-zinc-500 dark:text-zinc-400">Cashier and Admin</div>
             </div>
             {mode === 'edit' && (
               <Button
@@ -277,7 +277,7 @@ export function CustomersClient() {
             />
 
             {mode === 'edit' && detail && (
-              <div className="border-t border-zinc-200 pt-6">
+              <div className="border-t border-zinc-200 dark:border-zinc-800 pt-6">
                 <div className="text-sm font-semibold mb-3">
                   Recent transactions
                 </div>
@@ -285,7 +285,7 @@ export function CustomersClient() {
                   <div className="overflow-x-auto">
                     <table className="w-full text-sm">
                       <thead>
-                        <tr className="border-b border-zinc-200 text-left text-zinc-500">
+                        <tr className="border-b border-zinc-200 dark:border-zinc-800 text-left text-zinc-500 dark:text-zinc-400">
                           <th className="py-2">ID</th>
                           <th className="py-2">Total</th>
                           <th className="py-2">Status</th>
@@ -293,7 +293,7 @@ export function CustomersClient() {
                       </thead>
                       <tbody>
                         {detail.transactions.map((t) => (
-                          <tr key={t.id} className="border-b border-zinc-100">
+                          <tr key={t.id} className="border-b border-zinc-100 dark:border-zinc-800">
                             <td className="py-2 font-mono text-xs">
                               {t.id.slice(0, 8)}
                             </td>
@@ -316,7 +316,7 @@ export function CustomersClient() {
                     </table>
                   </div>
                 ) : (
-                  <div className="text-sm text-zinc-500 bg-zinc-50 rounded-lg p-4 text-center border border-zinc-100">
+                  <div className="text-sm text-zinc-500 dark:text-zinc-400 bg-zinc-50 dark:bg-zinc-900 dark:bg-zinc-100 rounded-lg p-4 text-center border border-zinc-100 dark:border-zinc-800">
                     No recent transactions
                   </div>
                 )}

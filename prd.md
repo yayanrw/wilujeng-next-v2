@@ -121,6 +121,7 @@ Menu ini digunakan untuk menentukan identitas visual toko tanpa perlu mengunggah
 - **Manajemen Pengguna (User Management)**:
   - **List Pengguna**: Tabel dengan fitur pencarian (debounce 500ms), paginasi (menggunakan tombol Load More), dan menampilkan email, nama, serta role pengguna. Terdapat kolom "Action" dengan ikon pensil untuk mengedit detail pengguna.
   - **Tambah/Edit Pengguna**: Form untuk menambah pengguna baru (membutuhkan email dan password) atau mengedit pengguna yang sudah ada (mengubah role atau nama). Dilengkapi dengan notifikasi Toast untuk setiap aksi sukses atau gagal, serta otomatis me-reset form setelah penambahan berhasil.
+- **Appearance**: Terdapat pilihan untuk mengganti tema (Light, Dark, System) menggunakan next-themes. Theme ini tersimpan secara lokal dan merubah mode visual aplikasi secara keseluruhan.
 
 ### 3.9 Menu Kasir & Struk
 

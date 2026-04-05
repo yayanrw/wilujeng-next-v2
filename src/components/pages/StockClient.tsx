@@ -138,8 +138,8 @@ export function StockClient() {
             type="button"
             className={
               t === tab
-                ? 'rounded-full bg-zinc-900 px-4 py-2 text-sm text-white'
-                : 'rounded-full border border-zinc-200 bg-white px-4 py-2 text-sm hover:bg-zinc-50'
+                ? 'rounded-full bg-zinc-900 dark:bg-zinc-100 px-4 py-2 text-sm text-white dark:text-zinc-900'
+                : 'rounded-full border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-950 px-4 py-2 text-sm hover:bg-zinc-50 dark:hover:bg-zinc-900 dark:bg-zinc-100 dark:bg-zinc-900 dark:bg-zinc-100'
             }
             onClick={() => setTab(t)}
           >
@@ -149,7 +149,7 @@ export function StockClient() {
       </div>
 
       {message ? (
-        <div className="rounded-md border border-zinc-200 bg-white px-3 py-2 text-sm text-zinc-700">
+        <div className="rounded-md border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-950 px-3 py-2 text-sm text-zinc-700 dark:text-zinc-300">
           {message}
         </div>
       ) : null}
@@ -160,7 +160,7 @@ export function StockClient() {
             <div className="text-sm font-semibold">
               Stock {tab.toUpperCase()}
             </div>
-            <div className="text-xs text-zinc-500">
+            <div className="text-xs text-zinc-500 dark:text-zinc-400">
               Choose product, enter qty, then submit
             </div>
           </CardHeader>
@@ -278,13 +278,13 @@ export function StockClient() {
             <div className="flex flex-wrap items-end justify-between gap-3">
               <div>
                 <div className="text-sm font-semibold">Stock logs</div>
-                <div className="text-xs text-zinc-500">
+                <div className="text-xs text-zinc-500 dark:text-zinc-400">
                   Recent inventory changes
                 </div>
               </div>
               <div className="flex flex-wrap items-end gap-2">
                 <div>
-                  <label className="text-xs text-zinc-500">From</label>
+                  <label className="text-xs text-zinc-500 dark:text-zinc-400">From</label>
                   <Input
                     value={dateFrom}
                     onChange={(e) => setDateFrom(e.target.value)}
@@ -292,7 +292,7 @@ export function StockClient() {
                   />
                 </div>
                 <div>
-                  <label className="text-xs text-zinc-500">To</label>
+                  <label className="text-xs text-zinc-500 dark:text-zinc-400">To</label>
                   <Input
                     value={dateTo}
                     onChange={(e) => setDateTo(e.target.value)}
@@ -316,7 +316,7 @@ export function StockClient() {
             <div className="overflow-x-auto">
               <table className="w-full text-sm">
                 <thead>
-                  <tr className="border-b border-zinc-200 text-left text-zinc-500">
+                  <tr className="border-b border-zinc-200 dark:border-zinc-800 text-left text-zinc-500 dark:text-zinc-400">
                     <th className="py-2">Product</th>
                     <th className="py-2">Type</th>
                     <th className="py-2">Qty</th>
@@ -330,12 +330,12 @@ export function StockClient() {
                 </thead>
                 <tbody>
                   {logs.map((l) => (
-                    <tr key={l.id} className="border-b border-zinc-100">
+                    <tr key={l.id} className="border-b border-zinc-100 dark:border-zinc-800">
                       <td className="py-2">
                         <div className="font-medium">
                           {l.productName ?? '-'}
                         </div>
-                        <div className="text-xs text-zinc-500 font-mono">
+                        <div className="text-xs text-zinc-500 dark:text-zinc-400 font-mono">
                           {l.productSku ?? '-'}
                         </div>
                       </td>
@@ -343,7 +343,7 @@ export function StockClient() {
                         {l.type}
                       </td>
                       <td className="py-2 tabular-nums">{l.qty}</td>
-                      <td className="py-2 tabular-nums text-zinc-500">
+                      <td className="py-2 tabular-nums text-zinc-500 dark:text-zinc-400">
                         {l.prevStock}
                       </td>
                       <td className="py-2 tabular-nums font-medium">
@@ -358,7 +358,7 @@ export function StockClient() {
                       >
                         {l.note ?? ''}
                       </td>
-                      <td className="py-2 whitespace-nowrap text-zinc-600">
+                      <td className="py-2 whitespace-nowrap text-zinc-600 dark:text-zinc-400">
                         {new Date(l.createdAt).toLocaleDateString()}{' '}
                         {new Date(l.createdAt).toLocaleTimeString([], {
                           hour: '2-digit',
@@ -369,7 +369,7 @@ export function StockClient() {
                         <Button
                           variant="ghost"
                           size="sm"
-                          className="h-8 px-2 text-zinc-500 hover:text-zinc-900"
+                          className="h-8 px-2 text-zinc-500 dark:text-zinc-400 hover:text-zinc-900 dark:text-zinc-50"
                           onClick={() => setSelectedLogId(l.id)}
                           title="View detail"
                         >
@@ -383,7 +383,7 @@ export function StockClient() {
                     <tr>
                       <td
                         colSpan={9}
-                        className="py-4 text-center text-zinc-500"
+                        className="py-4 text-center text-zinc-500 dark:text-zinc-400"
                       >
                         No logs found
                       </td>

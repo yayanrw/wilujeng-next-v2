@@ -52,7 +52,7 @@ export function CustomerForm({
 
   if (missingEdit) {
     return (
-      <div className="rounded-lg border border-dashed border-zinc-200 bg-white p-4 text-sm text-zinc-500">
+      <div className="rounded-lg border border-dashed border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-950 p-4 text-sm text-zinc-500 dark:text-zinc-400">
         Select a customer to edit.
       </div>
     );
@@ -157,7 +157,7 @@ export function CustomerForm({
               Reset
             </Button>
           </div>
-          <p className="text-xs text-zinc-500 mt-1">Admin can reset or adjust points manually.</p>
+          <p className="text-xs text-zinc-500 dark:text-zinc-400 mt-1">Admin can reset or adjust points manually.</p>
         </div>
       )}
 
