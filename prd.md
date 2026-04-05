@@ -73,10 +73,12 @@ Berikut adalah dokumen **Product Requirements Document (PRD)** yang komprehensif
 
 ### 3.4 Inventaris & Produk
 
-- **List Produk:** Tabel dengan fitur search dan filter kategori/merk.
+- **List Produk:** Tabel dengan fitur search, menampilkan data produk dengan skema pagination (Load More Products). Ditambah dengan fitur Dropdown Filter berdasarkan Kategori dan Merk untuk memudahkan pencarian. Terdapat kolom "Action" dengan ikon pensil untuk mengedit atau melihat detail produk. Tombol "New" terintegrasi ke dalam panel "Edit/New Product" daripada header tabel utama.
 - **Tambah/Edit Produk:**
   - Field: Nama, SKU/Barcode, Harga Beli, Harga Jual Dasar, Stok Awal.
-  - **Dynamic Input:** Input Merk dan Kategori mendukung "Type to Create" (jika merk baru diketik, otomatis tersimpan ke master data).
+  - **SKU Generator:** Tersedia tombol dengan ikon (dadu/Dices) di sebelah field SKU untuk membuat kode SKU acak secara otomatis (format `SKU-XXXXXXXX`).
+  - **Dynamic Input (Typeahead/Autocomplete):** Input Merk dan Kategori menampilkan dropdown list berdasarkan teks yang diketik. Mendukung "Type to Create" (jika nama baru diketik dan dipilih dengan menekan Enter, otomatis tersimpan ke master data).
+  - **Auto Reset Form & Toast:** Setelah berhasil menambah/mengedit produk, form akan otomatis di-reset, dan pesan keberhasilan (atau kegagalan) ditampilkan melalui Toast notification yang lebih bersih.
   - **Multi-Tier Pricing:** Form dinamis untuk menambah tier (Contoh: Beli ≥10 harga Rp9.500).
 
 ### 3.5 Kelola Stok

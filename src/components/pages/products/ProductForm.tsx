@@ -1,11 +1,13 @@
-"use client";
+'use client';
 
-import { useMemo, useState } from "react";
+import { useMemo, useState } from 'react';
 
-import { Plus, Trash2 } from "lucide-react";
+import { Plus, Trash2, Dices } from 'lucide-react';
 
-import { Button } from "@/components/ui/Button";
-import { Input } from "@/components/ui/Input";
+import { Button } from '@/components/ui/Button';
+import { Input } from '@/components/ui/Input';
+
+import { AutocompleteInput } from './AutocompleteInput';
 
 export type ProductDto = {
   id: string;
@@ -25,25 +27,40 @@ export function ProductForm({
   initial,
   onSaved,
 }: {
-  mode: "create" | "edit";
+  mode: 'create' | 'edit';
   initial?: ProductDto;
-  onSaved: () => void;
+  onSaved: (success: boolean, errorMsg?: string) => void;
 }) {
-  const missingEdit = mode === "edit" && !initial;
+  const missingEdit = mode === 'edit' && !initial;
 
-  const [sku, setSku] = useState(initial?.sku ?? "");
-  const [name, setName] = useState(initial?.name ?? "");
+  const [sku, setSku] = useState(initial?.sku ?? '');
+  const [name, setName] = useState(initial?.name ?? '');
   const [basePrice, setBasePrice] = useState(initial?.basePrice ?? 0);
   const [buyPrice, setBuyPrice] = useState(initial?.buyPrice ?? 0);
   const [stock, setStock] = useState(initial?.stock ?? 0);
-  const [minStockThreshold, setMinStockThreshold] = useState(initial?.minStockThreshold ?? 0);
-  const [categoryName, setCategoryName] = useState(initial?.category?.name ?? "");
-  const [brandName, setBrandName] = useState(initial?.brand?.name ?? "");
-  const [tiers, setTiers] = useState<Array<{ minQty: number; price: number }>>(initial?.tiers ?? []);
+  const [minStockThreshold, setMinStockThreshold] = useState(
+    initial?.minStockThreshold ?? 0,
+  );
+  const [categoryName, setCategoryName] = useState(
+    initial?.category?.name ?? '',
+  );
+  const [brandName, setBrandName] = useState(initial?.brand?.name ?? '');
+  const [tiers, setTiers] = useState<Array<{ minQty: number; price: number }>>(
+    initial?.tiers ?? [],
+  );
   const [pending, setPending] = useState(false);
-  const [error, setError] = useState<string | null>(null);
 
   const canSave = useMemo(() => sku.trim() && name.trim(), [sku, name]);
+
+  const generateSku = () => {
+    // Generate a random 8-character alphanumeric SKU
+    const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+    let result = 'SKU-';
+    for (let i = 0; i < 8; i++) {
+      result += chars.charAt(Math.floor(Math.random() * chars.length));
+    }
+    setSku(result);
+  };
 
   if (missingEdit) {
     return (
@@ -60,7 +77,6 @@ export function ProductForm({
         e.preventDefault();
         if (!canSave) return;
         setPending(true);
-        setError(null);
 
         const payload: Record<string, unknown> = {
           sku: sku.trim(),
@@ -74,7 +90,7 @@ export function ProductForm({
 
         const cat = categoryName.trim();
         const brand = brandName.trim();
-        if (mode === "create") {
+        if (mode === 'create') {
           if (cat) payload.categoryName = cat;
           if (brand) payload.brandName = brand;
         } else {
@@ -84,48 +100,93 @@ export function ProductForm({
           if (brand) payload.brandName = brand;
         }
 
-        const res = await fetch(mode === "create" ? "/api/products" : `/api/products/${initial!.id}`, {
-          method: mode === "create" ? "POST" : "PATCH",
-          headers: { "content-type": "application/json" },
-          body: JSON.stringify(payload),
-        });
-        const body = (await res.json().catch(() => null)) as
-          | { error?: { message?: string } }
-          | null;
+        const res = await fetch(
+          mode === 'create' ? '/api/products' : `/api/products/${initial!.id}`,
+          {
+            method: mode === 'create' ? 'POST' : 'PATCH',
+            headers: { 'content-type': 'application/json' },
+            body: JSON.stringify(payload),
+          },
+        );
+        const body = (await res.json().catch(() => null)) as {
+          error?: { message?: string };
+        } | null;
         setPending(false);
         if (!res.ok) {
-          setError(body?.error?.message ?? "Save failed");
+          onSaved(false, body?.error?.message ?? 'Save failed');
           return;
         }
-        onSaved();
+
+        if (mode === 'create') {
+          setSku('');
+          setName('');
+          setBasePrice(0);
+          setBuyPrice(0);
+          setStock(0);
+          setMinStockThreshold(0);
+          setCategoryName('');
+          setBrandName('');
+          setTiers([]);
+        }
+
+        onSaved(true);
       }}
     >
       <div className="grid grid-cols-2 gap-3">
         <div>
           <label className="text-sm font-medium">SKU</label>
-          <Input value={sku} onChange={(e) => setSku(e.target.value)} />
+          <div className="flex gap-2 mt-1">
+            <Input
+              value={sku}
+              onChange={(e) => setSku(e.target.value)}
+              className="flex-1"
+            />
+            <Button
+              type="button"
+              variant="secondary"
+              onClick={generateSku}
+              title="Generate Random SKU"
+              className="px-3"
+              aria-label="Generate Random SKU"
+            >
+              <Dices className="h-4 w-4" />
+            </Button>
+          </div>
         </div>
         <div>
           <label className="text-sm font-medium">Name</label>
-          <Input value={name} onChange={(e) => setName(e.target.value)} />
+          <Input
+            value={name}
+            onChange={(e) => setName(e.target.value)}
+            className="mt-1"
+          />
         </div>
       </div>
 
       <div className="grid grid-cols-2 gap-3">
         <div>
           <label className="text-sm font-medium">Base price</label>
-          <Input value={String(basePrice)} onChange={(e) => setBasePrice(Number(e.target.value) || 0)} />
+          <Input
+            value={String(basePrice)}
+            onChange={(e) => setBasePrice(Number(e.target.value) || 0)}
+          />
         </div>
         <div>
           <label className="text-sm font-medium">Buy price</label>
-          <Input value={String(buyPrice)} onChange={(e) => setBuyPrice(Number(e.target.value) || 0)} />
+          <Input
+            value={String(buyPrice)}
+            onChange={(e) => setBuyPrice(Number(e.target.value) || 0)}
+          />
         </div>
       </div>
 
       <div className="grid grid-cols-2 gap-3">
         <div>
           <label className="text-sm font-medium">Stock</label>
-          <Input value={String(stock)} onChange={(e) => setStock(Number(e.target.value) || 0)} />
+          <Input
+            value={String(stock)}
+            onChange={(e) => setStock(Number(e.target.value) || 0)}
+          />
         </div>
         <div>
           <label className="text-sm font-medium">Min stock threshold</label>
@@ -137,27 +198,37 @@ export function ProductForm({
       </div>
 
       <div className="grid grid-cols-2 gap-3">
-        <div>
-          <label className="text-sm font-medium">Category</label>
-          <Input value={categoryName} onChange={(e) => setCategoryName(e.target.value)} placeholder="Type to create" />
-        </div>
-        <div>
-          <label className="text-sm font-medium">Brand</label>
-          <Input value={brandName} onChange={(e) => setBrandName(e.target.value)} placeholder="Type to create" />
-        </div>
+        <AutocompleteInput
+          label="Category"
+          value={categoryName}
+          onChange={setCategoryName}
+          fetchEndpoint="/api/categories"
+          placeholder="Type to create"
+        />
+        <AutocompleteInput
+          label="Brand"
+          value={brandName}
+          onChange={setBrandName}
+          fetchEndpoint="/api/brands"
+          placeholder="Type to create"
+        />
       </div>
 
       <div>
         <div className="flex items-center justify-between">
           <div>
             <div className="text-sm font-semibold">Tier pricing</div>
-            <div className="text-xs text-zinc-500">Best-match by highest min qty</div>
+            <div className="text-xs text-zinc-500">
+              Best-match by highest min qty
+            </div>
           </div>
           <Button
             type="button"
             variant="secondary"
             size="sm"
-            onClick={() => setTiers((t) => [...t, { minQty: 1, price: basePrice }])}
+            onClick={() =>
+              setTiers((t) => [...t, { minQty: 1, price: basePrice }])
+            }
           >
             <Plus className="h-4 w-4" />
             Add tier
@@ -166,14 +237,21 @@ export function ProductForm({
 
         <div className="mt-2 flex flex-col gap-2">
           {tiers.map((t, idx) => (
-            <div key={idx} className="grid grid-cols-[1fr_1fr_40px] items-end gap-2">
+            <div
+              key={idx}
+              className="grid grid-cols-[1fr_1fr_40px] items-end gap-2"
+            >
               <div>
                 <label className="text-xs text-zinc-500">Min qty</label>
                 <Input
                   value={String(t.minQty)}
                   onChange={(e) =>
                     setTiers((prev) =>
-                      prev.map((x, i) => (i === idx ? { ...x, minQty: Number(e.target.value) || 0 } : x)),
+                      prev.map((x, i) =>
+                        i === idx
+                          ? { ...x, minQty: Number(e.target.value) || 0 }
+                          : x,
+                      ),
                     )
                   }
                 />
@@ -184,7 +262,11 @@ export function ProductForm({
                   value={String(t.price)}
                   onChange={(e) =>
                     setTiers((prev) =>
-                      prev.map((x, i) => (i === idx ? { ...x, price: Number(e.target.value) || 0 } : x)),
+                      prev.map((x, i) =>
+                        i === idx
+                          ? { ...x, price: Number(e.target.value) || 0 }
+                          : x,
+                      ),
                     )
                   }
                 />
@@ -192,7 +274,9 @@ export function ProductForm({
               <button
                 type="button"
                 className="grid h-10 w-10 place-items-center rounded-md border border-zinc-200 hover:bg-zinc-50"
-                onClick={() => setTiers((prev) => prev.filter((_, i) => i !== idx))}
+                onClick={() =>
+                  setTiers((prev) => prev.filter((_, i) => i !== idx))
+                }
                 aria-label="Remove tier"
               >
                 <Trash2 className="h-4 w-4" />
@@ -208,15 +292,9 @@ export function ProductForm({
         </div>
       </div>
 
-      {error ? (
-        <div className="rounded-md border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">
-          {error}
-        </div>
-      ) : null}
-
       <div className="flex items-center justify-end gap-2">
         <Button type="submit" disabled={pending || !canSave}>
-          {pending ? "Saving..." : mode === "create" ? "Create" : "Save"}
+          {pending ? 'Saving...' : mode === 'create' ? 'Create' : 'Save'}
         </Button>
       </div>
     </form>
