@@ -109,7 +109,7 @@ async function main() {
         role: 'admin',
         createdAt: new Date(),
         updatedAt: new Date(),
-        emailVerified: new Date(), // Important: mark as verified so better-auth doesn't block login
+        emailVerified: true, // Important: mark as verified so better-auth doesn't block login
       })
       .returning();
 
