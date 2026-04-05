@@ -54,7 +54,7 @@ export function ReportsClient() {
   const [to, setTo] = useState(todayStr);
   const [data, setData] = useState<unknown>(null);
   const [error, setError] = useState<string | null>(null);
-  const [pending, setPending] = useState(false);
+  const [pending, setPending] = useState(true);
 
   const [selectedSalesId, setSelectedSalesId] = useState<string | null>(null);
   const [selectedReceivableId, setSelectedReceivableId] = useState<
@@ -192,7 +192,16 @@ export function ReportsClient() {
             </div>
           ) : null}
 
-          {tab === 'sales' && Array.isArray(data) ? (
+          {pending ? (
+            <div className="flex items-center justify-center p-12">
+              <div className="flex flex-col items-center gap-3">
+                <div className="h-6 w-6 animate-spin rounded-full border-2 border-zinc-200 border-t-zinc-900 dark:border-zinc-800 dark:border-t-zinc-100" />
+                <div className="text-sm font-medium text-zinc-500 dark:text-zinc-400">
+                  Loading report data...
+                </div>
+              </div>
+            </div>
+          ) : tab === 'sales' && Array.isArray(data) ? (
             <div className="overflow-x-auto">
               <table className="w-full text-sm">
                 <thead>
