@@ -7,7 +7,7 @@ import { authClient } from "@/lib/auth-client";
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
 
-export function LoginForm() {
+export function LoginForm({ hasUsers }: { hasUsers?: boolean }) {
   const router = useRouter();
   const sp = useSearchParams();
   const redirectTo = useMemo(() => sp.get("redirectTo") ?? "/", [sp]);
@@ -60,13 +60,15 @@ export function LoginForm() {
       <Button type="submit" disabled={pending}>
         {pending ? "Signing in..." : "Sign in"}
       </Button>
-      <button
-        type="button"
-        className="text-center text-sm text-zinc-600 hover:text-zinc-900"
-        onClick={() => router.push("/setup")}
-      >
-        First time setup
-      </button>
+      {!hasUsers && (
+        <button
+          type="button"
+          className="text-center text-sm text-zinc-600 hover:text-zinc-900"
+          onClick={() => router.push("/setup")}
+        >
+          First time setup
+        </button>
+      )}
     </form>
   );
 }

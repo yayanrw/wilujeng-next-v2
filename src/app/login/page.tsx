@@ -1,22 +1,34 @@
-import { redirect } from "next/navigation";
+import { redirect } from 'next/navigation';
+import { sql } from 'drizzle-orm';
 
-import * as Icons from "lucide-react";
+import * as Icons from 'lucide-react';
 
-import { Card, CardContent, CardHeader } from "@/components/ui/Card";
-import { getBranding } from "@/lib/branding";
-import { getSession } from "@/lib/server-session";
+import { Card, CardContent, CardHeader } from '@/components/ui/Card';
+import { getBranding } from '@/lib/branding';
+import { getSession } from '@/lib/server-session';
+import { db } from '@/db';
+import { users } from '@/db/schema';
 
-import { LoginForm } from "./LoginForm";
+import { LoginForm } from './LoginForm';
 
 export default async function LoginPage() {
   const session = await getSession();
-  if (session) redirect("/");
+  if (session) redirect('/');
+
+  const [{ count }] = await db
+    .select({ count: sql<number>`count(*)` })
+    .from(users);
+  const hasUsers = (count ?? 0) > 0;
+
   const branding = await getBranding();
 
   const Icon =
-    (Icons as unknown as Record<string, (p: { className?: string }) => React.ReactNode>)[
-      branding.storeIconName
-    ] ?? Icons.Store;
+    (
+      Icons as unknown as Record<
+        string,
+        (p: { className?: string }) => React.ReactNode
+      >
+    )[branding.storeIconName] ?? Icons.Store;
 
   return (
     <div className="flex min-h-dvh items-center justify-center bg-zinc-50 px-4">
@@ -27,16 +39,19 @@ export default async function LoginPage() {
               <Icon className="h-5 w-5" />
             </div>
             <div className="min-w-0">
-              <div className="truncate text-lg font-semibold">{branding.storeName}</div>
-              <div className="truncate text-sm text-zinc-500">Sign in to continue</div>
+              <div className="truncate text-lg font-semibold">
+                {branding.storeName}
+              </div>
+              <div className="truncate text-sm text-zinc-500">
+                Sign in to continue
+              </div>
             </div>
           </div>
         </CardHeader>
         <CardContent>
-          <LoginForm />
+          <LoginForm hasUsers={hasUsers} />
         </CardContent>
       </Card>
     </div>
   );
 }
-
