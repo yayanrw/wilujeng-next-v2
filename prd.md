@@ -92,13 +92,14 @@ Berikut adalah dokumen **Product Requirements Document (PRD)** yang komprehensif
 
 ### 3.6 Manajemen Pelanggan
 
-- **List Pelanggan:** Tabel dengan fitur search (debounce 500ms), paginasi (Load More Customers), menampilkan nama, telepon, total poin, dan hutang. Terdapat kolom "Action" dengan ikon pensil untuk mengedit atau melihat detail pelanggan. Tombol "New" terintegrasi di dalam panel "Add/Edit customer" daripada header tabel utama.
+- **List Pelanggan:** Tabel dengan fitur search (debounce 500ms), paginasi (Load More Customers), menampilkan nama, telepon, total poin, dan hutang. Tampilan list pelanggan menggunakan desain "Card" dan "Badge" yang modern (mirip dengan halaman Produk dan Stok), menyoroti pelanggan yang memiliki hutang dengan badge khusus. Terdapat kolom "Action" dengan ikon pensil untuk mengedit atau melihat detail pelanggan. Tombol "New" terintegrasi di dalam panel "Add/Edit customer" daripada header tabel utama.
 - **Detail Pelanggan:**
   - Profil dan total debt/points.
   - Tabel history transaksi terakhir.
 - **Loyalty Points:** Otomatis bertambah saat transaksi (Contoh: Rp1.000 = 1 Poin). Admin bisa mereset poin melalui fitur edit pelanggan.
 - **Manajemen Pelanggan (Edit/Add):**
-  - Form untuk membuat atau mengedit data pelanggan (Nama, Telepon, Alamat).
+  - Form untuk membuat atau mengedit data pelanggan (Nama, Telepon, Alamat, Poin).
+  - Menggunakan layout 2-kolom (grid) dengan label uppercase tracking yang konsisten dengan standar form produk.
   - Terdapat Toast notification setelah operasi berhasil atau gagal, dengan auto reset form.
 
 ### 3.7 Laporan
