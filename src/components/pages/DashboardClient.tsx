@@ -18,6 +18,7 @@ import {
   Legend,
   ResponsiveContainer,
 } from 'recharts';
+import CountUp from 'react-countup';
 
 import { Card, CardContent, CardHeader } from '@/components/ui/Card';
 import { formatIdr } from '@/utils/money';
@@ -92,13 +93,28 @@ export function DashboardClient() {
       </div>
 
       {!data && !error ? (
-        <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
-          {Array.from({ length: 3 }).map((_, i) => (
-            <div
-              key={i}
-              className="h-28 animate-pulse rounded-xl bg-zinc-200 dark:bg-zinc-800"
-            />
-          ))}
+        <div className="flex flex-col gap-4">
+          <div className="grid grid-cols-1 gap-4 md:grid-cols-5">
+            {Array.from({ length: 5 }).map((_, i) => (
+              <Card key={i} className="animate-pulse">
+                <CardHeader className="pb-2">
+                  <div className="h-4 w-1/2 rounded bg-zinc-200 dark:bg-zinc-800" />
+                </CardHeader>
+                <CardContent>
+                  <div className="h-8 w-3/4 rounded bg-zinc-200 dark:bg-zinc-800" />
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+          <Card className="animate-pulse">
+            <CardHeader className="pb-2">
+              <div className="h-5 w-48 rounded bg-zinc-200 dark:bg-zinc-800" />
+              <div className="mt-2 h-4 w-64 rounded bg-zinc-200 dark:bg-zinc-800" />
+            </CardHeader>
+            <CardContent>
+              <div className="h-[300px] w-full rounded bg-zinc-200/50 dark:bg-zinc-800/50" />
+            </CardContent>
+          </Card>
         </div>
       ) : null}
 
@@ -120,7 +136,11 @@ export function DashboardClient() {
               </CardHeader>
               <CardContent>
                 <div className="text-2xl font-bold tabular-nums tracking-tight">
-                  {data.todayTransactionCount}
+                  <CountUp
+                    end={data.todayTransactionCount}
+                    duration={1.5}
+                    separator="."
+                  />
                 </div>
               </CardContent>
             </Card>
@@ -133,7 +153,12 @@ export function DashboardClient() {
               </CardHeader>
               <CardContent>
                 <div className="text-2xl font-bold tabular-nums tracking-tight">
-                  {formatIdr(data.todaySales)}
+                  <CountUp
+                    prefix="Rp"
+                    end={data.todaySales}
+                    duration={1.5}
+                    separator="."
+                  />
                 </div>
               </CardContent>
             </Card>
@@ -146,7 +171,12 @@ export function DashboardClient() {
               </CardHeader>
               <CardContent>
                 <div className="text-2xl font-bold tabular-nums tracking-tight text-emerald-600 dark:text-emerald-400">
-                  {formatIdr(data.todayGrossProfit)}
+                  <CountUp
+                    prefix="Rp"
+                    end={data.todayGrossProfit}
+                    duration={1.5}
+                    separator="."
+                  />
                 </div>
               </CardContent>
             </Card>
@@ -159,7 +189,11 @@ export function DashboardClient() {
               </CardHeader>
               <CardContent>
                 <div className="text-2xl font-bold tabular-nums tracking-tight">
-                  {data.lowStockCount}
+                  <CountUp
+                    end={data.lowStockCount}
+                    duration={1.5}
+                    separator="."
+                  />
                 </div>
               </CardContent>
             </Card>
@@ -172,7 +206,12 @@ export function DashboardClient() {
               </CardHeader>
               <CardContent>
                 <div className="text-2xl font-bold tabular-nums tracking-tight text-red-600 dark:text-red-400">
-                  {formatIdr(data.receivablesTotal)}
+                  <CountUp
+                    prefix="Rp"
+                    end={data.receivablesTotal}
+                    duration={1.5}
+                    separator="."
+                  />
                 </div>
               </CardContent>
             </Card>
