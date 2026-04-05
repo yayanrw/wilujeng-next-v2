@@ -31,18 +31,18 @@ export default async function LoginPage() {
     )[branding.storeIconName] ?? Icons.Store;
 
   return (
-    <div className="flex min-h-dvh items-center justify-center bg-zinc-50 px-4">
+    <div className="flex min-h-dvh items-center justify-center px-4">
       <Card className="w-full max-w-md">
         <CardHeader>
           <div className="flex items-center gap-3">
-            <div className="grid h-10 w-10 place-items-center rounded-xl bg-zinc-900 text-white">
+            <div className="grid h-10 w-10 place-items-center rounded-xl bg-zinc-900 text-white dark:bg-zinc-100 dark:text-zinc-900">
               <Icon className="h-5 w-5" />
             </div>
             <div className="min-w-0">
-              <div className="truncate text-lg font-semibold">
+              <div className="truncate text-lg font-semibold text-zinc-900 dark:text-zinc-50">
                 {branding.storeName}
               </div>
-              <div className="truncate text-sm text-zinc-500">
+              <div className="truncate text-sm text-zinc-500 dark:text-zinc-400">
                 Sign in to continue
               </div>
             </div>
