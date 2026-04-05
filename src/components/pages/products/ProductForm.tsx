@@ -222,25 +222,6 @@ export function ProductForm({
       <div className="grid grid-cols-2 gap-4">
         <div>
           <label className="text-xs font-semibold uppercase tracking-wider text-zinc-500 dark:text-zinc-400">
-            {t.products.basePrice}
-          </label>
-          <div className="relative mt-1.5">
-            <span className="absolute left-3 top-1/2 -translate-y-1/2 text-zinc-500 text-sm font-medium">
-              Rp
-            </span>
-            <Input
-              className="pl-9 font-medium tabular-nums"
-              inputMode="numeric"
-              value={basePrice ? String(basePrice) : ''}
-              onChange={(e) =>
-                setBasePrice(Number(e.target.value.replace(/[^0-9]/g, '')) || 0)
-              }
-              placeholder="0"
-            />
-          </div>
-        </div>
-        <div>
-          <label className="text-xs font-semibold uppercase tracking-wider text-zinc-500 dark:text-zinc-400">
             {t.products.buyPrice}
           </label>
           <div className="relative mt-1.5">
@@ -253,6 +234,25 @@ export function ProductForm({
               value={buyPrice ? String(buyPrice) : ''}
               onChange={(e) =>
                 setBuyPrice(Number(e.target.value.replace(/[^0-9]/g, '')) || 0)
+              }
+              placeholder="0"
+            />
+          </div>
+        </div>
+        <div>
+          <label className="text-xs font-semibold uppercase tracking-wider text-zinc-500 dark:text-zinc-400">
+            {t.products.basePrice}
+          </label>
+          <div className="relative mt-1.5">
+            <span className="absolute left-3 top-1/2 -translate-y-1/2 text-zinc-500 text-sm font-medium">
+              Rp
+            </span>
+            <Input
+              className="pl-9 font-medium tabular-nums"
+              inputMode="numeric"
+              value={basePrice ? String(basePrice) : ''}
+              onChange={(e) =>
+                setBasePrice(Number(e.target.value.replace(/[^0-9]/g, '')) || 0)
               }
               placeholder="0"
             />

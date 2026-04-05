@@ -84,6 +84,10 @@ export function AutocompleteInput({
           setIsOpen(true);
         }}
         onFocus={() => setIsOpen(true)}
+        onBlur={() => {
+          // Delay closing slightly so clicks on dropdown items can register first
+          setTimeout(() => setIsOpen(false), 200);
+        }}
         placeholder={placeholder}
         autoComplete="off"
       />

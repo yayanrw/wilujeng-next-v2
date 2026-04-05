@@ -1,10 +1,12 @@
-"use client";
+'use client';
 
-import { useEffect } from "react";
-
-import { Button } from "@/components/ui/Button";
+import { useEffect } from 'react';
+import { Button } from '@/components/ui/Button';
+import { useTranslation } from "@/i18n/useTranslation";
 
 export function ReceiptClient() {
+  const { t } = useTranslation();
+
   useEffect(() => {
     const t = window.setTimeout(() => {
       window.print();
@@ -15,9 +17,8 @@ export function ReceiptClient() {
   return (
     <div className="print:hidden mt-4 flex justify-center">
       <Button variant="secondary" onClick={() => window.print()}>
-        Print
+        {t.pos.printReceipt}
       </Button>
     </div>
   );
 }
-

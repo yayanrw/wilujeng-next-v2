@@ -1,4 +1,4 @@
-import { asc, ilike, or } from "drizzle-orm";
+import { asc, desc, ilike, or } from "drizzle-orm";
 import { z } from "zod";
 
 import { db } from "@/db";
@@ -11,6 +11,8 @@ export async function GET(req: Request) {
 
   const { searchParams } = new URL(req.url);
   const search = (searchParams.get("search") ?? "").trim();
+  const sortBy = searchParams.get("sortBy") || "name";
+  const sortOrder = searchParams.get("sortOrder") || "asc";
   
   const limitParam = parseInt(searchParams.get("limit") || "50", 10);
   const offsetParam = parseInt(searchParams.get("offset") || "0", 10);
@@ -20,6 +22,22 @@ export async function GET(req: Request) {
   const where = search
     ? or(ilike(customers.name, `%${search}%`), ilike(customers.phone, `%${search}%`))
     : undefined;
+
+  let orderByColumn;
+  switch (sortBy) {
+    case "points":
+      orderByColumn = customers.points;
+      break;
+    case "totalDebt":
+      orderByColumn = customers.totalDebt;
+      break;
+    case "name":
+    default:
+      orderByColumn = customers.name;
+      break;
+  }
+
+  const orderBy = sortOrder === "desc" ? desc(orderByColumn) : asc(orderByColumn);
 
   const rows = await db
     .select({
@@ -32,7 +50,7 @@ export async function GET(req: Request) {
     })
     .from(customers)
     .where(where)
-    .orderBy(asc(customers.name))
+    .orderBy(orderBy)
     .limit(limit)
     .offset(offset);
 
@@ -43,6 +61,7 @@ const CreateSchema = z.object({
   name: z.string().min(1).max(80),
   phone: z.string().max(80).optional(),
   address: z.string().max(200).optional(),
+  totalDebt: z.number().int().min(0).optional().default(0),
 });
 
 export async function POST(req: Request) {
@@ -60,6 +79,7 @@ export async function POST(req: Request) {
       name: parsed.data.name,
       phone: parsed.data.phone,
       address: parsed.data.address,
+      totalDebt: parsed.data.totalDebt,
     })
     .returning();
 

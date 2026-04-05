@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useState } from 'react';
 
-import { Plus, Pencil } from 'lucide-react';
+import { Plus, Pencil, ArrowUp, ArrowDown, ArrowUpDown } from 'lucide-react';
 
 import { Badge } from '@/components/ui/Badge';
 import { Button } from '@/components/ui/Button';
@@ -41,6 +41,8 @@ export function CustomersClient() {
   const [page, setPage] = useState(0);
   const [hasMore, setHasMore] = useState(true);
   const [toastMessage, setToastMessage] = useState<string | null>(null);
+  const [sortBy, setSortBy] = useState<'name' | 'points' | 'totalDebt'>('name');
+  const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('asc');
   const { t } = useTranslation();
   const LIMIT = 50;
 
@@ -54,13 +56,21 @@ export function CustomersClient() {
     [customers, selectedId],
   );
 
-  async function fetchCustomers(q: string, p: number, append = false) {
+  async function fetchCustomers(
+    q: string,
+    p: number,
+    append = false,
+    currentSortBy = sortBy,
+    currentSortOrder = sortOrder,
+  ) {
     setLoading(true);
     try {
       const params = new URLSearchParams();
       if (q) params.append('search', q);
       params.append('limit', LIMIT.toString());
       params.append('offset', (p * LIMIT).toString());
+      params.append('sortBy', currentSortBy);
+      params.append('sortOrder', currentSortOrder);
 
       const res = await fetch(`/api/customers?${params.toString()}`);
       const body = (await res.json().catch(() => [])) as CustomerDto[];
@@ -85,7 +95,7 @@ export function CustomersClient() {
 
   async function refresh() {
     setPage(0);
-    await fetchCustomers(search, 0, false);
+    await fetchCustomers(search, 0, false, sortBy, sortOrder);
   }
 
   useEffect(() => {
@@ -97,12 +107,21 @@ export function CustomersClient() {
   useEffect(() => {
     setPage(0);
     const t = window.setTimeout(
-      () => void fetchCustomers(search, 0, false),
+      () => void fetchCustomers(search, 0, false, sortBy, sortOrder),
       500,
     );
     return () => window.clearTimeout(t);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [search]);
+
+  // Handle sort changes
+  const handleSort = (column: 'name' | 'points' | 'totalDebt') => {
+    const newOrder = sortBy === column && sortOrder === 'asc' ? 'desc' : 'asc';
+    setSortBy(column);
+    setSortOrder(newOrder);
+    setPage(0);
+    void fetchCustomers(search, 0, false, column, newOrder);
+  };
 
   // Fetch customer detail for transactions when selected
   useEffect(() => {
@@ -126,7 +145,21 @@ export function CustomersClient() {
     if (loading || !hasMore) return;
     const nextPage = page + 1;
     setPage(nextPage);
-    fetchCustomers(search, nextPage, true);
+    void fetchCustomers(search, nextPage, true, sortBy, sortOrder);
+  };
+
+  const SortIcon = ({
+    column,
+  }: {
+    column: 'name' | 'points' | 'totalDebt';
+  }) => {
+    if (sortBy !== column)
+      return <ArrowUpDown className="ml-1 h-3 w-3 opacity-20" />;
+    return sortOrder === 'asc' ? (
+      <ArrowUp className="ml-1 h-3 w-3" />
+    ) : (
+      <ArrowDown className="ml-1 h-3 w-3" />
+    );
   };
 
   return (
@@ -166,14 +199,32 @@ export function CustomersClient() {
                 <table className="w-full text-sm">
                   <thead>
                     <tr className="border-y border-zinc-200 dark:border-zinc-800 bg-zinc-50/50 dark:bg-zinc-900/50 text-left text-zinc-500 dark:text-zinc-400">
-                      <th className="py-3 px-4 font-medium">
-                        {t.customers.customerDetails}
+                      <th
+                        className="py-3 px-4 font-medium cursor-pointer hover:text-zinc-700 dark:hover:text-zinc-300 transition-colors"
+                        onClick={() => handleSort('name')}
+                      >
+                        <div className="flex items-center">
+                          {t.customers.customerDetails}
+                          <SortIcon column="name" />
+                        </div>
                       </th>
-                      <th className="py-3 px-4 font-medium text-right">
-                        {t.customers.points}
+                      <th
+                        className="py-3 px-4 font-medium text-right cursor-pointer hover:text-zinc-700 dark:hover:text-zinc-300 transition-colors"
+                        onClick={() => handleSort('points')}
+                      >
+                        <div className="flex items-center justify-end">
+                          {t.customers.points}
+                          <SortIcon column="points" />
+                        </div>
                       </th>
-                      <th className="py-3 px-4 font-medium text-right">
-                        {t.pos.outstandingDebt}
+                      <th
+                        className="py-3 px-4 font-medium text-right cursor-pointer hover:text-zinc-700 dark:hover:text-zinc-300 transition-colors"
+                        onClick={() => handleSort('totalDebt')}
+                      >
+                        <div className="flex items-center justify-end">
+                          {t.pos.outstandingDebt}
+                          <SortIcon column="totalDebt" />
+                        </div>
                       </th>
                       <th className="py-3 px-4 font-medium text-right">
                         {t.common.action}
@@ -345,21 +396,6 @@ export function CustomersClient() {
                     <div className="text-sm font-semibold">
                       {t.customers.recentTransactions}
                     </div>
-                    {detail.customer.totalDebt > 0 && (
-                      <Button
-                        size="sm"
-                        className="h-8 bg-zinc-900 text-white hover:bg-zinc-800 dark:bg-zinc-100 dark:text-zinc-900 dark:hover:bg-zinc-200"
-                        onClick={() => {
-                          setPayDebtCustomer({
-                            id: detail.customer.id,
-                            name: detail.customer.name,
-                            totalDebt: detail.customer.totalDebt,
-                          });
-                        }}
-                      >
-                        {t.customers.payDebt}
-                      </Button>
-                    )}
                   </div>
                   {detail.transactions.length > 0 ? (
                     <div className="overflow-x-auto">

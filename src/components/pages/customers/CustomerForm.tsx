@@ -32,6 +32,7 @@ export function CustomerForm({
   const [phone, setPhone] = useState(initial?.phone ?? '');
   const [address, setAddress] = useState(initial?.address ?? '');
   const [points, setPoints] = useState(initial?.points ?? 0);
+  const [totalDebt, setTotalDebt] = useState(initial?.totalDebt ?? 0);
   const [pending, setPending] = useState(false);
   const { t } = useTranslation();
 
@@ -42,11 +43,13 @@ export function CustomerForm({
       setPhone(initial.phone ?? '');
       setAddress(initial.address ?? '');
       setPoints(initial.points ?? 0);
+      setTotalDebt(initial.totalDebt ?? 0);
     } else if (mode === 'create') {
       setName('');
       setPhone('');
       setAddress('');
       setPoints(0);
+      setTotalDebt(0);
     }
   }, [initial, mode]);
 
@@ -76,6 +79,8 @@ export function CustomerForm({
 
         if (mode === 'edit') {
           payload.points = points;
+        } else if (mode === 'create') {
+          payload.totalDebt = totalDebt;
         }
 
         const res = await fetch(
@@ -105,6 +110,7 @@ export function CustomerForm({
           setPhone('');
           setAddress('');
           setPoints(0);
+          setTotalDebt(0);
         }
 
         onSaved(true);
@@ -147,6 +153,31 @@ export function CustomerForm({
           className="mt-1.5"
         />
       </div>
+
+      {mode === 'create' && (
+        <div>
+          <label className="text-xs font-semibold uppercase tracking-wider text-zinc-500 dark:text-zinc-400">
+            {t.customers.debt}
+          </label>
+          <p className="text-xs text-zinc-500 dark:text-zinc-400 mb-1.5 mt-0.5">
+            {t.customers.initialDebtDesc}
+          </p>
+          <div className="relative">
+            <span className="absolute left-3 top-1/2 -translate-y-1/2 text-zinc-500 text-sm font-medium">
+              Rp
+            </span>
+            <Input
+              className="pl-9 font-medium tabular-nums"
+              inputMode="numeric"
+              value={totalDebt ? String(totalDebt) : ''}
+              onChange={(e) =>
+                setTotalDebt(Number(e.target.value.replace(/[^0-9]/g, '')) || 0)
+              }
+              placeholder="0"
+            />
+          </div>
+        </div>
+      )}
 
       {mode === 'edit' && (
         <div className="p-4 bg-zinc-50 dark:bg-zinc-900 rounded-lg border border-zinc-100 dark:border-zinc-800">

@@ -1,5 +1,6 @@
 'use client';
 
+import { useState, useRef, useEffect } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import type { ReactNode } from 'react';
@@ -14,6 +15,8 @@ import {
   Settings,
   ShoppingCart,
   Users,
+  User,
+  ChevronDown,
 } from 'lucide-react';
 
 import { authClient } from '@/lib/auth-client';
@@ -27,8 +30,6 @@ type NavItem = {
   icon: ReactNode;
   adminOnly?: boolean;
 };
-
-
 
 export function AppShell({
   children,
@@ -47,6 +48,21 @@ export function AppShell({
   const sidebarCollapsed = useUiStore((s) => s.sidebarCollapsed);
   const toggleSidebar = useUiStore((s) => s.toggleSidebar);
   const { t } = useTranslation();
+  const [profileOpen, setProfileOpen] = useState(false);
+  const profileRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      if (
+        profileRef.current &&
+        !profileRef.current.contains(event.target as Node)
+      ) {
+        setProfileOpen(false);
+      }
+    }
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
 
   const navItems: NavItem[] = [
     {
@@ -205,27 +221,64 @@ export function AppShell({
               </button>
 
               <div className="hidden sm:block min-w-0">
-                <div className="truncate text-sm font-medium">{userName}</div>
-                <div className="truncate text-xs text-zinc-500 dark:text-zinc-400">
-                  {t.nav.signedIn}
+                <div className="truncate text-sm font-medium">{storeName}</div>
+                <div className="truncate text-xs text-zinc-500 dark:text-zinc-400 capitalize">
+                  {role}
                 </div>
               </div>
             </div>
 
-            <button
-              type="button"
-              className="inline-flex h-9 items-center gap-2 rounded-md border border-zinc-200 bg-white px-3 text-sm font-medium text-zinc-700 transition-colors hover:bg-zinc-50 hover:text-red-600 dark:border-zinc-800 dark:bg-zinc-950 dark:text-zinc-300 dark:hover:bg-zinc-900 dark:hover:text-red-400"
-              onClick={() =>
-                authClient.signOut({
-                  fetchOptions: {
-                    onSuccess: () => window.location.assign('/login'),
-                  },
-                })
-              }
-            >
-              <LogOut className="h-4 w-4" />
-              <span className="hidden sm:inline">{t.nav.signOut}</span>
-            </button>
+            <div className="relative" ref={profileRef}>
+              <button
+                type="button"
+                className="flex items-center gap-2 rounded-full border border-zinc-200 bg-white pl-1 pr-3 py-1 text-sm font-medium text-zinc-700 transition-colors hover:bg-zinc-50 dark:border-zinc-800 dark:bg-zinc-950 dark:text-zinc-300 dark:hover:bg-zinc-900"
+                onClick={() => setProfileOpen(!profileOpen)}
+              >
+                <div className="flex h-7 w-7 items-center justify-center rounded-full bg-zinc-100 text-zinc-600 dark:bg-zinc-800 dark:text-zinc-400">
+                  <User className="h-4 w-4" />
+                </div>
+                <span className="hidden sm:block truncate max-w-[120px]">
+                  {userName}
+                </span>
+                <ChevronDown className="h-4 w-4 text-zinc-400" />
+              </button>
+
+              {profileOpen && (
+                <div className="absolute right-0 top-full mt-2 w-48 rounded-xl border border-zinc-200 bg-white p-1 shadow-lg dark:border-zinc-800 dark:bg-zinc-950 animate-in fade-in slide-in-from-top-2">
+                  <div className="px-2 py-2 mb-1 border-b border-zinc-100 dark:border-zinc-800 sm:hidden">
+                    <p className="truncate text-sm font-medium text-zinc-900 dark:text-zinc-100">
+                      {userName}
+                    </p>
+                    <p className="truncate text-xs text-zinc-500 dark:text-zinc-400 capitalize">
+                      {role}
+                    </p>
+                  </div>
+                  <Link
+                    href="/profile"
+                    className="flex w-full items-center gap-2 rounded-lg px-2 py-2 text-sm text-zinc-700 hover:bg-zinc-100 dark:text-zinc-300 dark:hover:bg-zinc-900"
+                    onClick={() => setProfileOpen(false)}
+                  >
+                    <User className="h-4 w-4" />
+                    {t.nav.profile || 'Profile'}
+                  </Link>
+                  <button
+                    type="button"
+                    className="flex w-full items-center gap-2 rounded-lg px-2 py-2 text-sm text-red-600 hover:bg-red-50 dark:text-red-400 dark:hover:bg-red-950/50"
+                    onClick={() => {
+                      setProfileOpen(false);
+                      authClient.signOut({
+                        fetchOptions: {
+                          onSuccess: () => window.location.assign('/login'),
+                        },
+                      });
+                    }}
+                  >
+                    <LogOut className="h-4 w-4" />
+                    {t.nav.signOut}
+                  </button>
+                </div>
+              )}
+            </div>
           </header>
           <main className="flex-1 p-4 md:p-6 overflow-x-hidden">
             {children}

@@ -8,6 +8,7 @@ import { requireSession } from "@/lib/server-session";
 import { formatIdr } from "@/utils/money";
 
 import { ReceiptClient } from "../ReceiptClient";
+import { ReceiptContent } from "../ReceiptContent";
 
 export default async function ReceiptPage(ctx: { params: Promise<{ id: string }> }) {
   await requireSession();
@@ -37,63 +38,8 @@ export default async function ReceiptPage(ctx: { params: Promise<{ id: string }>
           .print\:hidden { display: none !important; }
         }
       `}</style>
-
-      <div className="text-center">
-        <div className="text-base font-semibold">{branding.storeName}</div>
-        {branding.storeAddress ? <div className="text-xs">{branding.storeAddress}</div> : null}
-        {branding.storePhone ? <div className="text-xs">{branding.storePhone}</div> : null}
-      </div>
-
-      <div className="mt-4 border-t border-zinc-200 pt-3 text-xs">
-        <div className="flex items-center justify-between">
-          <span>Transaction</span>
-          <span className="font-mono">{tx.id.slice(0, 8)}</span>
-        </div>
-        <div className="flex items-center justify-between">
-          <span>Date</span>
-          <span>{new Date(tx.createdAt).toLocaleString("id-ID")}</span>
-        </div>
-        <div className="flex items-center justify-between">
-          <span>Status</span>
-          <span>{tx.status}</span>
-        </div>
-      </div>
-
-      <div className="mt-4 border-t border-zinc-200 pt-3">
-        <div className="grid gap-2">
-          {items.map((i, idx) => (
-            <div key={idx} className="text-xs">
-              <div className="flex items-start justify-between gap-2">
-                <div className="min-w-0">
-                  <div className="truncate">{i.name ?? "(Unknown)"}</div>
-                  <div className="text-zinc-600">{i.qty} x {formatIdr(i.unitPrice)}</div>
-                </div>
-                <div className="shrink-0 tabular-nums">{formatIdr(i.subtotal)}</div>
-              </div>
-            </div>
-          ))}
-        </div>
-      </div>
-
-      <div className="mt-4 border-t border-zinc-200 pt-3 text-xs">
-        <div className="flex items-center justify-between">
-          <span>Total</span>
-          <span className="tabular-nums">{formatIdr(tx.totalAmount)}</span>
-        </div>
-        <div className="flex items-center justify-between">
-          <span>Paid</span>
-          <span className="tabular-nums">{formatIdr(tx.amountReceived)}</span>
-        </div>
-        <div className="flex items-center justify-between">
-          <span>Change</span>
-          <span className="tabular-nums">{formatIdr(tx.change)}</span>
-        </div>
-      </div>
-
-      <div className="mt-4 border-t border-zinc-200 pt-3 text-center text-xs text-zinc-600">
-        {branding.receiptFooter}
-      </div>
-
+      
+      <ReceiptContent tx={tx} items={items} branding={branding} />
       <ReceiptClient />
     </div>
   );

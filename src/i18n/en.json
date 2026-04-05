@@ -66,7 +66,8 @@
     "reports": "Reports",
     "settings": "Settings",
     "signOut": "Sign out",
-    "signedIn": "Signed in"
+    "signedIn": "Signed in as",
+    "profile": "Profile"
   },
   "dashboard": {
     "title": "Dashboard",
@@ -270,16 +271,23 @@
     "amountExceedsDebt": "Amount exceeds total debt",
     "totalOutstanding": "Total Outstanding",
     "paymentAmount": "Payment Amount",
-    "confirmPayment": "Confirm Payment"
+    "confirmPayment": "Confirm Payment",
+    "change": "Change",
+    "transaction": "Transaction",
+    "date": "Date",
+    "status": "Status",
+    "paid": "Paid",
+    "initialDebt": "Initial Debt",
+    "initialDebtDesc": "Fill this field if the customer has an existing debt before using this system."
   },
   "reports": {
     "title": "Reports",
     "subtitle": "View analytics, sales, stock alerts, and financial summaries",
-    "sales": "SALES",
-    "stock": "STOCK",
-    "receivables": "RECEIVABLES",
+    "sales": "Sales",
+    "stock": "Stock",
+    "receivables": "Receivables",
     "pnl": "PNL",
-    "suppliers": "SUPPLIERS",
+    "suppliers": "Suppliers",
     "dailySalesReport": "Daily Sales Report",
     "lowStockAlerts": "Low Stock Alerts",
     "accountsReceivable": "Accounts Receivable",
@@ -318,7 +326,8 @@
     "failedToLoadCustomer": "Failed to load customer details",
     "salesDetails": "Sales Details",
     "subtotal": "Subtotal",
-    "failedToLoadTransaction": "Failed to load transaction"
+    "failedToLoadTransaction": "Failed to load transaction",
+    "printReceipt": "Print Receipt"
   },
   "settings": {
     "title": "Settings",
@@ -359,6 +368,9 @@
     "languageDesc": "Select the application language",
     "createdSuccess": "User created successfully",
     "updatedSuccess": "User updated successfully",
-    "saveFailed": "Failed to save user"
+    "saveFailed": "Failed to save user",
+    "passwordsDoNotMatch": "Passwords do not match",
+    "newPassword": "New Password",
+    "confirmPassword": "Confirm Password"
   }
 }

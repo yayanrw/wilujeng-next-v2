@@ -104,7 +104,7 @@ Berikut adalah dokumen **Product Requirements Document (PRD)** yang komprehensif
 
 ### 3.6 Manajemen Pelanggan
 
-- **List Pelanggan:** Tabel dengan fitur search (debounce 500ms), paginasi (Load More Customers), menampilkan nama, telepon, total poin, dan hutang. Tampilan list pelanggan menggunakan desain "Card" dan "Badge" yang modern (mirip dengan halaman Produk dan Stok), menyoroti pelanggan yang memiliki hutang dengan badge khusus. Terdapat kolom "Action" dengan ikon pensil untuk mengedit atau melihat detail pelanggan. Tombol "New" terintegrasi di dalam panel "Add/Edit customer" daripada header tabel utama.
+- **List Pelanggan:** Tabel dengan fitur search (debounce 500ms), paginasi (Load More Customers), menampilkan nama, telepon, total poin, dan hutang. Tabel mendukung **Sorting Berdasarkan Kolom** (klik header tabel Nama, Poin, atau Hutang untuk mengurutkan secara _Ascending/Descending_). Tampilan list pelanggan menggunakan desain "Card" dan "Badge" yang modern, menyoroti pelanggan yang memiliki hutang. Terdapat kolom "Action" dengan ikon pensil untuk mengedit pelanggan. Tombol "New" terintegrasi di dalam panel "Add/Edit customer".
 - **Detail Pelanggan:**
   - Profil dan total debt/points.
   - Tabel history transaksi terakhir.
@@ -117,7 +117,7 @@ Berikut adalah dokumen **Product Requirements Document (PRD)** yang komprehensif
 
 ### 3.7 Laporan
 
-- **Laporan Penjualan Harian:** Menampilkan daftar transaksi per hari dengan filter tambahan berdasarkan **Metode Pembayaran** (Cash, Transfer, QRIS, Card). Menggunakan desain tabel modern (Card/Badge) dengan highlight status Lunas/Hutang menggunakan badge warna (Emerald/Red). Dilengkapi dengan kolom tanggal/waktu transaksi, nama pelanggan, metode pembayaran, status, serta tombol ikon mata ("View Detail") untuk melihat rincian barang yang dibeli pada transaksi tersebut (Modal Detail Transaksi).
+- **Laporan Penjualan Harian:** Menampilkan daftar transaksi per hari dengan filter tambahan berdasarkan **Metode Pembayaran** (Cash, Transfer, QRIS, Card). Menggunakan desain tabel modern (Card/Badge) dengan highlight status Lunas/Hutang menggunakan badge warna (Emerald/Red). Dilengkapi dengan kolom tanggal/waktu transaksi, nama pelanggan, metode pembayaran, status, serta tombol ikon **Cetak Struk** (membuka struk di tab baru) dan tombol ikon mata ("View Detail") untuk melihat rincian barang yang dibeli pada transaksi tersebut (Modal Detail Transaksi).
 - **Laporan Stok Habis (Stock Alerts):** List produk yang stoknya secara spesifik **di bawah batas minimum** (`< minStockThreshold`). Menyoroti stok kritis menggunakan text merah.
 - **Laporan Hutang Piutang:** Daftar pelanggan yang memiliki tunggakan (total debt). Menyoroti jumlah hutang dengan text merah. Dilengkapi dengan tombol "Detail" untuk melihat riwayat transaksi hutang pelanggan secara spesifik dalam sebuah modal.
 - **Laporan Laba Rugi:** Perhitungan (Total Penjualan - Harga Pokok Penjualan). Menampilkan kartu ringkasan (Summary Cards) modern yang memisahkan metrik Total Sales, COGS (Cost of Goods), dan Gross Profit.
@@ -135,6 +135,9 @@ Menu ini digunakan untuk menentukan identitas visual toko tanpa perlu mengunggah
 - **Manajemen Pengguna (User Management)**:
   - **List Pengguna**: Tabel dengan fitur pencarian (debounce 500ms), paginasi (menggunakan tombol Load More), dan menampilkan email, nama, serta role pengguna. Terdapat kolom "Action" dengan ikon pensil untuk mengedit detail pengguna.
   - **Tambah/Edit Pengguna**: Form untuk menambah pengguna baru (membutuhkan email dan password) atau mengedit pengguna yang sudah ada (mengubah role atau nama). Dilengkapi dengan notifikasi Toast untuk setiap aksi sukses atau gagal, serta otomatis me-reset form setelah penambahan berhasil.
+- **Profil Pengguna**:
+  - Halaman khusus (`/profile`) yang dapat diakses melalui menu dropdown di Top Bar (dengan mengklik nama/ikon profil pengguna yang sedang login).
+  - Memungkinkan pengguna untuk memperbarui **Nama** dan **Kata Sandi (Password)** mereka sendiri secara mandiri. Email bersifat _read-only_. Dilengkapi validasi kecocokan konfirmasi kata sandi dan notifikasi Toast.
 - **Appearance**:
   - Terdapat pilihan untuk mengganti tema (Light, Dark, System) menggunakan next-themes. Theme ini tersimpan secara lokal dan merubah mode visual aplikasi secara keseluruhan.
   - Terdapat pilihan untuk mengganti Bahasa aplikasi (English, Bahasa Indonesia). State bahasa dikelola secara global menggunakan Zustand dan disimpan (persisted) ke local storage. Seluruh teks aplikasi (mulai dari Dashboard, POS, Produk, Stok, Pelanggan, Laporan, hingga Pengaturan) disimpan dalam file JSON terpusat (`en.json` dan `id.json`) dan dirender secara dinamis menggunakan custom hook `useTranslation`.

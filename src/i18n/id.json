@@ -67,7 +67,8 @@
     "reports": "Laporan",
     "settings": "Pengaturan",
     "signOut": "Keluar",
-    "signedIn": "Masuk sebagai"
+    "signedIn": "Masuk sebagai",
+    "profile": "Profil"
   },
   "dashboard": {
     "title": "Dasbor",
@@ -145,7 +146,13 @@
     "newTransaction": "Transaksi Baru",
     "cannotAdd": "Tidak dapat menambahkan",
     "payRp": "Bayar Rp",
-    "payDebt": "Bayar Hutang"
+    "payDebt": "Bayar Hutang",
+    "transaction": "Transaksi",
+    "date": "Tanggal",
+    "status": "Status",
+    "paid": "Dibayar",
+    "initialDebt": "Hutang Awal",
+    "initialDebtDesc": "Isi bidang ini jika pelanggan memiliki hutang sebelum menggunakan sistem ini."
   },
   "products": {
     "title": "Produk",
@@ -276,11 +283,11 @@
   "reports": {
     "title": "Laporan",
     "subtitle": "Lihat analitik, penjualan, peringatan stok, dan ringkasan keuangan",
-    "sales": "PENJUALAN",
-    "stock": "STOK",
-    "receivables": "PIUTANG",
-    "pnl": "LABA RUGI",
-    "suppliers": "PEMASOK",
+    "sales": "Penjualan",
+    "stock": "Stok",
+    "receivables": "Piutang",
+    "pnl": "Laba Rugi",
+    "suppliers": "Pemasok",
     "dailySalesReport": "Laporan Penjualan Harian",
     "lowStockAlerts": "Peringatan Stok Menipis",
     "accountsReceivable": "Piutang Usaha",
@@ -319,7 +326,8 @@
     "failedToLoadCustomer": "Gagal memuat detail pelanggan",
     "salesDetails": "Detail Penjualan",
     "subtotal": "Subtotal",
-    "failedToLoadTransaction": "Gagal memuat transaksi"
+    "failedToLoadTransaction": "Gagal memuat transaksi",
+    "printReceipt": "Cetak Struk"
   },
   "settings": {
     "title": "Pengaturan",
@@ -360,6 +368,9 @@
     "languageDesc": "Pilih bahasa aplikasi",
     "createdSuccess": "Pengguna berhasil dibuat",
     "updatedSuccess": "Pengguna berhasil diperbarui",
-    "saveFailed": "Gagal menyimpan pengguna"
+    "saveFailed": "Gagal menyimpan pengguna",
+    "passwordsDoNotMatch": "Kata sandi tidak cocok",
+    "newPassword": "Kata Sandi Baru",
+    "confirmPassword": "Konfirmasi Kata Sandi"
   }
 }
