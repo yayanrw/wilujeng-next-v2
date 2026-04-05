@@ -327,22 +327,12 @@ export function StockClient() {
               </div>
             </div>
             <div className="flex flex-wrap items-end gap-3">
-              <div className="w-[200px]">
-                <label className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-zinc-500 dark:text-zinc-400">
-                  Filter Product
-                </label>
-                <ProductPicker
-                  value={filterProductId}
-                  onChange={setFilterProductId}
-                  className="h-9"
-                />
-              </div>
               <div>
                 <label className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-zinc-500 dark:text-zinc-400">
                   From
                 </label>
                 <Input
-                  className="h-9 text-sm"
+                  className="h-9 w-40 text-sm"
                   value={dateFrom}
                   onChange={(e) => setDateFrom(e.target.value)}
                   placeholder="YYYY-MM-DD"
@@ -353,22 +343,32 @@ export function StockClient() {
                   To
                 </label>
                 <Input
-                  className="h-9 text-sm"
+                  className="h-9 w-40 text-sm"
                   value={dateTo}
                   onChange={(e) => setDateTo(e.target.value)}
                   placeholder="YYYY-MM-DD"
                 />
               </div>
+              <div className="w-[200px]">
+                <label className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-zinc-500 dark:text-zinc-400">
+                  Filter Product
+                </label>
+                <ProductPicker
+                  value={filterProductId}
+                  onChange={setFilterProductId}
+                  className="h-9"
+                />
+              </div>
               <Button
                 variant="secondary"
-                className="h-9 px-4"
+                className="h-9 px-4 font-medium shadow-sm"
                 onClick={() => {
                   setPage(0);
                   void loadLogs(0, false);
                 }}
                 disabled={loadingLogs}
               >
-                {loadingLogs ? 'Loading...' : 'Run Filter'}
+                {loadingLogs ? 'Filtering...' : 'Apply Filter'}
               </Button>
             </div>
           </CardHeader>
@@ -474,6 +474,18 @@ export function StockClient() {
                       </td>
                     </tr>
                   ))}
+                  {loadingLogs && logs.length === 0 && (
+                    <tr>
+                      <td colSpan={7} className="py-12">
+                        <div className="flex flex-col items-center justify-center gap-3">
+                          <div className="h-6 w-6 animate-spin rounded-full border-2 border-zinc-200 border-t-zinc-900 dark:border-zinc-800 dark:border-t-zinc-100" />
+                          <div className="text-sm font-medium text-zinc-500 dark:text-zinc-400">
+                            Loading stock logs...
+                          </div>
+                        </div>
+                      </td>
+                    </tr>
+                  )}
                   {logs.length === 0 && !loadingLogs && (
                     <tr>
                       <td
@@ -493,10 +505,9 @@ export function StockClient() {
                 <Button
                   variant="secondary"
                   onClick={loadMoreLogs}
-                  disabled={loadingLogs}
                   className="w-full max-w-xs"
                 >
-                  {loadingLogs ? 'Loading...' : 'Load More Logs'}
+                  Load More Logs
                 </Button>
               </div>
             )}

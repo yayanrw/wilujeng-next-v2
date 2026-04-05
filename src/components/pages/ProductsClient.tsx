@@ -168,117 +168,123 @@ export function ProductsClient() {
           </div>
         </CardHeader>
         <CardContent className="p-0">
-          <div className="overflow-x-auto">
-            <table className="w-full text-sm">
-              <thead>
-                <tr className="border-y border-zinc-200 dark:border-zinc-800 bg-zinc-50/50 dark:bg-zinc-900/50 text-left text-zinc-500 dark:text-zinc-400">
-                  <th className="py-3 px-4 font-medium">SKU</th>
-                  <th className="py-3 px-4 font-medium">Name</th>
-                  <th className="py-3 px-4 font-medium">Price</th>
-                  <th className="py-3 px-4 font-medium">Stock</th>
-                  <th className="py-3 px-4 font-medium text-right">Action</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-zinc-100 dark:divide-zinc-800">
-                {products.map((p) => (
-                  <tr
-                    key={p.id}
-                    className={`group transition-colors ${
-                      p.id === selectedId
-                        ? 'bg-zinc-50 dark:bg-zinc-900'
-                        : 'hover:bg-zinc-50/50 dark:hover:bg-zinc-900/50'
-                    }`}
-                  >
-                    <td className="py-3 px-4 align-middle">
-                      <button
-                        type="button"
-                        className="font-mono text-xs font-medium text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-100 transition-colors"
-                        onClick={() => {
-                          setSelectedId(p.id);
-                          setMode('edit');
-                        }}
-                      >
-                        {p.sku}
-                      </button>
-                    </td>
-                    <td className="py-3 px-4 align-middle">
-                      <div className="flex flex-col gap-1">
-                        <div className="flex items-center gap-2">
-                          <span className="truncate font-semibold text-zinc-900 dark:text-zinc-100">
-                            {p.name}
-                          </span>
-                          {p.minStockThreshold > 0 &&
-                          p.stock <= p.minStockThreshold ? (
-                            <Badge
-                              tone="warning"
-                              className="h-5 px-1.5 py-0 text-[10px]"
-                            >
-                              Low Stock
-                            </Badge>
-                          ) : null}
-                        </div>
-                        <div className="flex gap-2 text-[11px] font-medium text-zinc-500 dark:text-zinc-400 uppercase tracking-wider">
-                          {p.category ? <span>{p.category.name}</span> : null}
-                          {p.category && p.brand ? (
-                            <span className="text-zinc-300 dark:text-zinc-700">
-                              •
-                            </span>
-                          ) : null}
-                          {p.brand ? <span>{p.brand.name}</span> : null}
-                        </div>
-                      </div>
-                    </td>
-                    <td className="py-3 px-4 align-middle font-medium text-zinc-900 dark:text-zinc-100 tabular-nums">
-                      {formatIdr(p.basePrice)}
-                    </td>
-                    <td className="py-3 px-4 align-middle">
-                      <Badge
-                        tone={p.stock <= 0 ? 'danger' : 'neutral'}
-                        className="tabular-nums font-semibold"
-                      >
-                        {p.stock}
-                      </Badge>
-                    </td>
-                    <td className="py-3 px-4 align-middle text-right">
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        className="h-8 w-8 p-0 text-zinc-400 opacity-0 group-hover:opacity-100 hover:text-zinc-900 dark:hover:text-zinc-100 transition-all focus-visible:opacity-100"
-                        onClick={() => {
-                          setSelectedId(p.id);
-                          setMode('edit');
-                        }}
-                        title="Edit product"
-                      >
-                        <Pencil className="h-4 w-4" />
-                        <span className="sr-only">Edit</span>
-                      </Button>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
           {loading && products.length === 0 ? (
-            <div className="mt-3 text-sm text-zinc-500 dark:text-zinc-400">
-              Loading...
+            <div className="flex items-center justify-center p-12">
+              <div className="flex flex-col items-center gap-3">
+                <div className="h-6 w-6 animate-spin rounded-full border-2 border-zinc-200 border-t-zinc-900 dark:border-zinc-800 dark:border-t-zinc-100" />
+                <div className="text-sm font-medium text-zinc-500 dark:text-zinc-400">
+                  Loading products...
+                </div>
+              </div>
             </div>
-          ) : null}
-          {!loading && products.length === 0 && search ? (
+          ) : (
+            <div className="overflow-x-auto">
+              <table className="w-full text-sm">
+                <thead>
+                  <tr className="border-y border-zinc-200 dark:border-zinc-800 bg-zinc-50/50 dark:bg-zinc-900/50 text-left text-zinc-500 dark:text-zinc-400">
+                    <th className="py-3 px-4 font-medium">SKU</th>
+                    <th className="py-3 px-4 font-medium">Name</th>
+                    <th className="py-3 px-4 font-medium">Price</th>
+                    <th className="py-3 px-4 font-medium">Stock</th>
+                    <th className="py-3 px-4 font-medium text-right">Action</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-zinc-100 dark:divide-zinc-800">
+                  {products.map((p) => (
+                    <tr
+                      key={p.id}
+                      className={`group transition-colors ${
+                        p.id === selectedId
+                          ? 'bg-zinc-50 dark:bg-zinc-900'
+                          : 'hover:bg-zinc-50/50 dark:hover:bg-zinc-900/50'
+                      }`}
+                    >
+                      <td className="py-3 px-4 align-middle">
+                        <button
+                          type="button"
+                          className="font-mono text-xs font-medium text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-100 transition-colors"
+                          onClick={() => {
+                            setSelectedId(p.id);
+                            setMode('edit');
+                          }}
+                        >
+                          {p.sku}
+                        </button>
+                      </td>
+                      <td className="py-3 px-4 align-middle">
+                        <div className="flex flex-col gap-1">
+                          <div className="flex items-center gap-2">
+                            <span className="truncate font-semibold text-zinc-900 dark:text-zinc-100">
+                              {p.name}
+                            </span>
+                            {p.minStockThreshold > 0 &&
+                            p.stock <= p.minStockThreshold ? (
+                              <Badge
+                                tone="warning"
+                                className="h-5 px-1.5 py-0 text-[10px]"
+                              >
+                                Low Stock
+                              </Badge>
+                            ) : null}
+                          </div>
+                          <div className="flex gap-2 text-[11px] font-medium text-zinc-500 dark:text-zinc-400 uppercase tracking-wider">
+                            {p.category ? <span>{p.category.name}</span> : null}
+                            {p.category && p.brand ? (
+                              <span className="text-zinc-300 dark:text-zinc-700">
+                                •
+                              </span>
+                            ) : null}
+                            {p.brand ? <span>{p.brand.name}</span> : null}
+                          </div>
+                        </div>
+                      </td>
+                      <td className="py-3 px-4 align-middle font-medium text-zinc-900 dark:text-zinc-100 tabular-nums">
+                        {formatIdr(p.basePrice)}
+                      </td>
+                      <td className="py-3 px-4 align-middle">
+                        <Badge
+                          tone={p.stock <= 0 ? 'danger' : 'neutral'}
+                          className="tabular-nums font-semibold"
+                        >
+                          {p.stock}
+                        </Badge>
+                      </td>
+                      <td className="py-3 px-4 align-middle text-right">
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className="h-8 w-8 p-0 text-zinc-400 opacity-0 group-hover:opacity-100 hover:text-zinc-900 dark:hover:text-zinc-100 transition-all focus-visible:opacity-100"
+                          onClick={() => {
+                            setSelectedId(p.id);
+                            setMode('edit');
+                          }}
+                          title="Edit product"
+                        >
+                          <Pencil className="h-4 w-4" />
+                          <span className="sr-only">Edit</span>
+                        </Button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+          {!loading && products.length === 0 ? (
             <div className="mt-3 text-sm text-zinc-500 dark:text-zinc-400 text-center py-4">
               No products found.
             </div>
           ) : null}
 
-          {hasMore && products.length > 0 && (
-            <div className="mt-6 flex justify-center pb-2">
+          {hasMore && products.length > 0 && !loading && (
+            <div className="mt-6 flex justify-center pb-4">
               <Button
                 variant="secondary"
                 onClick={loadMore}
                 disabled={loading}
                 className="w-full sm:w-auto"
               >
-                {loading ? 'Loading...' : 'Load More Products'}
+                Load More Products
               </Button>
             </div>
           )}
