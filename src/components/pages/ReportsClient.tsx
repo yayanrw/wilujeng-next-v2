@@ -51,6 +51,7 @@ export function ReportsClient() {
   const [tab, setTab] = useState<Tab>('sales');
   const todayStr = useMemo(() => new Date().toISOString().slice(0, 10), []);
   const [date, setDate] = useState(todayStr);
+  const [paymentMethod, setPaymentMethod] = useState('all');
   const [from, setFrom] = useState(todayStr);
   const [to, setTo] = useState(todayStr);
   const [data, setData] = useState<unknown>(null);
@@ -67,8 +68,13 @@ export function ReportsClient() {
     setPending(true);
     setError(null);
     let url = '';
-    if (tab === 'sales')
-      url = `/api/reports/sales?date=${encodeURIComponent(date)}`;
+    if (tab === 'sales') {
+      let params = `date=${encodeURIComponent(date)}`;
+      if (paymentMethod !== 'all') {
+        params += `&method=${encodeURIComponent(paymentMethod)}`;
+      }
+      url = `/api/reports/sales?${params}`;
+    }
     if (tab === 'stock') url = `/api/reports/stock-low`;
     if (tab === 'receivables') url = `/api/reports/receivables`;
     if (tab === 'pnl')
@@ -138,17 +144,35 @@ export function ReportsClient() {
 
             <div className="flex flex-wrap items-end gap-3">
               {tab === 'sales' ? (
-                <div>
-                  <label className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-zinc-500 dark:text-zinc-400">
-                    {t.reports.date}
-                  </label>
-                  <Input
-                    className="h-9 w-40 text-sm"
-                    value={date}
-                    onChange={(e) => setDate(e.target.value)}
-                    placeholder="YYYY-MM-DD"
-                  />
-                </div>
+                <>
+                  <div>
+                    <label className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-zinc-500 dark:text-zinc-400">
+                      {t.reports.date}
+                    </label>
+                    <Input
+                      className="h-9 w-40 text-sm"
+                      value={date}
+                      onChange={(e) => setDate(e.target.value)}
+                      placeholder="YYYY-MM-DD"
+                    />
+                  </div>
+                  <div>
+                    <label className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-zinc-500 dark:text-zinc-400">
+                      {t.reports.method}
+                    </label>
+                    <select
+                      className="h-9 w-32 rounded-md border border-zinc-200 bg-white px-3 text-sm text-zinc-900 shadow-sm focus:border-zinc-900 focus:outline-none focus:ring-1 focus:ring-zinc-900 dark:border-zinc-800 dark:bg-zinc-950 dark:text-zinc-100 dark:focus:border-zinc-100 dark:focus:ring-zinc-100"
+                      value={paymentMethod}
+                      onChange={(e) => setPaymentMethod(e.target.value)}
+                    >
+                      <option value="all">{t.common.all || 'All'}</option>
+                      <option value="cash">Cash</option>
+                      <option value="transfer">Transfer</option>
+                      <option value="qris">QRIS</option>
+                      <option value="card">Card</option>
+                    </select>
+                  </div>
+                </>
               ) : null}
 
               {tab === 'pnl' || tab === 'suppliers' ? (

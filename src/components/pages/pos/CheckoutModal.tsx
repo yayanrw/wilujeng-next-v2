@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { User, Wallet, AlertCircle, RefreshCw } from 'lucide-react';
+import { User, Wallet, AlertCircle, RefreshCw, HandCoins } from 'lucide-react';
 
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
@@ -10,6 +10,82 @@ import { usePosStore } from '@/stores/posStore';
 import type { PaymentMethod } from '@/utils/checkout';
 import { formatIdr } from '@/utils/money';
 import { useTranslation } from '@/i18n/useTranslation';
+
+function CustomerDebtPayButton({
+  customerId,
+  onToast,
+  debtPaymentAmount,
+  onDebtPaymentAmountChange,
+}: {
+  customerId: string;
+  onToast: (m: string) => void;
+  debtPaymentAmount?: number;
+  onDebtPaymentAmountChange?: (n: number) => void;
+}) {
+  const [debt, setDebt] = useState<number | null>(null);
+  const { t } = useTranslation();
+
+  useEffect(() => {
+    let cancelled = false;
+    fetch(`/api/customers/${customerId}`)
+      .then((res) => res.json())
+      .then((data) => {
+        if (!cancelled && data.customer?.totalDebt > 0) {
+          setDebt(data.customer.totalDebt);
+        } else if (!cancelled) {
+          setDebt(0);
+        }
+      })
+      .catch(() => {});
+    return () => {
+      cancelled = true;
+    };
+  }, [customerId]);
+
+  if (debt === null || debt <= 0) return null;
+
+  return (
+    <div className="flex flex-col gap-3 rounded-lg bg-red-50 dark:bg-red-900/20 border border-red-100 dark:border-red-900/50 p-3">
+      <div className="flex items-center gap-2">
+        <AlertCircle className="h-4 w-4 text-red-600 dark:text-red-400" />
+        <div>
+          <div className="text-xs font-semibold text-red-800 dark:text-red-200">
+            {t.pos.outstandingDebt}
+          </div>
+          <div className="text-sm font-bold text-red-900 dark:text-red-100">
+            {formatIdr(debt)}
+          </div>
+        </div>
+      </div>
+      {onDebtPaymentAmountChange && (
+        <div className="relative">
+          <span className="absolute left-3 top-1/2 -translate-y-1/2 text-xs font-medium text-red-700 dark:text-red-300">
+            {t.pos.payRp}
+          </span>
+          <Input
+            className="pl-14 h-9 text-sm font-medium tracking-tight bg-white dark:bg-zinc-950 border-red-200 dark:border-red-800/50 focus-visible:ring-red-500"
+            inputMode="numeric"
+            value={
+              debtPaymentAmount
+                ? formatIdr(debtPaymentAmount).replace('Rp', '').trim()
+                : ''
+            }
+            onChange={(e) => {
+              const val = Number(e.target.value.replace(/[^0-9]/g, '')) || 0;
+              if (val > debt) {
+                onToast(t.customers.amountExceedsDebt);
+                onDebtPaymentAmountChange(debt);
+              } else {
+                onDebtPaymentAmountChange(val);
+              }
+            }}
+            placeholder="0"
+          />
+        </div>
+      )}
+    </div>
+  );
+}
 
 export function CheckoutModal({
   open,
@@ -24,6 +100,8 @@ export function CheckoutModal({
   onAmountReceivedChange,
   onConfirm,
   onToast,
+  debtPaymentAmount,
+  onDebtPaymentAmountChange,
 }: {
   open: boolean;
   total: number;
@@ -37,6 +115,8 @@ export function CheckoutModal({
   onAmountReceivedChange: (n: number) => void;
   onConfirm: () => void;
   onToast: (m: string) => void;
+  debtPaymentAmount?: number;
+  onDebtPaymentAmountChange?: (n: number) => void;
 }) {
   const customerId = usePosStore((s) => s.customerId);
   const setCustomerId = usePosStore((s) => s.setCustomerId);
@@ -185,7 +265,17 @@ export function CheckoutModal({
                 </Button>
               </div>
             ) : (
-              <CustomerPicker value={customerId} onChange={setCustomerId} />
+              <div className="space-y-2">
+                <CustomerPicker value={customerId} onChange={setCustomerId} />
+                {customerId && (
+                  <CustomerDebtPayButton
+                    customerId={customerId}
+                    onToast={onToast}
+                    debtPaymentAmount={debtPaymentAmount}
+                    onDebtPaymentAmountChange={onDebtPaymentAmountChange}
+                  />
+                )}
+              </div>
             )}
           </div>
 

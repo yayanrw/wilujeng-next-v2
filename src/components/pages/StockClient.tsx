@@ -12,6 +12,7 @@ import { AutocompleteInput } from './products/AutocompleteInput';
 import { formatIdr } from '@/utils/money';
 import { StockLogDetailModal } from './stock/StockLogDetailModal';
 import { useTranslation } from '@/i18n/useTranslation';
+import { Toast } from '@/components/pages/pos/Toast';
 
 type Tab = 'in' | 'out' | 'opname' | 'logs';
 
@@ -40,8 +41,13 @@ export function StockClient() {
   const [expiryDate, setExpiryDate] = useState('');
   const [note, setNote] = useState('');
   const [logs, setLogs] = useState<StockLog[]>([]);
-  const [message, setMessage] = useState<string | null>(null);
+  const [toastMessage, setToastMessage] = useState<string | null>(null);
   const [pending, setPending] = useState(false);
+
+  const showToast = (msg: string) => {
+    setToastMessage(msg);
+    setTimeout(() => setToastMessage(null), 3000);
+  };
 
   // Pagination and filtering for logs
   const LIMIT = 50;
@@ -102,7 +108,7 @@ export function StockClient() {
 
   async function submit(path: string, payload: unknown) {
     setPending(true);
-    setMessage(null);
+    setToastMessage(null);
     const res = await fetch(path, {
       method: 'POST',
       headers: { 'content-type': 'application/json' },
@@ -114,17 +120,24 @@ export function StockClient() {
       | null;
     setPending(false);
     if (!res.ok) {
-      setMessage(
+      showToast(
         body && 'error' in body ? body.error.message : 'Request failed',
       );
       return;
     }
     if (!body || !('prevStock' in body)) {
-      setMessage('OK');
+      showToast('OK');
       return;
     }
-    setMessage(`OK: stock ${body.prevStock} → ${body.nextStock}`);
+    showToast(`OK: stock ${body.prevStock} → ${body.nextStock}`);
+    setProductId(null);
+    setQty(1);
+    setUnitBuyPrice(0);
+    setSupplierName('');
+    setBrandName('');
+    setExpiryDate('');
     setNote('');
+
     if (tab === 'logs') {
       setPage(0);
       void loadLogs(0, false);
@@ -156,12 +169,6 @@ export function StockClient() {
           </button>
         ))}
       </div>
-
-      {message ? (
-        <div className="rounded-lg border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-800 dark:border-emerald-900/50 dark:bg-emerald-900/20 dark:text-emerald-200 animate-in fade-in slide-in-from-top-2">
-          {message}
-        </div>
-      ) : null}
 
       {tab !== 'logs' ? (
         <Card className="max-w-3xl overflow-visible">
@@ -237,24 +244,13 @@ export function StockClient() {
                 </div>
               ) : null}
 
-              <div className={tab === 'in' ? '' : 'md:col-span-2'}>
-                <div className="mt-1.5">
-                  <AutocompleteInput
-                    label={t.products.brand}
-                    value={brandName}
-                    onChange={setBrandName}
-                    fetchEndpoint="/api/brands"
-                    placeholder={t.products.typeToCreate}
-                  />
-                </div>
-              </div>
-
               {tab === 'in' ? (
                 <div>
                   <label className="text-xs font-semibold uppercase tracking-wider text-zinc-500 dark:text-zinc-400">
                     {t.stock.expiryDate}
                   </label>
                   <Input
+                    type="date"
                     className="mt-1.5"
                     value={expiryDate}
                     onChange={(e) => setExpiryDate(e.target.value)}
@@ -289,7 +285,6 @@ export function StockClient() {
                     qty,
                     unitBuyPrice,
                     supplierName: supplierName.trim() || undefined,
-                    brandName: brandName.trim() || undefined,
                     expiryDate: expiryDate.trim() || undefined,
                     note: note.trim() || undefined,
                   });
@@ -298,7 +293,6 @@ export function StockClient() {
                   void submit('/api/stock/out', {
                     productId,
                     qty,
-                    brandName: brandName.trim() || undefined,
                     note: note.trim() || undefined,
                   });
                 }
@@ -306,7 +300,6 @@ export function StockClient() {
                   void submit('/api/stock/opname', {
                     productId,
                     qty,
-                    brandName: brandName.trim() || undefined,
                     note: note.trim() || undefined,
                   });
                 }
@@ -528,6 +521,7 @@ export function StockClient() {
           onClose={() => setSelectedLogId(null)}
         />
       )}
+      {toastMessage && <Toast message={toastMessage} />}
     </div>
   );
 }

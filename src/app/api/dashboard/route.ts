@@ -49,7 +49,7 @@ export async function GET(req: Request) {
   const pnlChartDataRaw = await db
     .select({
       date: sql<string>`to_char(${transactions.createdAt}, ${sql.raw(`'${groupByFormat}'`)})`,
-      sales: sql<number>`coalesce(sum(${transactionItems.qty} * ${transactionItems.priceAtTransaction}), 0)`,
+      sales: sql<number>`coalesce(sum(${transactionItems.subtotal}), 0)`,
       cogs: sql<number>`coalesce(sum(${transactionItems.qty} * ${products.buyPrice}), 0)`,
     })
     .from(transactions)
@@ -80,8 +80,8 @@ export async function GET(req: Request) {
 
   const [todaySalesRow] = await db
     .select({
-      total: sql<number>`coalesce(sum(${transactions.totalAmount}), 0)`,
-      count: sql<number>`count(${transactions.id})`,
+      total: sql<number>`coalesce(sum(${transactionItems.subtotal}), 0)`,
+      count: sql<number>`count(DISTINCT ${transactions.id})`,
       cogs: sql<number>`coalesce(sum(${transactionItems.qty} * ${products.buyPrice}), 0)`,
     })
     .from(transactions)

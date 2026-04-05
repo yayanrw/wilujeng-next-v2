@@ -18,11 +18,21 @@ export async function GET(req: Request) {
 
   const { searchParams } = new URL(req.url);
   const dateStr = searchParams.get("date");
+  const methodStr = searchParams.get("method");
   if (!dateStr) return badRequest("Missing date");
   const start = parseDay(dateStr);
   if (!start) return badRequest("Invalid date");
   const end = new Date(start);
   end.setDate(end.getDate() + 1);
+
+  const filters = [
+    gte(transactions.createdAt, start),
+    lte(transactions.createdAt, end),
+  ];
+
+  if (methodStr && methodStr !== 'all') {
+    filters.push(eq(transactions.paymentMethod, methodStr));
+  }
 
   const rows = await db
     .select({
@@ -37,7 +47,7 @@ export async function GET(req: Request) {
     })
     .from(transactions)
     .leftJoin(customers, eq(transactions.customerId, customers.id))
-    .where(and(gte(transactions.createdAt, start), lte(transactions.createdAt, end)))
+    .where(and(...filters))
     .orderBy(desc(transactions.createdAt))
     .limit(500);
 

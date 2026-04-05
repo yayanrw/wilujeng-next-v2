@@ -1,7 +1,7 @@
-import { asc, desc, eq, inArray, sql } from "drizzle-orm";
-import { z } from "zod";
+import { asc, desc, eq, inArray, sql } from 'drizzle-orm';
+import { z } from 'zod';
 
-import { db } from "@/db";
+import { db } from '@/db';
 import {
   customers,
   productTiers,
@@ -9,10 +9,10 @@ import {
   stockLogs,
   transactionItems,
   transactions,
-} from "@/db/schema";
-import { badRequest, json, requireApiSession } from "@/server/api-helpers";
-import { computePayment, type PaymentMethod } from "@/utils/checkout";
-import { getTierPrice } from "@/utils/tier-pricing";
+} from '@/db/schema';
+import { badRequest, json, requireApiSession } from '@/server/api-helpers';
+import { computePayment, type PaymentMethod } from '@/utils/checkout';
+import { getTierPrice } from '@/utils/tier-pricing';
 
 const ItemSchema = z.object({
   productId: z.string().uuid(),
@@ -21,9 +21,10 @@ const ItemSchema = z.object({
 
 const Schema = z.object({
   items: z.array(ItemSchema).min(1),
-  paymentMethod: z.enum(["cash", "qris", "transfer", "debt"]),
+  paymentMethod: z.enum(['cash', 'qris', 'transfer', 'debt']),
   amountReceived: z.number().int().min(0).optional().default(0),
   customerId: z.string().uuid().optional(),
+  debtPaymentAmount: z.number().int().min(0).optional(),
 });
 
 export async function POST(req: Request) {
@@ -48,11 +49,15 @@ export async function POST(req: Request) {
     .where(inArray(products.id, productIds));
 
   if (productRows.length !== productIds.length) {
-    return badRequest("One or more products are missing");
+    return badRequest('One or more products are missing');
   }
 
   const tiers = await db
-    .select({ productId: productTiers.productId, minQty: productTiers.minQty, price: productTiers.price })
+    .select({
+      productId: productTiers.productId,
+      minQty: productTiers.minQty,
+      price: productTiers.price,
+    })
     .from(productTiers)
     .where(inArray(productTiers.productId, productIds))
     .orderBy(asc(productTiers.minQty));
@@ -64,7 +69,9 @@ export async function POST(req: Request) {
     tiersByProduct.set(tier.productId, list);
   }
 
-  const qtyById = new Map(parsed.data.items.map((i) => [i.productId, i.qty] as const));
+  const qtyById = new Map(
+    parsed.data.items.map((i) => [i.productId, i.qty] as const),
+  );
   for (const p of productRows) {
     const qty = qtyById.get(p.id) ?? 0;
     if (p.stock < qty) {
@@ -102,8 +109,8 @@ export async function POST(req: Request) {
     amountReceived: parsed.data.amountReceived,
   });
 
-  if (payment.status === "debt" && !parsed.data.customerId) {
-    return badRequest("Customer is required for debt or partial payment");
+  if (payment.status === 'debt' && !parsed.data.customerId) {
+    return badRequest('Customer is required for debt or partial payment');
   }
 
   const branding = await db.query.settings.findFirst({
@@ -115,7 +122,26 @@ export async function POST(req: Request) {
       const customer = await tx.query.customers.findFirst({
         where: (t, { eq: eq2 }) => eq2(t.id, parsed.data.customerId!),
       });
-      if (!customer) throw new Error("Customer not found");
+      if (!customer) throw new Error('Customer not found');
+
+      if (parsed.data.debtPaymentAmount && parsed.data.debtPaymentAmount > 0) {
+        if (parsed.data.debtPaymentAmount > customer.totalDebt) {
+          throw new Error('Debt payment amount exceeds total debt');
+        }
+
+        await tx.insert(transactions).values({
+          customerId: customer.id,
+          userId: session.user.id,
+          totalAmount: 0,
+          paymentMethod: parsed.data.paymentMethod, // Assuming same payment method as checkout
+          amountReceived: parsed.data.debtPaymentAmount,
+          change: 0,
+          status: 'paid_debt',
+          createdAt: new Date(),
+        });
+
+        // We will subtract this amount from totalDebt in the update below
+      }
     }
 
     const [createdTx] = await tx
@@ -131,7 +157,7 @@ export async function POST(req: Request) {
       })
       .returning();
 
-    if (!createdTx) throw new Error("Failed to create transaction");
+    if (!createdTx) throw new Error('Failed to create transaction');
 
     await tx.insert(transactionItems).values(
       lineItems.map((i) => ({
@@ -152,7 +178,7 @@ export async function POST(req: Request) {
 
       await tx.insert(stockLogs).values({
         productId: i.productId,
-        type: "out",
+        type: 'out',
         qty: i.qty,
         prevStock: i.stock,
         nextStock,
@@ -163,11 +189,13 @@ export async function POST(req: Request) {
     if (parsed.data.customerId) {
       const pointsAdd = Math.floor(totalAmount / 1000);
       const debtAdd = payment.outstandingDebt;
+      const debtPay = parsed.data.debtPaymentAmount ?? 0;
+
       await tx
         .update(customers)
         .set({
           points: sql`${customers.points} + ${pointsAdd}`,
-          totalDebt: sql`${customers.totalDebt} + ${debtAdd}`,
+          totalDebt: sql`${customers.totalDebt} + ${debtAdd} - ${debtPay}`,
           updatedAt: new Date(),
         })
         .where(eq(customers.id, parsed.data.customerId));
@@ -184,11 +212,11 @@ export async function POST(req: Request) {
     status: payment.status,
     outstandingDebt: payment.outstandingDebt,
     printable: {
-      storeName: branding?.storeName ?? "SimplePOS Pro",
-      storeIconName: branding?.storeIconName ?? "Store",
-      storeAddress: branding?.storeAddress ?? "",
-      storePhone: branding?.storePhone ?? "",
-      receiptFooter: branding?.receiptFooter ?? "Terima kasih telah berbelanja",
+      storeName: branding?.storeName ?? 'SimplePOS Pro',
+      storeIconName: branding?.storeIconName ?? 'Store',
+      storeAddress: branding?.storeAddress ?? '',
+      storePhone: branding?.storePhone ?? '',
+      receiptFooter: branding?.receiptFooter ?? 'Terima kasih telah berbelanja',
       items: lineItems.map((i) => ({
         sku: i.sku,
         name: i.name,
@@ -196,7 +224,11 @@ export async function POST(req: Request) {
         unitPrice: i.unitPrice,
         subtotal: i.subtotal,
       })),
-      totals: { totalAmount, amountReceived: parsed.data.amountReceived, change: payment.change },
+      totals: {
+        totalAmount,
+        amountReceived: parsed.data.amountReceived,
+        change: payment.change,
+      },
     },
   });
 }

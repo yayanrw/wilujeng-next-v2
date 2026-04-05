@@ -1,5 +1,6 @@
 {
   "common": {
+    "all": "All",
     "loading": "Loading...",
     "save": "Save",
     "saving": "Saving...",
@@ -141,7 +142,9 @@
     "transactionSaved": "Transaction saved",
     "printReceipt": "Print Receipt",
     "newTransaction": "New Transaction",
-    "cannotAdd": "Cannot add"
+    "cannotAdd": "Cannot add",
+    "payRp": "Pay Rp",
+    "payDebt": "Pay Debt"
   },
   "products": {
     "title": "Products",
@@ -258,7 +261,16 @@
     "recentTransactions": "Recent transactions",
     "noRecentTransactions": "No recent transactions",
     "selectToEdit": "Select a customer to edit.",
-    "resetPoints": "Reset Points"
+    "resetPoints": "Reset Points",
+    "payDebt": "Pay Debt",
+    "invalidAmount": "Invalid amount",
+    "invalidPaymentMethod": "Invalid payment method",
+    "paymentSuccessful": "Payment successful",
+    "paymentFailed": "Payment failed",
+    "amountExceedsDebt": "Amount exceeds total debt",
+    "totalOutstanding": "Total Outstanding",
+    "paymentAmount": "Payment Amount",
+    "confirmPayment": "Confirm Payment"
   },
   "reports": {
     "title": "Reports",

@@ -11,6 +11,7 @@
     "searching": "Mencari...",
     "edit": "Edit",
     "delete": "Hapus",
+    "all": "Semua",
     "action": "Aksi",
     "search": "Cari...",
     "loadMore": "Muat Lebih",
@@ -142,7 +143,9 @@
     "transactionSaved": "Transaksi disimpan",
     "printReceipt": "Cetak Struk",
     "newTransaction": "Transaksi Baru",
-    "cannotAdd": "Tidak dapat menambahkan"
+    "cannotAdd": "Tidak dapat menambahkan",
+    "payRp": "Bayar Rp",
+    "payDebt": "Bayar Hutang"
   },
   "products": {
     "title": "Produk",
@@ -259,7 +262,16 @@
     "recentTransactions": "Transaksi terbaru",
     "noRecentTransactions": "Tidak ada transaksi terbaru",
     "selectToEdit": "Pilih pelanggan untuk diedit.",
-    "resetPoints": "Reset Poin"
+    "resetPoints": "Reset Poin",
+    "payDebt": "Bayar Hutang",
+    "invalidAmount": "Jumlah tidak valid",
+    "invalidPaymentMethod": "Metode pembayaran tidak valid",
+    "paymentSuccessful": "Pembayaran berhasil",
+    "paymentFailed": "Pembayaran gagal",
+    "amountExceedsDebt": "Jumlah melebihi total hutang",
+    "totalOutstanding": "Total Tunggakan",
+    "paymentAmount": "Jumlah Pembayaran",
+    "confirmPayment": "Konfirmasi Pembayaran"
   },
   "reports": {
     "title": "Laporan",

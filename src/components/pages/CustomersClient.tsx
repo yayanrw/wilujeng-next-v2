@@ -11,6 +11,7 @@ import { Input } from '@/components/ui/Input';
 import { formatIdr } from '@/utils/money';
 import { Toast } from './pos/Toast';
 import { CustomerForm, type CustomerDto } from './customers/CustomerForm';
+import { PayDebtModal } from './customers/PayDebtModal';
 import { useTranslation } from '@/i18n/useTranslation';
 
 type CustomerDetail = {
@@ -30,6 +31,11 @@ export function CustomersClient() {
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [detail, setDetail] = useState<CustomerDetail | null>(null);
   const [mode, setMode] = useState<'create' | 'edit'>('create');
+  const [payDebtCustomer, setPayDebtCustomer] = useState<{
+    id: string;
+    name: string;
+    totalDebt: number;
+  } | null>(null);
 
   const [loading, setLoading] = useState(false);
   const [page, setPage] = useState(0);
@@ -222,19 +228,37 @@ export function CustomersClient() {
                           </div>
                         </td>
                         <td className="py-3 px-4 align-middle text-right">
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            className="h-8 w-8 p-0 text-zinc-400 opacity-0 group-hover:opacity-100 hover:text-zinc-900 dark:hover:text-zinc-100 transition-all focus-visible:opacity-100"
-                            onClick={() => {
-                              setSelectedId(c.id);
-                              setMode('edit');
-                            }}
-                            title={t.customers.editCustomer}
-                          >
-                            <Pencil className="h-4 w-4" />
-                            <span className="sr-only">{t.common.edit}</span>
-                          </Button>
+                          <div className="flex items-center justify-end gap-2">
+                            {c.totalDebt > 0 && (
+                              <Button
+                                variant="secondary"
+                                size="sm"
+                                className="h-8 text-xs bg-red-50 text-red-700 border border-red-200 hover:bg-red-100 hover:text-red-800 dark:bg-red-900/20 dark:text-red-300 dark:border-red-900/50 dark:hover:bg-red-900/40"
+                                onClick={() => {
+                                  setPayDebtCustomer({
+                                    id: c.id,
+                                    name: c.name,
+                                    totalDebt: c.totalDebt,
+                                  });
+                                }}
+                              >
+                                {t.customers.payDebt}
+                              </Button>
+                            )}
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              className="h-8 w-8 p-0 text-zinc-400 opacity-0 group-hover:opacity-100 hover:text-zinc-900 dark:hover:text-zinc-100 transition-all focus-visible:opacity-100"
+                              onClick={() => {
+                                setSelectedId(c.id);
+                                setMode('edit');
+                              }}
+                              title={t.customers.editCustomer}
+                            >
+                              <Pencil className="h-4 w-4" />
+                              <span className="sr-only">{t.common.edit}</span>
+                            </Button>
+                          </div>
                         </td>
                       </tr>
                     ))}
@@ -317,8 +341,25 @@ export function CustomersClient() {
 
               {mode === 'edit' && detail && (
                 <div className="border-t border-zinc-200 dark:border-zinc-800 pt-6">
-                  <div className="text-sm font-semibold mb-3">
-                    {t.customers.recentTransactions}
+                  <div className="flex items-center justify-between mb-3">
+                    <div className="text-sm font-semibold">
+                      {t.customers.recentTransactions}
+                    </div>
+                    {detail.customer.totalDebt > 0 && (
+                      <Button
+                        size="sm"
+                        className="h-8 bg-zinc-900 text-white hover:bg-zinc-800 dark:bg-zinc-100 dark:text-zinc-900 dark:hover:bg-zinc-200"
+                        onClick={() => {
+                          setPayDebtCustomer({
+                            id: detail.customer.id,
+                            name: detail.customer.name,
+                            totalDebt: detail.customer.totalDebt,
+                          });
+                        }}
+                      >
+                        {t.customers.payDebt}
+                      </Button>
+                    )}
                   </div>
                   {detail.transactions.length > 0 ? (
                     <div className="overflow-x-auto">
@@ -373,6 +414,38 @@ export function CustomersClient() {
       </div>
 
       <Toast message={toastMessage} />
+
+      {payDebtCustomer && (
+        <PayDebtModal
+          customerName={payDebtCustomer.name}
+          totalDebt={payDebtCustomer.totalDebt}
+          onClose={() => setPayDebtCustomer(null)}
+          onSubmit={async (amount, method) => {
+            const res = await fetch(
+              `/api/customers/${payDebtCustomer.id}/pay-debt`,
+              {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ amount, paymentMethod: method }),
+              },
+            );
+
+            if (res.ok) {
+              showToast(t.customers.paymentSuccessful);
+              setPayDebtCustomer(null);
+              await refresh();
+              if (selectedId === payDebtCustomer.id) {
+                const dRes = await fetch(`/api/customers/${selectedId}`);
+                const dData = await dRes.json();
+                setDetail(dData);
+              }
+            } else {
+              const err = await res.json();
+              showToast(err.error?.message || t.customers.paymentFailed);
+            }
+          }}
+        />
+      )}
     </div>
   );
 }

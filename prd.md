@@ -76,7 +76,8 @@ Berikut adalah dokumen **Product Requirements Document (PRD)** yang komprehensif
   - Menampilkan ringkasan total dan input nominal yang diterima (Amount Received).
   - Metode Pembayaran: Tunai, QRIS, Transfer, Hutang.
   - **Quick Cash Buttons:** Tombol nominal cepat (Exact, 1.000, 2.000, 5.000, 10.000, 20.000, 50.000, 100.000) dan tombol "Uang Pas".
-  - **Hutang Logic:** Jika memilih "Hutang", wajib memilih pelanggan terdaftar. Jika belum ada, tersedia tombol "Add Pelanggan Baru".
+  - **Hutang Logic:** Jika memilih "Hutang" atau terdapat kurang bayar, wajib memilih pelanggan terdaftar. Jika belum ada, tersedia tombol "Add Pelanggan Baru".
+  - **Pembayaran Hutang (Pay Debt) Inline:** Kasir dapat memproses pelunasan hutang (sebagian atau penuh) pelanggan langsung dari modal Checkout bersamaan dengan transaksi baru.
   - Perhitungan otomatis untuk kembalian (Change) atau sisa hutang (Outstanding Debt) secara real-time; dukung skenario “kurang bayar”:
     - Kurang Bayar (Partial Payment): Jika amount_received < total_amount → wajib pilih pelanggan; status transaksi = 'hutang'; outstanding_debt = total_amount - amount_received; change = 0.
     - Hutang Penuh: Jika memilih metode 'Hutang' dan amount_received 0 → wajib pilih pelanggan; status = 'hutang'; outstanding_debt = total_amount; change = 0.
@@ -97,8 +98,9 @@ Berikut adalah dokumen **Product Requirements Document (PRD)** yang komprehensif
 
 - **Stock Log:** Histori perubahan stok (Opname, In, Out). Dilengkapi dengan paginasi (Load More), filter berdasarkan rentang tanggal dan filter spesifik berdasarkan Produk (menggunakan komponen Product Picker autocomplete), penambahan kolom nama produk, serta kolom aksi untuk melihat detail histori (Modal Detail).
 - **Stock Opname:** Fitur untuk menyesuaikan stok sistem dengan stok fisik (Replace quantity). Kolom pencarian produk menggunakan Autocomplete/Typeahead dropdown, dan ditambahkan input Brand yang menggunakan fitur serupa.
-- **Stock Masuk (In):** Input stok baru, harga beli (bisa berbeda dari sebelumnya), Supplier (menggunakan fitur Autocomplete/Type to Create), Brand (menggunakan fitur Autocomplete/Type to Create), dan Tanggal Kadaluarsa. Kolom pencarian produk menggunakan Autocomplete/Typeahead dropdown.
-- **Stock Keluar (Out):** Pengurangan stok manual (misal: barang rusak/retur). Kolom pencarian produk menggunakan Autocomplete/Typeahead dropdown, dan ditambahkan input Brand yang menggunakan fitur serupa.
+- **Stock Masuk (In):** Input stok baru, harga beli (bisa berbeda dari sebelumnya), Supplier (menggunakan fitur Autocomplete/Type to Create), dan Tanggal Kadaluarsa (native date picker). Kolom pencarian produk menggunakan Autocomplete/Typeahead dropdown. Field 'Brand' ditiadakan dari form ini.
+- **Stock Keluar (Out):** Pengurangan stok manual (misal: barang rusak/retur). Kolom pencarian produk menggunakan Autocomplete/Typeahead dropdown. Field 'Brand' ditiadakan dari form ini.
+- **Notifikasi & UI:** Seluruh form (In, Out, Opname) memunculkan "Toast" notifikasi interaktif sukses/gagal di bagian bawah layar. Setelah aksi tersimpan, form input akan otomatis di-reset.
 
 ### 3.6 Manajemen Pelanggan
 
@@ -107,15 +109,16 @@ Berikut adalah dokumen **Product Requirements Document (PRD)** yang komprehensif
   - Profil dan total debt/points.
   - Tabel history transaksi terakhir.
 - **Loyalty Points:** Otomatis bertambah saat transaksi (Contoh: Rp1.000 = 1 Poin). Admin bisa mereset poin melalui fitur edit pelanggan.
-- **Manajemen Pelanggan (Edit/Add):**
+- **Manajemen Pelanggan (Edit/Add & Pembayaran Hutang):**
   - Form untuk membuat atau mengedit data pelanggan (Nama, Telepon, Alamat, Poin).
   - Menggunakan layout 2-kolom (grid) dengan label uppercase tracking yang konsisten dengan standar form produk.
+  - **Pembayaran Hutang:** Terdapat tombol aksi "Pay Debt" (bayar hutang) pada tabel utama dan panel edit untuk memproses pembayaran tunggakan pelanggan melalui sebuah Modal khusus. Pembayaran ini akan dicatat ke database sebagai histori pembayaran (`status='paid_debt'`).
   - Terdapat Toast notification setelah operasi berhasil atau gagal, dengan auto reset form.
 
 ### 3.7 Laporan
 
-- **Laporan Penjualan Harian:** Menampilkan daftar transaksi per hari. Menggunakan desain tabel modern (Card/Badge) dengan highlight status Lunas/Hutang menggunakan badge warna (Emerald/Red). Dilengkapi dengan kolom tanggal/waktu transaksi, nama pelanggan, metode pembayaran, status, serta tombol ikon mata ("View Detail") untuk melihat rincian barang yang dibeli pada transaksi tersebut (Modal Detail Transaksi).
-- **Laporan Stok Habis:** List produk yang stoknya 0 atau di bawah batas minimum. Menyoroti stok kritis menggunakan text merah.
+- **Laporan Penjualan Harian:** Menampilkan daftar transaksi per hari dengan filter tambahan berdasarkan **Metode Pembayaran** (Cash, Transfer, QRIS, Card). Menggunakan desain tabel modern (Card/Badge) dengan highlight status Lunas/Hutang menggunakan badge warna (Emerald/Red). Dilengkapi dengan kolom tanggal/waktu transaksi, nama pelanggan, metode pembayaran, status, serta tombol ikon mata ("View Detail") untuk melihat rincian barang yang dibeli pada transaksi tersebut (Modal Detail Transaksi).
+- **Laporan Stok Habis (Stock Alerts):** List produk yang stoknya secara spesifik **di bawah batas minimum** (`< minStockThreshold`). Menyoroti stok kritis menggunakan text merah.
 - **Laporan Hutang Piutang:** Daftar pelanggan yang memiliki tunggakan (total debt). Menyoroti jumlah hutang dengan text merah. Dilengkapi dengan tombol "Detail" untuk melihat riwayat transaksi hutang pelanggan secara spesifik dalam sebuah modal.
 - **Laporan Laba Rugi:** Perhitungan (Total Penjualan - Harga Pokok Penjualan). Menampilkan kartu ringkasan (Summary Cards) modern yang memisahkan metrik Total Sales, COGS (Cost of Goods), dan Gross Profit.
 - **Laporan Pemasok:** Ringkasan pemasukan stok per pemasok (total qty masuk, total nilai pembelian) dengan filter tanggal & supplier.
