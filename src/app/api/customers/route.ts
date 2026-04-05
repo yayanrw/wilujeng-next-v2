@@ -11,6 +11,11 @@ export async function GET(req: Request) {
 
   const { searchParams } = new URL(req.url);
   const search = (searchParams.get("search") ?? "").trim();
+  
+  const limitParam = parseInt(searchParams.get("limit") || "50", 10);
+  const offsetParam = parseInt(searchParams.get("offset") || "0", 10);
+  const limit = isNaN(limitParam) || limitParam <= 0 ? 50 : Math.min(limitParam, 100);
+  const offset = isNaN(offsetParam) || offsetParam < 0 ? 0 : offsetParam;
 
   const where = search
     ? or(ilike(customers.name, `%${search}%`), ilike(customers.phone, `%${search}%`))
@@ -28,7 +33,8 @@ export async function GET(req: Request) {
     .from(customers)
     .where(where)
     .orderBy(asc(customers.name))
-    .limit(50);
+    .limit(limit)
+    .offset(offset);
 
   return json(rows);
 }

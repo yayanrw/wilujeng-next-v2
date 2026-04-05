@@ -48,7 +48,7 @@ export function CartPanel({
         </div>
       </CardHeader>
 
-      <div className="flex-1 overflow-y-auto bg-zinc-50/50 p-4 space-y-3 min-h-0">
+      <div className="flex-1 overflow-y-auto bg-zinc-50/50 p-4 space-y-3 min-h-0 custom-scrollbar">
         {items.map((i) => (
           <div
             key={i.productId}

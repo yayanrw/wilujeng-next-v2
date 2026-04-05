@@ -1,55 +1,104 @@
 "use client";
 
-import { useEffect, useState } from "react";
-
-import { Plus } from "lucide-react";
+import { useEffect, useMemo, useState } from "react";
+import { Pencil } from "lucide-react";
 
 import { Button } from "@/components/ui/Button";
 import { Card, CardContent, CardHeader } from "@/components/ui/Card";
 import { Input } from "@/components/ui/Input";
-
-type UserRow = {
-  id: string;
-  name: string | null;
-  email: string;
-  role: string;
-  createdAt: string;
-};
+import { Toast } from "@/components/pages/pos/Toast";
+import { UserForm, type UserDto } from "./UserForm";
 
 export function UsersSettings() {
-  const [users, setUsers] = useState<UserRow[]>([]);
-  const [pending, setPending] = useState(false);
-  const [message, setMessage] = useState<string | null>(null);
+  const [search, setSearch] = useState("");
+  const [users, setUsers] = useState<UserDto[]>([]);
+  const [selectedId, setSelectedId] = useState<string | null>(null);
+  const [mode, setMode] = useState<"create" | "edit">("create");
 
-  const [newUserName, setNewUserName] = useState("");
-  const [newUserEmail, setNewUserEmail] = useState("");
-  const [newUserPassword, setNewUserPassword] = useState("");
-  const [newUserRole, setNewUserRole] = useState<"admin" | "cashier">("cashier");
+  const [loading, setLoading] = useState(false);
+  const [page, setPage] = useState(0);
+  const [hasMore, setHasMore] = useState(true);
+  const [toastMessage, setToastMessage] = useState<string | null>(null);
+  const LIMIT = 50;
 
-  async function loadUsers() {
-    const res = await fetch("/api/users");
-    const body = (await res.json().catch(() => [])) as UserRow[];
-    setUsers(body);
+  const showToast = (msg: string) => {
+    setToastMessage(msg);
+    setTimeout(() => setToastMessage(null), 3000);
+  };
+
+  const selected = useMemo(
+    () => users.find((u) => u.id === selectedId) ?? null,
+    [users, selectedId],
+  );
+
+  async function fetchUsers(q: string, p: number, append = false) {
+    setLoading(true);
+    try {
+      const params = new URLSearchParams();
+      if (q) params.append("search", q);
+      params.append("limit", LIMIT.toString());
+      params.append("offset", (p * LIMIT).toString());
+
+      const res = await fetch(`/api/users?${params.toString()}`);
+      const body = (await res.json().catch(() => [])) as UserDto[];
+
+      setHasMore(body.length === LIMIT);
+
+      if (append) {
+        setUsers((prev) => {
+          const existingIds = new Set(prev.map((item) => item.id));
+          return [...prev, ...body.filter((item) => !existingIds.has(item.id))];
+        });
+      } else {
+        setUsers(body);
+      }
+    } catch (err) {
+      console.error(err);
+      if (!append) setUsers([]);
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  async function refresh() {
+    setPage(0);
+    await fetchUsers(search, 0, false);
   }
 
   useEffect(() => {
-    void loadUsers();
+    void refresh();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  // Debounced search
+  useEffect(() => {
+    setPage(0);
+    const t = window.setTimeout(() => void fetchUsers(search, 0, false), 500);
+    return () => window.clearTimeout(t);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [search]);
+
+  const loadMore = () => {
+    if (loading || !hasMore) return;
+    const nextPage = page + 1;
+    setPage(nextPage);
+    fetchUsers(search, nextPage, true);
+  };
 
   return (
     <div className="grid grid-cols-1 gap-4 lg:grid-cols-[1fr_420px]">
       <Card>
         <CardHeader>
-          <div className="text-sm font-semibold">Users</div>
-          <div className="text-xs text-zinc-500">Admin can create cashiers</div>
+          <div className="text-lg font-semibold">Users</div>
+          <div className="mt-3">
+            <Input
+              placeholder="Search by name or email"
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+            />
+          </div>
         </CardHeader>
         <CardContent>
-          {message ? (
-            <div className="mb-3 rounded-md border border-zinc-200 bg-white px-3 py-2 text-sm text-zinc-700">
-              {message}
-            </div>
-          ) : null}
-
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
               <thead>
@@ -57,109 +106,112 @@ export function UsersSettings() {
                   <th className="py-2">Email</th>
                   <th className="py-2">Name</th>
                   <th className="py-2">Role</th>
+                  <th className="py-2 text-right">Action</th>
                 </tr>
               </thead>
               <tbody>
                 {users.map((u) => (
-                  <tr key={u.id} className="border-b border-zinc-100">
-                    <td className="py-2">{u.email}</td>
-                    <td className="py-2">{u.name ?? ""}</td>
+                  <tr
+                    key={u.id}
+                    className={
+                      u.id === selectedId
+                        ? "border-b border-zinc-100 bg-zinc-50"
+                        : "border-b border-zinc-100 hover:bg-zinc-50"
+                    }
+                  >
                     <td className="py-2">
-                      <select
-                        className="h-9 rounded-md border border-zinc-200 bg-white px-2 text-sm"
-                        value={u.role}
-                        onChange={async (e) => {
-                          const nextRole = e.target.value;
-                          setUsers((prev) => prev.map((x) => (x.id === u.id ? { ...x, role: nextRole } : x)));
-                          await fetch(`/api/users/${u.id}`, {
-                            method: "PATCH",
-                            headers: { "content-type": "application/json" },
-                            body: JSON.stringify({ role: nextRole }),
-                          });
-                          await loadUsers();
+                      <button
+                        type="button"
+                        className="font-medium hover:underline"
+                        onClick={() => {
+                          setSelectedId(u.id);
+                          setMode("edit");
                         }}
                       >
-                        <option value="admin">admin</option>
-                        <option value="cashier">cashier</option>
-                      </select>
+                        {u.email}
+                      </button>
+                    </td>
+                    <td className="py-2">{u.name ?? "-"}</td>
+                    <td className="py-2">{u.role}</td>
+                    <td className="py-2 text-right">
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="h-8 px-2 text-zinc-500 hover:text-zinc-900"
+                        onClick={() => {
+                          setSelectedId(u.id);
+                          setMode("edit");
+                        }}
+                        title="Edit user"
+                      >
+                        <Pencil className="h-4 w-4" />
+                        <span className="sr-only">Edit</span>
+                      </Button>
                     </td>
                   </tr>
                 ))}
+                {users.length === 0 && !loading && (
+                  <tr>
+                    <td colSpan={4} className="py-4 text-center text-zinc-500">
+                      No users found
+                    </td>
+                  </tr>
+                )}
               </tbody>
             </table>
           </div>
+
+          {hasMore && (
+            <div className="mt-4 flex justify-center">
+              <Button
+                variant="ghost"
+                onClick={loadMore}
+                disabled={loading}
+              >
+                {loading ? "Loading..." : "Load More"}
+              </Button>
+            </div>
+          )}
         </CardContent>
       </Card>
 
-      <Card>
+      <Card className="h-fit sticky top-4">
         <CardHeader>
-          <div className="text-sm font-semibold">Create user</div>
-          <div className="text-xs text-zinc-500">Email + password</div>
+          <div className="text-sm font-semibold">
+            {mode === "create" ? "Create User" : "Edit User"}
+          </div>
+          <div className="text-xs text-zinc-500">
+            {mode === "create"
+              ? "Add a new cashier or admin"
+              : "Update user details"}
+          </div>
         </CardHeader>
         <CardContent>
-          <form
-            className="flex flex-col gap-3"
-            onSubmit={async (e) => {
-              e.preventDefault();
-              setPending(true);
-              setMessage(null);
-              const res = await fetch("/api/users", {
-                method: "POST",
-                headers: { "content-type": "application/json" },
-                body: JSON.stringify({
-                  name: newUserName,
-                  email: newUserEmail,
-                  password: newUserPassword,
-                  role: newUserRole,
-                }),
-              });
-              const body = (await res.json().catch(() => null)) as
-                | { id: string }
-                | { error: { message: string } }
-                | null;
-              setPending(false);
-              if (!res.ok) {
-                setMessage(body && "error" in body ? body.error.message : "Failed to create user");
-                return;
+          <UserForm
+            mode={mode}
+            initial={selected}
+            onSuccess={() => {
+              if (mode === "create") {
+                setMode("create");
+                setSelectedId(null);
+                setSearch(""); // Reset search to see new user
+                refresh();
+              } else {
+                setMode("create");
+                setSelectedId(null);
+                refresh();
               }
-              setMessage("User created");
-              setNewUserName("");
-              setNewUserEmail("");
-              setNewUserPassword("");
-              setNewUserRole("cashier");
-              await loadUsers();
             }}
-          >
-            <div>
-              <label className="text-sm font-medium">Name</label>
-              <Input value={newUserName} onChange={(e) => setNewUserName(e.target.value)} />
-            </div>
-            <div>
-              <label className="text-sm font-medium">Email</label>
-              <Input value={newUserEmail} onChange={(e) => setNewUserEmail(e.target.value)} />
-            </div>
-            <div>
-              <label className="text-sm font-medium">Password</label>
-              <Input type="password" value={newUserPassword} onChange={(e) => setNewUserPassword(e.target.value)} />
-            </div>
-            <div>
-              <label className="text-sm font-medium">Role</label>
-              <select
-                className="h-10 w-full rounded-md border border-zinc-200 bg-white px-2 text-sm"
-                value={newUserRole}
-                onChange={(e) => setNewUserRole(e.target.value === "admin" ? "admin" : "cashier")}
-              >
-                <option value="cashier">cashier</option>
-                <option value="admin">admin</option>
-              </select>
-            </div>
-            <Button type="submit" disabled={pending || !newUserEmail.trim() || newUserPassword.length < 8}>
-              <Plus className="h-4 w-4" />
-              {pending ? "Creating..." : "Create"}
-            </Button>
-          </form>
+            showToast={showToast}
+            onCancelEdit={() => {
+              setMode("create");
+              setSelectedId(null);
+            }}
+          />
         </CardContent>
       </Card>
+
+      {toastMessage && <Toast message={toastMessage} />}
     </div>
   );
 }

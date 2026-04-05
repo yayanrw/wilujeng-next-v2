@@ -1,0 +1,139 @@
+"use client";
+
+import { useEffect, useState } from "react";
+import { formatIdr } from "@/utils/money";
+
+type TransactionRow = {
+  id: string;
+  totalAmount: number;
+  paymentMethod: string;
+  status: string;
+  createdAt: string;
+};
+
+type CustomerData = {
+  name: string;
+  phone: string | null;
+  totalDebt: number;
+};
+
+export function ReceivableDetailModal({
+  customerId,
+  onClose,
+}: {
+  customerId: string;
+  onClose: () => void;
+}) {
+  const [customer, setCustomer] = useState<CustomerData | null>(null);
+  const [transactions, setTransactions] = useState<TransactionRow[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    let cancelled = false;
+    setLoading(true);
+    fetch(`/api/customers/${customerId}`)
+      .then((res) => res.json())
+      .then((data) => {
+        if (!cancelled && !data.error) {
+          setCustomer(data.customer);
+          setTransactions(data.transactions);
+        }
+        if (!cancelled) setLoading(false);
+      })
+      .catch(() => {
+        if (!cancelled) setLoading(false);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [customerId]);
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
+      <div className="w-full max-w-3xl rounded-lg bg-white p-6 shadow-xl max-h-[90vh] overflow-y-auto">
+        <div className="flex items-center justify-between mb-4">
+          <h2 className="text-xl font-semibold">Receivable Details</h2>
+          <button onClick={onClose} className="text-zinc-500 hover:text-zinc-900">
+            Close
+          </button>
+        </div>
+
+        {loading ? (
+          <div className="py-8 text-center text-zinc-500">Loading...</div>
+        ) : customer ? (
+          <div className="space-y-6">
+            <div className="grid grid-cols-2 gap-4 text-sm">
+              <div>
+                <span className="block text-zinc-500">Customer Name</span>
+                <span className="font-medium">{customer.name}</span>
+              </div>
+              <div>
+                <span className="block text-zinc-500">Phone</span>
+                <span>{customer.phone || "-"}</span>
+              </div>
+              <div>
+                <span className="block text-zinc-500">Total Debt</span>
+                <span className="text-red-600 font-semibold tabular-nums">
+                  {formatIdr(customer.totalDebt)}
+                </span>
+              </div>
+            </div>
+
+            <div>
+              <h3 className="mb-2 font-medium">Transaction History</h3>
+              <div className="overflow-x-auto rounded-md border border-zinc-200">
+                <table className="w-full text-sm">
+                  <thead className="bg-zinc-50">
+                    <tr className="border-b border-zinc-200 text-left text-zinc-500">
+                      <th className="px-3 py-2">Date</th>
+                      <th className="px-3 py-2">ID</th>
+                      <th className="px-3 py-2 text-right">Total Amount</th>
+                      <th className="px-3 py-2 text-center">Payment Method</th>
+                      <th className="px-3 py-2 text-center">Status</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {transactions?.map((tx) => (
+                      <tr key={tx.id} className="border-b border-zinc-100 last:border-0">
+                        <td className="px-3 py-2 text-zinc-600">
+                          {new Date(tx.createdAt).toLocaleDateString()}
+                        </td>
+                        <td className="px-3 py-2 font-mono text-xs text-zinc-500">
+                          {tx.id.slice(0, 8)}
+                        </td>
+                        <td className="px-3 py-2 text-right tabular-nums">
+                          {formatIdr(tx.totalAmount)}
+                        </td>
+                        <td className="px-3 py-2 text-center capitalize">{tx.paymentMethod}</td>
+                        <td className="px-3 py-2 text-center">
+                          <span
+                            className={`rounded-full px-2 py-0.5 text-xs font-medium ${
+                              tx.status === "lunas"
+                                ? "bg-green-100 text-green-700"
+                                : "bg-red-100 text-red-700"
+                            }`}
+                          >
+                            {tx.status}
+                          </span>
+                        </td>
+                      </tr>
+                    ))}
+                    {transactions?.length === 0 && (
+                      <tr>
+                        <td colSpan={5} className="px-3 py-4 text-center text-zinc-500">
+                          No transactions found
+                        </td>
+                      </tr>
+                    )}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        ) : (
+          <div className="py-8 text-center text-red-500">Failed to load customer details</div>
+        )}
+      </div>
+    </div>
+  );
+}

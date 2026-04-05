@@ -1,4 +1,4 @@
-import { asc, eq } from "drizzle-orm";
+import { asc, desc, eq, ilike, or } from "drizzle-orm";
 import { z } from "zod";
 
 import { db } from "@/db";
@@ -10,11 +10,31 @@ export async function GET(req: Request) {
   const { response } = await requireApiRole(req, "admin");
   if (response) return response;
 
+  const url = new URL(req.url);
+  const search = url.searchParams.get("search") || "";
+  const limit = Math.min(parseInt(url.searchParams.get("limit") || "20", 10), 100);
+  const offset = parseInt(url.searchParams.get("offset") || "0", 10);
+
+  const filters = search
+    ? or(
+        ilike(users.name, `%${search}%`),
+        ilike(users.email, `%${search}%`)
+      )
+    : undefined;
+
   const rows = await db
-    .select({ id: users.id, name: users.name, email: users.email, role: users.role, createdAt: users.createdAt })
+    .select({
+      id: users.id,
+      name: users.name,
+      email: users.email,
+      role: users.role,
+      createdAt: users.createdAt,
+    })
     .from(users)
-    .orderBy(asc(users.email))
-    .limit(200);
+    .where(filters)
+    .orderBy(desc(users.createdAt))
+    .limit(limit)
+    .offset(offset);
 
   return json(rows);
 }

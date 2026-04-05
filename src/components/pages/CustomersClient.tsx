@@ -1,26 +1,19 @@
-"use client";
+'use client';
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from 'react';
 
-import { Plus } from "lucide-react";
+import { Plus, Pencil, ChevronDown } from 'lucide-react';
 
-import { Badge } from "@/components/ui/Badge";
-import { Button } from "@/components/ui/Button";
-import { Card, CardContent, CardHeader } from "@/components/ui/Card";
-import { Input } from "@/components/ui/Input";
-import { formatIdr } from "@/utils/money";
-
-type Customer = {
-  id: string;
-  name: string;
-  phone: string | null;
-  address: string | null;
-  points: number;
-  totalDebt: number;
-};
+import { Badge } from '@/components/ui/Badge';
+import { Button } from '@/components/ui/Button';
+import { Card, CardContent, CardHeader } from '@/components/ui/Card';
+import { Input } from '@/components/ui/Input';
+import { formatIdr } from '@/utils/money';
+import { Toast } from './pos/Toast';
+import { CustomerForm, type CustomerDto } from './customers/CustomerForm';
 
 type CustomerDetail = {
-  customer: Customer;
+  customer: CustomerDto;
   transactions: Array<{
     id: string;
     totalAmount: number;
@@ -31,30 +24,79 @@ type CustomerDetail = {
 };
 
 export function CustomersClient() {
-  const [search, setSearch] = useState("");
-  const [customers, setCustomers] = useState<Customer[]>([]);
+  const [search, setSearch] = useState('');
+  const [customers, setCustomers] = useState<CustomerDto[]>([]);
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [detail, setDetail] = useState<CustomerDetail | null>(null);
-  const [newName, setNewName] = useState("");
-  const [newPhone, setNewPhone] = useState("");
-  const [newAddress, setNewAddress] = useState("");
-  const [message, setMessage] = useState<string | null>(null);
+  const [mode, setMode] = useState<'create' | 'edit'>('create');
 
-  async function refreshList(q: string) {
-    const res = await fetch(`/api/customers?search=${encodeURIComponent(q)}`);
-    const rows = (await res.json().catch(() => [])) as Customer[];
-    setCustomers(rows);
+  const [loading, setLoading] = useState(false);
+  const [page, setPage] = useState(0);
+  const [hasMore, setHasMore] = useState(true);
+  const [toastMessage, setToastMessage] = useState<string | null>(null);
+  const LIMIT = 50;
+
+  const showToast = (msg: string) => {
+    setToastMessage(msg);
+    setTimeout(() => setToastMessage(null), 3000);
+  };
+
+  const selected = useMemo(
+    () => customers.find((c) => c.id === selectedId) ?? null,
+    [customers, selectedId],
+  );
+
+  async function fetchCustomers(q: string, p: number, append = false) {
+    setLoading(true);
+    try {
+      const params = new URLSearchParams();
+      if (q) params.append('search', q);
+      params.append('limit', LIMIT.toString());
+      params.append('offset', (p * LIMIT).toString());
+
+      const res = await fetch(`/api/customers?${params.toString()}`);
+      const body = (await res.json().catch(() => [])) as CustomerDto[];
+
+      setHasMore(body.length === LIMIT);
+
+      if (append) {
+        setCustomers((prev) => {
+          const existingIds = new Set(prev.map((item) => item.id));
+          return [...prev, ...body.filter((item) => !existingIds.has(item.id))];
+        });
+      } else {
+        setCustomers(body);
+      }
+    } catch (err) {
+      console.error(err);
+      if (!append) setCustomers([]);
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  async function refresh() {
+    setPage(0);
+    await fetchCustomers(search, 0, false);
   }
 
   useEffect(() => {
-    void refreshList("");
+    void refresh();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
+  // Debounced search
   useEffect(() => {
-    const t = window.setTimeout(() => void refreshList(search), 250);
+    setPage(0);
+    const t = window.setTimeout(
+      () => void fetchCustomers(search, 0, false),
+      500,
+    );
     return () => window.clearTimeout(t);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [search]);
 
+  // Fetch customer detail for transactions when selected
   useEffect(() => {
     if (!selectedId) {
       setDetail(null);
@@ -63,15 +105,21 @@ export function CustomersClient() {
     let cancelled = false;
     void fetch(`/api/customers/${selectedId}`)
       .then((r) => r.json())
-      .then((d: CustomerDetail) => {
-        if (!cancelled) setDetail(d);
-      });
+      .then((d: CustomerDetail & { error?: unknown }) => {
+        if (!cancelled && !d.error) setDetail(d as CustomerDetail);
+      })
+      .catch(() => {});
     return () => {
       cancelled = true;
     };
   }, [selectedId]);
 
-  const selected = useMemo(() => customers.find((c) => c.id === selectedId) ?? null, [customers, selectedId]);
+  const loadMore = () => {
+    if (loading || !hasMore) return;
+    const nextPage = page + 1;
+    setPage(nextPage);
+    fetchCustomers(search, nextPage, true);
+  };
 
   return (
     <div className="grid grid-cols-1 gap-4 lg:grid-cols-[1fr_420px]">
@@ -79,7 +127,11 @@ export function CustomersClient() {
         <CardHeader>
           <div className="text-lg font-semibold">Customers</div>
           <div className="mt-3">
-            <Input placeholder="Search name or phone" value={search} onChange={(e) => setSearch(e.target.value)} />
+            <Input
+              placeholder="Search name or phone"
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+            />
           </div>
         </CardHeader>
         <CardContent>
@@ -91,6 +143,7 @@ export function CustomersClient() {
                   <th className="py-2">Phone</th>
                   <th className="py-2">Points</th>
                   <th className="py-2">Debt</th>
+                  <th className="py-2 text-right">Action</th>
                 </tr>
               </thead>
               <tbody>
@@ -99,137 +152,181 @@ export function CustomersClient() {
                     key={c.id}
                     className={
                       c.id === selectedId
-                        ? "border-b border-zinc-100 bg-zinc-50"
-                        : "border-b border-zinc-100 hover:bg-zinc-50"
+                        ? 'border-b border-zinc-100 bg-zinc-50'
+                        : 'border-b border-zinc-100 hover:bg-zinc-50'
                     }
                   >
                     <td className="py-2">
                       <button
                         type="button"
                         className="font-medium hover:underline"
-                        onClick={() => setSelectedId(c.id)}
+                        onClick={() => {
+                          setSelectedId(c.id);
+                          setMode('edit');
+                        }}
                       >
                         {c.name}
                       </button>
-                      {c.totalDebt > 0 ? <div className="mt-1"><Badge tone="warning">Has debt</Badge></div> : null}
+                      {c.totalDebt > 0 ? (
+                        <div className="mt-1">
+                          <Badge tone="warning">Has debt</Badge>
+                        </div>
+                      ) : null}
                     </td>
-                    <td className="py-2">{c.phone ?? ""}</td>
+                    <td className="py-2">{c.phone ?? '-'}</td>
                     <td className="py-2 tabular-nums">{c.points}</td>
-                    <td className="py-2 tabular-nums">{formatIdr(c.totalDebt)}</td>
+                    <td className="py-2 tabular-nums">
+                      {formatIdr(c.totalDebt)}
+                    </td>
+                    <td className="py-2 text-right">
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="h-8 px-2 text-zinc-500 hover:text-zinc-900"
+                        onClick={() => {
+                          setSelectedId(c.id);
+                          setMode('edit');
+                        }}
+                        title="Edit customer"
+                      >
+                        <Pencil className="h-4 w-4" />
+                        <span className="sr-only">Edit</span>
+                      </Button>
+                    </td>
                   </tr>
                 ))}
               </tbody>
             </table>
           </div>
-        </CardContent>
-      </Card>
 
-      <Card>
-        <CardHeader>
-          <div className="text-sm font-semibold">{selected ? "Customer detail" : "Add customer"}</div>
-          <div className="text-xs text-zinc-500">Cashier and Admin</div>
-        </CardHeader>
-        <CardContent>
-          {selected ? (
-            <div className="flex flex-col gap-3">
-              <div className="rounded-lg border border-zinc-200 bg-white p-3">
-                <div className="text-sm font-semibold">{selected.name}</div>
-                <div className="mt-1 text-sm text-zinc-600">{selected.phone ?? ""}</div>
-                <div className="mt-2 grid grid-cols-2 gap-2 text-sm">
-                  <div className="rounded-md bg-zinc-50 p-2">
-                    <div className="text-xs text-zinc-500">Points</div>
-                    <div className="tabular-nums font-semibold">{selected.points}</div>
-                  </div>
-                  <div className="rounded-md bg-zinc-50 p-2">
-                    <div className="text-xs text-zinc-500">Total debt</div>
-                    <div className="tabular-nums font-semibold">{formatIdr(selected.totalDebt)}</div>
-                  </div>
-                </div>
-              </div>
+          {loading && customers.length === 0 ? (
+            <div className="mt-3 text-sm text-zinc-500">Loading...</div>
+          ) : null}
+          {!loading && customers.length === 0 && search ? (
+            <div className="mt-3 text-sm text-zinc-500 text-center py-4">
+              No customers found.
+            </div>
+          ) : null}
 
-              <div>
-                <div className="text-sm font-semibold">Recent transactions</div>
-                <div className="mt-2 overflow-x-auto">
-                  <table className="w-full text-sm">
-                    <thead>
-                      <tr className="border-b border-zinc-200 text-left text-zinc-500">
-                        <th className="py-2">ID</th>
-                        <th className="py-2">Total</th>
-                        <th className="py-2">Status</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {(detail?.transactions ?? []).map((t) => (
-                        <tr key={t.id} className="border-b border-zinc-100">
-                          <td className="py-2 font-mono text-xs">{t.id.slice(0, 8)}</td>
-                          <td className="py-2 tabular-nums">{formatIdr(t.totalAmount)}</td>
-                          <td className="py-2">{t.status}</td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
-              </div>
-
-              <Button variant="secondary" onClick={() => setSelectedId(null)}>
-                Back
+          {hasMore && customers.length > 0 && (
+            <div className="mt-6 flex justify-center pb-2">
+              <Button
+                variant="secondary"
+                onClick={loadMore}
+                disabled={loading}
+                className="w-full sm:w-auto"
+              >
+                {loading ? (
+                  'Loading...'
+                ) : (
+                  <>
+                    <ChevronDown className="mr-2 h-4 w-4" />
+                    Load More Customers
+                  </>
+                )}
               </Button>
             </div>
-          ) : (
-            <form
-              className="flex flex-col gap-3"
-              onSubmit={async (e) => {
-                e.preventDefault();
-                setMessage(null);
-                const res = await fetch("/api/customers", {
-                  method: "POST",
-                  headers: { "content-type": "application/json" },
-                  body: JSON.stringify({
-                    name: newName,
-                    phone: newPhone || undefined,
-                    address: newAddress || undefined,
-                  }),
-                });
-                const body = (await res.json().catch(() => null)) as
-                  | { id: string }
-                  | { error: { message: string } }
-                  | null;
-                if (!res.ok) {
-                  setMessage(body && "error" in body ? body.error.message : "Failed to create customer");
-                  return;
-                }
-                setMessage("Customer created");
-                setNewName("");
-                setNewPhone("");
-                setNewAddress("");
-                void refreshList(search);
-              }}
-            >
-              <div>
-                <label className="text-sm font-medium">Name</label>
-                <Input value={newName} onChange={(e) => setNewName(e.target.value)} />
-              </div>
-              <div>
-                <label className="text-sm font-medium">Phone</label>
-                <Input value={newPhone} onChange={(e) => setNewPhone(e.target.value)} />
-              </div>
-              <div>
-                <label className="text-sm font-medium">Address</label>
-                <Input value={newAddress} onChange={(e) => setNewAddress(e.target.value)} />
-              </div>
-              {message ? (
-                <div className="rounded-md border border-zinc-200 bg-white px-3 py-2 text-sm text-zinc-700">
-                  {message}
-                </div>
-              ) : null}
-              <Button type="submit" disabled={!newName.trim()}>
-                <Plus className="h-4 w-4" />
-                Create
-              </Button>
-            </form>
           )}
         </CardContent>
       </Card>
+
+      <Card className="h-fit">
+        <CardHeader>
+          <div className="flex items-center justify-between">
+            <div>
+              <div className="text-sm font-semibold">
+                {mode === 'create' ? 'Add customer' : 'Edit customer'}
+              </div>
+              <div className="text-xs text-zinc-500">Cashier and Admin</div>
+            </div>
+            {mode === 'edit' && (
+              <Button
+                variant="secondary"
+                size="sm"
+                onClick={() => {
+                  setMode('create');
+                  setSelectedId(null);
+                }}
+              >
+                <Plus className="h-3 w-3 mr-1" />
+                New Customer
+              </Button>
+            )}
+          </div>
+        </CardHeader>
+        <CardContent>
+          <div className="flex flex-col gap-6">
+            <CustomerForm
+              mode={mode}
+              initial={mode === 'edit' ? (selected ?? undefined) : undefined}
+              onSaved={async (success, errorMsg) => {
+                if (success) {
+                  await refresh();
+                  if (mode === 'create') {
+                    setMode('create');
+                  }
+                  showToast(
+                    mode === 'create'
+                      ? 'Customer created successfully'
+                      : 'Customer updated successfully',
+                  );
+                } else {
+                  showToast(errorMsg || 'Failed to save customer');
+                }
+              }}
+            />
+
+            {mode === 'edit' && detail && (
+              <div className="border-t border-zinc-200 pt-6">
+                <div className="text-sm font-semibold mb-3">
+                  Recent transactions
+                </div>
+                {detail.transactions.length > 0 ? (
+                  <div className="overflow-x-auto">
+                    <table className="w-full text-sm">
+                      <thead>
+                        <tr className="border-b border-zinc-200 text-left text-zinc-500">
+                          <th className="py-2">ID</th>
+                          <th className="py-2">Total</th>
+                          <th className="py-2">Status</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {detail.transactions.map((t) => (
+                          <tr key={t.id} className="border-b border-zinc-100">
+                            <td className="py-2 font-mono text-xs">
+                              {t.id.slice(0, 8)}
+                            </td>
+                            <td className="py-2 tabular-nums">
+                              {formatIdr(t.totalAmount)}
+                            </td>
+                            <td className="py-2">
+                              <Badge
+                                tone={
+                                  t.status === 'debt' ? 'danger' : 'success'
+                                }
+                                className="text-[10px] px-1.5 py-0 h-4"
+                              >
+                                {t.status}
+                              </Badge>
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                ) : (
+                  <div className="text-sm text-zinc-500 bg-zinc-50 rounded-lg p-4 text-center border border-zinc-100">
+                    No recent transactions
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
+        </CardContent>
+      </Card>
+
+      <Toast message={toastMessage} />
     </div>
   );
 }

@@ -147,7 +147,7 @@ export function SearchPanel({
         </div>
       </CardHeader>
 
-      <CardContent className="flex-1 overflow-y-auto min-h-0">
+      <CardContent className="flex-1 overflow-y-auto min-h-0 custom-scrollbar">
         <div className="grid grid-cols-1 gap-2 md:grid-cols-2">
           {results.map((p) => (
             <button

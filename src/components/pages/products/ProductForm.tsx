@@ -1,6 +1,6 @@
 'use client';
 
-import { useMemo, useState } from 'react';
+import { useMemo, useState, useEffect } from 'react';
 
 import { Plus, Trash2, Dices } from 'lucide-react';
 
@@ -49,6 +49,31 @@ export function ProductForm({
     initial?.tiers ?? [],
   );
   const [pending, setPending] = useState(false);
+
+  // Sync state when initial product changes (e.g. user clicks another product to edit)
+  useEffect(() => {
+    if (mode === 'edit' && initial) {
+      setSku(initial.sku);
+      setName(initial.name);
+      setBasePrice(initial.basePrice);
+      setBuyPrice(initial.buyPrice);
+      setStock(initial.stock);
+      setMinStockThreshold(initial.minStockThreshold);
+      setCategoryName(initial.category?.name ?? '');
+      setBrandName(initial.brand?.name ?? '');
+      setTiers(initial.tiers ?? []);
+    } else if (mode === 'create') {
+      setSku('');
+      setName('');
+      setBasePrice(0);
+      setBuyPrice(0);
+      setStock(0);
+      setMinStockThreshold(0);
+      setCategoryName('');
+      setBrandName('');
+      setTiers([]);
+    }
+  }, [initial, mode]);
 
   const canSave = useMemo(() => sku.trim() && name.trim(), [sku, name]);
 

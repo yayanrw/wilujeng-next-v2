@@ -11,13 +11,16 @@ export async function GET(req: Request) {
 
   const { searchParams } = new URL(req.url);
   const search = (searchParams.get("search") ?? "").trim();
+  const limit = Math.min(parseInt(searchParams.get("limit") || "50", 10), 100);
+  const offset = parseInt(searchParams.get("offset") || "0", 10);
 
   const rows = await db
     .select({ id: brands.id, name: brands.name })
     .from(brands)
     .where(search ? ilike(brands.name, `%${search}%`) : undefined)
     .orderBy(asc(brands.name))
-    .limit(50);
+    .limit(limit)
+    .offset(offset);
 
   return json(rows);
 }

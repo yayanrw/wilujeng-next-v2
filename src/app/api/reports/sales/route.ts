@@ -1,7 +1,7 @@
-import { and, desc, gte, lte } from "drizzle-orm";
+import { and, desc, eq, gte, lte } from "drizzle-orm";
 
 import { db } from "@/db";
-import { transactions } from "@/db/schema";
+import { customers, transactions } from "@/db/schema";
 import { badRequest, json, requireApiRole } from "@/server/api-helpers";
 
 function parseDay(dateStr: string) {
@@ -28,6 +28,7 @@ export async function GET(req: Request) {
     .select({
       id: transactions.id,
       customerId: transactions.customerId,
+      customerName: customers.name,
       userId: transactions.userId,
       totalAmount: transactions.totalAmount,
       paymentMethod: transactions.paymentMethod,
@@ -35,6 +36,7 @@ export async function GET(req: Request) {
       createdAt: transactions.createdAt,
     })
     .from(transactions)
+    .leftJoin(customers, eq(transactions.customerId, customers.id))
     .where(and(gte(transactions.createdAt, start), lte(transactions.createdAt, end)))
     .orderBy(desc(transactions.createdAt))
     .limit(500);

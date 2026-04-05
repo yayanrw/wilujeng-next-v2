@@ -83,36 +83,42 @@ Berikut adalah dokumen **Product Requirements Document (PRD)** yang komprehensif
 
 ### 3.5 Kelola Stok
 
-- **Stock Log:** Histori perubahan stok (Opname, In, Out).
-- **Stock Opname:** Fitur untuk menyesuaikan stok sistem dengan stok fisik (Replace quantity).
-- **Stock Masuk (In):** Input stok baru, harga beli (bisa berbeda dari sebelumnya), Supplier (Type to Create), dan Tanggal Kadaluarsa.
-- **Stock Keluar (Out):** Pengurangan stok manual (misal: barang rusak/retur).
+- **Stock Log:** Histori perubahan stok (Opname, In, Out). Dilengkapi dengan paginasi (Load More), filter berdasarkan rentang tanggal, penambahan kolom nama produk, serta kolom aksi untuk melihat detail histori (Modal Detail).
+- **Stock Opname:** Fitur untuk menyesuaikan stok sistem dengan stok fisik (Replace quantity). Kolom pencarian produk menggunakan Autocomplete/Typeahead dropdown, dan ditambahkan input Brand yang menggunakan fitur serupa.
+- **Stock Masuk (In):** Input stok baru, harga beli (bisa berbeda dari sebelumnya), Supplier (menggunakan fitur Autocomplete/Type to Create), Brand (menggunakan fitur Autocomplete/Type to Create), dan Tanggal Kadaluarsa. Kolom pencarian produk menggunakan Autocomplete/Typeahead dropdown.
+- **Stock Keluar (Out):** Pengurangan stok manual (misal: barang rusak/retur). Kolom pencarian produk menggunakan Autocomplete/Typeahead dropdown, dan ditambahkan input Brand yang menggunakan fitur serupa.
 
 ### 3.6 Manajemen Pelanggan
 
-- **Data Pelanggan:** Nama, No. HP, Alamat.
-- **Loyalty Points:** Otomatis bertambah saat transaksi (Contoh: Rp1.000 = 1 Poin). Admin bisa mereset poin.
-- **Detail Pelanggan:** Riwayat transaksi, histori poin, dan daftar hutang yang belum dibayar.
+- **List Pelanggan:** Tabel dengan fitur search (debounce 500ms), paginasi (Load More Customers), menampilkan nama, telepon, total poin, dan hutang. Terdapat kolom "Action" dengan ikon pensil untuk mengedit atau melihat detail pelanggan. Tombol "New" terintegrasi di dalam panel "Add/Edit customer" daripada header tabel utama.
+- **Detail Pelanggan:**
+  - Profil dan total debt/points.
+  - Tabel history transaksi terakhir.
+- **Loyalty Points:** Otomatis bertambah saat transaksi (Contoh: Rp1.000 = 1 Poin). Admin bisa mereset poin melalui fitur edit pelanggan.
+- **Manajemen Pelanggan (Edit/Add):**
+  - Form untuk membuat atau mengedit data pelanggan (Nama, Telepon, Alamat).
+  - Terdapat Toast notification setelah operasi berhasil atau gagal, dengan auto reset form.
 
 ### 3.7 Laporan
 
-- **Laporan Penjualan Harian:** Detail transaksi per hari.
+- **Laporan Penjualan Harian:** Menampilkan daftar transaksi per hari. Dilengkapi dengan kolom tanggal/waktu transaksi, nama pelanggan, metode pembayaran, status, serta tombol "View Detail" untuk melihat rincian barang yang dibeli pada transaksi tersebut (Modal Detail Transaksi).
 - **Laporan Stok Habis:** List produk yang stoknya 0 atau di bawah batas minimum.
-- **Laporan Hutang Piutang:** Daftar pelanggan yang memiliki tunggakan.
+- **Laporan Hutang Piutang:** Daftar pelanggan yang memiliki tunggakan (total debt). Dilengkapi dengan tombol "Detail" untuk melihat riwayat transaksi hutang pelanggan secara spesifik dalam sebuah modal.
 - **Laporan Laba Rugi:** Perhitungan (Total Penjualan - Harga Pokok Penjualan).
 - **Laporan Pemasok:** Ringkasan pemasukan stok per pemasok (total qty masuk, total nilai pembelian) dengan filter tanggal & supplier.
 
 ### 3.8 Pengaturan Sistem
 
-Menu ini digunakan untuk menentukan identitas visual toko tanpa perlu mengunggah file.
+Menu ini digunakan untuk menentukan identitas visual toko tanpa perlu mengunggah file serta mengelola pengguna sistem.
 
-- **Nama Toko**: Input text (Contoh: "Toko Wilujeng").
-- **Ikon Toko (Icon Picker)**:
-  - User memilih ikon dari daftar pradefinisi (Preset) dari library **Lucide React**.
-  - Pilihan ikon yang tersedia dikurasi (misal: `Store`, `ShoppingBag`, `Coffee`, `Utensils`, `Package`, `Printer`).
-  - Database hanya menyimpan **string nama ikon** (contoh: `"Store"`).
-- **Info Kontak**: Alamat dan nomor telepon untuk header struk.
-- **Konfigurasi Struk**: Pesan footer (Contoh: "Terima kasih telah berbelanja").
+- **Branding Toko**:
+  - **Nama Toko**: Input text (Contoh: "Toko Wilujeng").
+  - **Ikon Toko (Icon Picker)**: Menampilkan visual ikon yang dapat dipilih secara langsung (bukan teks). Pilihan ikon dikurasi dari library **Lucide React** (misal: `Store`, `ShoppingBag`, `Coffee`, `Utensils`, `Package`, `Printer`). Database menyimpan string nama ikon.
+  - **Info Kontak**: Alamat dan nomor telepon untuk header struk.
+  - **Konfigurasi Struk**: Pesan footer (Contoh: "Terima kasih telah berbelanja").
+- **Manajemen Pengguna (User Management)**:
+  - **List Pengguna**: Tabel dengan fitur pencarian (debounce 500ms), paginasi (menggunakan tombol Load More), dan menampilkan email, nama, serta role pengguna. Terdapat kolom "Action" dengan ikon pensil untuk mengedit detail pengguna.
+  - **Tambah/Edit Pengguna**: Form untuk menambah pengguna baru (membutuhkan email dan password) atau mengedit pengguna yang sudah ada (mengubah role atau nama). Dilengkapi dengan notifikasi Toast untuk setiap aksi sukses atau gagal, serta otomatis me-reset form setelah penambahan berhasil.
 
 ### 3.9 Menu Kasir & Struk
 
@@ -166,7 +172,7 @@ Sistem menggunakan metode **Best Match Match** pada `min_qty` terbesar.
 ## 6. Non-Functional Requirements
 
 - **UI/UX Design:** Desain antarmuka (UI) harus modern dan minimalis, dengan memanfaatkan komponen shadcn/ui dan utility class Tailwind CSS. Fokus pada scannability, hierarchy visual yang jelas, serta micro-interactions (animasi transisi halus) untuk meningkatkan pengalaman pengguna (UX).
-- **Responsive Design:** Dioptimalkan untuk Desktop (Kasir) dan Tablet. Aplikasi harus memiliki **Sidebar yang dapat di-collapse (hide/show)** untuk memberikan ruang kerja yang lebih luas pada layar kasir.
+- **Responsive Design:** Dioptimalkan untuk Desktop (Kasir) dan Tablet. Aplikasi harus memiliki **Sidebar yang dapat di-collapse (hide/show)** untuk memberikan ruang kerja yang lebih luas pada layar kasir. Halaman POS dikonfigurasi menggunakan _full height_ viewport agar keranjang belanja dan hasil pencarian dapat di-scroll secara independen tanpa perlu melakukan scroll pada halaman keseluruhan.
 - **Performance:** Transaksi kasir harus tetap responsif dengan >1000 SKU menggunakan _client-side searching_ atau _SWR indexing_.
 - **Offline Resilience:** Opsional, namun disarankan menggunakan _Optimistic Updates_ pada UI keranjang.
 - **Security:** Proteksi API Routes sehingga kasir tidak bisa mengakses endpoint laporan laba rugi atau manajemen user.
@@ -259,9 +265,9 @@ Catatan: Implementasi RBAC di level API Route Handlers dan server components; si
   - Field: name, phone, address(optional), points default 0, total_debt default 0.
   - Riwayat: transaksi, poin, hutang belum lunas.
 - Laporan
-  - Penjualan Harian: filter tanggal; kolom transaksi & total.
+  - Penjualan Harian: filter tanggal; kolom tanggal/waktu, ID transaksi, pelanggan, total, metode bayar, status, dan tombol aksi untuk melihat detail item.
   - Stok Habis: list produk stock=0 atau ≤ threshold.
-  - Hutang Piutang: pelanggan dengan total_debt>0.
+  - Hutang Piutang: pelanggan dengan total_debt>0, beserta aksi untuk melihat history transaksi pelanggan.
   - Laba Rugi: total penjualan – HPP (agregasi dari buy_price×qty terjual).
 - Pengaturan
   - Branding: store_name, store_icon_name (string Lucide, kurasi), store_address, store_phone, receipt_footer.

@@ -45,7 +45,7 @@ describe("POST /api/setup-admin", () => {
     mockAuth.api.signUpEmail.mockResolvedValue({ user: { id: "test-admin-id" } });
   });
 
-  const createRequest = (body: any) => {
+  const createRequest = (body: unknown) => {
     return new Request("http://localhost:3000/api/setup-admin", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
