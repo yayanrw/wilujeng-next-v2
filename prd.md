@@ -104,10 +104,10 @@ Berikut adalah dokumen **Product Requirements Document (PRD)** yang komprehensif
 
 ### 3.7 Laporan
 
-- **Laporan Penjualan Harian:** Menampilkan daftar transaksi per hari. Dilengkapi dengan kolom tanggal/waktu transaksi, nama pelanggan, metode pembayaran, status, serta tombol "View Detail" untuk melihat rincian barang yang dibeli pada transaksi tersebut (Modal Detail Transaksi).
-- **Laporan Stok Habis:** List produk yang stoknya 0 atau di bawah batas minimum.
-- **Laporan Hutang Piutang:** Daftar pelanggan yang memiliki tunggakan (total debt). Dilengkapi dengan tombol "Detail" untuk melihat riwayat transaksi hutang pelanggan secara spesifik dalam sebuah modal.
-- **Laporan Laba Rugi:** Perhitungan (Total Penjualan - Harga Pokok Penjualan).
+- **Laporan Penjualan Harian:** Menampilkan daftar transaksi per hari. Menggunakan desain tabel modern (Card/Badge) dengan highlight status Lunas/Hutang menggunakan badge warna (Emerald/Red). Dilengkapi dengan kolom tanggal/waktu transaksi, nama pelanggan, metode pembayaran, status, serta tombol ikon mata ("View Detail") untuk melihat rincian barang yang dibeli pada transaksi tersebut (Modal Detail Transaksi).
+- **Laporan Stok Habis:** List produk yang stoknya 0 atau di bawah batas minimum. Menyoroti stok kritis menggunakan text merah.
+- **Laporan Hutang Piutang:** Daftar pelanggan yang memiliki tunggakan (total debt). Menyoroti jumlah hutang dengan text merah. Dilengkapi dengan tombol "Detail" untuk melihat riwayat transaksi hutang pelanggan secara spesifik dalam sebuah modal.
+- **Laporan Laba Rugi:** Perhitungan (Total Penjualan - Harga Pokok Penjualan). Menampilkan kartu ringkasan (Summary Cards) modern yang memisahkan metrik Total Sales, COGS (Cost of Goods), dan Gross Profit.
 - **Laporan Pemasok:** Ringkasan pemasukan stok per pemasok (total qty masuk, total nilai pembelian) dengan filter tanggal & supplier.
 
 ### 3.8 Pengaturan Sistem

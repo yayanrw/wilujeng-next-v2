@@ -90,7 +90,12 @@ export function ReportsClient() {
 
   return (
     <div className="flex flex-col gap-4">
-      <div className="text-lg font-semibold">Reports</div>
+      <div className="space-y-1.5">
+        <div className="text-xl font-bold tracking-tight">Reports</div>
+        <div className="text-sm text-zinc-500 dark:text-zinc-400">
+          View analytics, sales, stock alerts, and financial summaries
+        </div>
+      </div>
 
       <div className="flex flex-wrap gap-2">
         {(['sales', 'stock', 'receivables', 'pnl', 'suppliers'] as Tab[]).map(
@@ -100,8 +105,8 @@ export function ReportsClient() {
               type="button"
               className={
                 t === tab
-                  ? 'rounded-full bg-zinc-900 dark:bg-zinc-100 px-4 py-2 text-sm text-white dark:text-zinc-900'
-                  : 'rounded-full border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-950 px-4 py-2 text-sm hover:bg-zinc-50 dark:hover:bg-zinc-900 dark:bg-zinc-100 dark:bg-zinc-900 dark:bg-zinc-100'
+                  ? 'rounded-full bg-zinc-900 px-4 py-2 text-sm text-white shadow-sm dark:bg-zinc-100 dark:text-zinc-900'
+                  : 'rounded-full border border-zinc-200 bg-white px-4 py-2 text-sm transition-colors hover:bg-zinc-50 dark:border-zinc-800 dark:bg-zinc-950 dark:text-zinc-400 dark:hover:bg-zinc-900'
               }
               onClick={() => setTab(t)}
             >
@@ -112,18 +117,29 @@ export function ReportsClient() {
       </div>
 
       <Card>
-        <CardHeader>
-          <div className="flex flex-wrap items-end justify-between gap-3">
-            <div>
-              <div className="text-sm font-semibold">Filters</div>
-              <div className="text-xs text-zinc-500 dark:text-zinc-400">Adjust and run</div>
+        <CardHeader className="border-b border-zinc-100 dark:border-zinc-800 bg-zinc-50/50 dark:bg-zinc-900/50 pb-4">
+          <div className="flex flex-wrap items-end justify-between gap-4">
+            <div className="space-y-1">
+              <div className="text-base font-semibold text-zinc-900 dark:text-zinc-100">
+                {tab === 'sales' && 'Daily Sales Report'}
+                {tab === 'stock' && 'Low Stock Alerts'}
+                {tab === 'receivables' && 'Accounts Receivable'}
+                {tab === 'pnl' && 'Profit & Loss Statement'}
+                {tab === 'suppliers' && 'Supplier Summary'}
+              </div>
+              <div className="text-sm text-zinc-500 dark:text-zinc-400">
+                Adjust filters below and run to see the report
+              </div>
             </div>
 
-            <div className="flex flex-wrap items-end gap-2">
+            <div className="flex flex-wrap items-end gap-3">
               {tab === 'sales' ? (
                 <div>
-                  <label className="text-xs text-zinc-500 dark:text-zinc-400">Date</label>
+                  <label className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-zinc-500 dark:text-zinc-400">
+                    Date
+                  </label>
                   <Input
+                    className="h-9 w-40 text-sm"
                     value={date}
                     onChange={(e) => setDate(e.target.value)}
                     placeholder="YYYY-MM-DD"
@@ -134,16 +150,22 @@ export function ReportsClient() {
               {tab === 'pnl' || tab === 'suppliers' ? (
                 <>
                   <div>
-                    <label className="text-xs text-zinc-500 dark:text-zinc-400">From</label>
+                    <label className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-zinc-500 dark:text-zinc-400">
+                      From
+                    </label>
                     <Input
+                      className="h-9 w-40 text-sm"
                       value={from}
                       onChange={(e) => setFrom(e.target.value)}
                       placeholder="YYYY-MM-DD"
                     />
                   </div>
                   <div>
-                    <label className="text-xs text-zinc-500 dark:text-zinc-400">To</label>
+                    <label className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-zinc-500 dark:text-zinc-400">
+                      To
+                    </label>
                     <Input
+                      className="h-9 w-40 text-sm"
                       value={to}
                       onChange={(e) => setTo(e.target.value)}
                       placeholder="YYYY-MM-DD"
@@ -154,17 +176,18 @@ export function ReportsClient() {
 
               <Button
                 variant="secondary"
+                className="h-9 font-medium shadow-sm"
                 onClick={() => void run()}
                 disabled={pending}
               >
-                {pending ? 'Running...' : 'Run'}
+                {pending ? 'Running...' : 'Run Report'}
               </Button>
             </div>
           </div>
         </CardHeader>
-        <CardContent>
+        <CardContent className="p-0">
           {error ? (
-            <div className="rounded-md border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">
+            <div className="m-6 rounded-md border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">
               {error}
             </div>
           ) : null}
@@ -173,50 +196,57 @@ export function ReportsClient() {
             <div className="overflow-x-auto">
               <table className="w-full text-sm">
                 <thead>
-                  <tr className="border-b border-zinc-200 dark:border-zinc-800 text-left text-zinc-500 dark:text-zinc-400">
-                    <th className="py-2">Date</th>
-                    <th className="py-2">ID</th>
-                    <th className="py-2">Customer</th>
-                    <th className="py-2">Total</th>
-                    <th className="py-2">Method</th>
-                    <th className="py-2">Status</th>
-                    <th className="py-2 text-right">Action</th>
+                  <tr className="border-b border-zinc-200 bg-zinc-50/50 text-left text-zinc-500 dark:border-zinc-800 dark:bg-zinc-900/50 dark:text-zinc-400">
+                    <th className="px-4 py-3 font-medium">Date</th>
+                    <th className="px-4 py-3 font-medium">ID</th>
+                    <th className="px-4 py-3 font-medium">Customer</th>
+                    <th className="px-4 py-3 font-medium text-right">Total</th>
+                    <th className="px-4 py-3 font-medium">Method</th>
+                    <th className="px-4 py-3 font-medium">Status</th>
+                    <th className="px-4 py-3 font-medium text-right">Action</th>
                   </tr>
                 </thead>
-                <tbody>
+                <tbody className="divide-y divide-zinc-100 dark:divide-zinc-800">
                   {(data as SalesRow[]).map((t) => (
-                    <tr key={t.id} className="border-b border-zinc-100 dark:border-zinc-800">
-                      <td className="py-2 whitespace-nowrap text-zinc-600 dark:text-zinc-400">
+                    <tr
+                      key={t.id}
+                      className="group transition-colors hover:bg-zinc-50/50 dark:hover:bg-zinc-900/50"
+                    >
+                      <td className="whitespace-nowrap px-4 py-3 text-zinc-600 dark:text-zinc-400">
                         {new Date(t.createdAt).toLocaleDateString()}{' '}
                         {new Date(t.createdAt).toLocaleTimeString([], {
                           hour: '2-digit',
                           minute: '2-digit',
                         })}
                       </td>
-                      <td className="py-2 font-mono text-xs text-zinc-500 dark:text-zinc-400">
+                      <td className="px-4 py-3 font-mono text-xs text-zinc-500 dark:text-zinc-400">
                         {String(t.id).slice(0, 8)}
                       </td>
-                      <td className="py-2">{t.customerName ?? '-'}</td>
-                      <td className="py-2 tabular-nums">
+                      <td className="px-4 py-3 font-medium text-zinc-900 dark:text-zinc-100">
+                        {t.customerName ?? '-'}
+                      </td>
+                      <td className="px-4 py-3 text-right tabular-nums font-semibold text-zinc-900 dark:text-zinc-100">
                         {formatIdr(t.totalAmount)}
                       </td>
-                      <td className="py-2 capitalize">{t.paymentMethod}</td>
-                      <td className="py-2">
+                      <td className="px-4 py-3 capitalize text-zinc-600 dark:text-zinc-400">
+                        {t.paymentMethod}
+                      </td>
+                      <td className="px-4 py-3">
                         <span
-                          className={`rounded-full px-2 py-0.5 text-xs font-medium capitalize ${
-                            t.status === 'lunas'
-                              ? 'bg-green-100 text-green-700'
-                              : 'bg-red-100 text-red-700'
+                          className={`rounded-full px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider ${
+                            t.status === 'paid' || t.status === 'lunas'
+                              ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400'
+                              : 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400'
                           }`}
                         >
                           {t.status}
                         </span>
                       </td>
-                      <td className="py-2 text-right">
+                      <td className="px-4 py-3 text-right">
                         <Button
                           variant="ghost"
                           size="sm"
-                          className="h-8 px-2 text-zinc-500 dark:text-zinc-400 hover:text-zinc-900 dark:text-zinc-50"
+                          className="h-8 w-8 p-0 text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-50"
                           onClick={() => setSelectedSalesId(t.id)}
                           title="View detail"
                         >
@@ -235,20 +265,31 @@ export function ReportsClient() {
             <div className="overflow-x-auto">
               <table className="w-full text-sm">
                 <thead>
-                  <tr className="border-b border-zinc-200 dark:border-zinc-800 text-left text-zinc-500 dark:text-zinc-400">
-                    <th className="py-2">SKU</th>
-                    <th className="py-2">Name</th>
-                    <th className="py-2">Stock</th>
-                    <th className="py-2">Threshold</th>
+                  <tr className="border-b border-zinc-200 bg-zinc-50/50 text-left text-zinc-500 dark:border-zinc-800 dark:bg-zinc-900/50 dark:text-zinc-400">
+                    <th className="px-4 py-3 font-medium">SKU</th>
+                    <th className="px-4 py-3 font-medium">Name</th>
+                    <th className="px-4 py-3 font-medium text-right">Stock</th>
+                    <th className="px-4 py-3 font-medium text-right">
+                      Threshold
+                    </th>
                   </tr>
                 </thead>
-                <tbody>
+                <tbody className="divide-y divide-zinc-100 dark:divide-zinc-800">
                   {(data as StockRow[]).map((p) => (
-                    <tr key={p.id} className="border-b border-zinc-100 dark:border-zinc-800">
-                      <td className="py-2 font-mono text-xs">{p.sku}</td>
-                      <td className="py-2">{p.name}</td>
-                      <td className="py-2 tabular-nums">{p.stock}</td>
-                      <td className="py-2 tabular-nums">
+                    <tr
+                      key={p.id}
+                      className="group transition-colors hover:bg-zinc-50/50 dark:hover:bg-zinc-900/50"
+                    >
+                      <td className="px-4 py-3 font-mono text-xs text-zinc-500 dark:text-zinc-400">
+                        {p.sku}
+                      </td>
+                      <td className="px-4 py-3 font-medium text-zinc-900 dark:text-zinc-100">
+                        {p.name}
+                      </td>
+                      <td className="px-4 py-3 text-right tabular-nums font-semibold text-red-600 dark:text-red-400">
+                        {p.stock}
+                      </td>
+                      <td className="px-4 py-3 text-right tabular-nums text-zinc-600 dark:text-zinc-400">
                         {p.minStockThreshold}
                       </td>
                     </tr>
@@ -262,26 +303,33 @@ export function ReportsClient() {
             <div className="overflow-x-auto">
               <table className="w-full text-sm">
                 <thead>
-                  <tr className="border-b border-zinc-200 dark:border-zinc-800 text-left text-zinc-500 dark:text-zinc-400">
-                    <th className="py-2">Customer</th>
-                    <th className="py-2">Phone</th>
-                    <th className="py-2">Debt</th>
-                    <th className="py-2 text-right">Action</th>
+                  <tr className="border-b border-zinc-200 bg-zinc-50/50 text-left text-zinc-500 dark:border-zinc-800 dark:bg-zinc-900/50 dark:text-zinc-400">
+                    <th className="px-4 py-3 font-medium">Customer</th>
+                    <th className="px-4 py-3 font-medium">Phone</th>
+                    <th className="px-4 py-3 font-medium text-right">Debt</th>
+                    <th className="px-4 py-3 font-medium text-right">Action</th>
                   </tr>
                 </thead>
-                <tbody>
+                <tbody className="divide-y divide-zinc-100 dark:divide-zinc-800">
                   {(data as ReceivableRow[]).map((c) => (
-                    <tr key={c.id} className="border-b border-zinc-100 dark:border-zinc-800">
-                      <td className="py-2">{c.name}</td>
-                      <td className="py-2">{c.phone ?? '-'}</td>
-                      <td className="py-2 text-red-600 font-medium tabular-nums">
+                    <tr
+                      key={c.id}
+                      className="group transition-colors hover:bg-zinc-50/50 dark:hover:bg-zinc-900/50"
+                    >
+                      <td className="px-4 py-3 font-medium text-zinc-900 dark:text-zinc-100">
+                        {c.name}
+                      </td>
+                      <td className="px-4 py-3 font-mono text-xs text-zinc-500 dark:text-zinc-400">
+                        {c.phone ?? '-'}
+                      </td>
+                      <td className="px-4 py-3 text-right tabular-nums font-semibold text-red-600 dark:text-red-400">
                         {formatIdr(c.totalDebt)}
                       </td>
-                      <td className="py-2 text-right">
+                      <td className="px-4 py-3 text-right">
                         <Button
                           variant="ghost"
                           size="sm"
-                          className="h-8 px-2 text-zinc-500 dark:text-zinc-400 hover:text-zinc-900 dark:text-zinc-50"
+                          className="h-8 w-8 p-0 text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-50"
                           onClick={() => setSelectedReceivableId(c.id)}
                           title="View detail"
                         >
@@ -297,22 +345,34 @@ export function ReportsClient() {
           ) : null}
 
           {tab === 'pnl' && data ? (
-            <div className="grid grid-cols-1 gap-3 md:grid-cols-3">
-              <div className="rounded-lg border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-950 p-3">
-                <div className="text-xs text-zinc-500 dark:text-zinc-400">Sales</div>
-                <div className="mt-1 text-base font-semibold tabular-nums">
+            <div className="grid grid-cols-1 gap-4 p-4 md:grid-cols-3">
+              <div className="rounded-xl border border-zinc-200 bg-white p-5 shadow-sm dark:border-zinc-800 dark:bg-zinc-950">
+                <div className="text-sm font-medium text-zinc-500 dark:text-zinc-400">
+                  Total Sales
+                </div>
+                <div className="mt-2 text-2xl font-bold tabular-nums tracking-tight text-zinc-900 dark:text-zinc-100">
                   {formatIdr((data as PnlRow).sales ?? 0)}
                 </div>
               </div>
-              <div className="rounded-lg border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-950 p-3">
-                <div className="text-xs text-zinc-500 dark:text-zinc-400">COGS</div>
-                <div className="mt-1 text-base font-semibold tabular-nums">
+              <div className="rounded-xl border border-zinc-200 bg-white p-5 shadow-sm dark:border-zinc-800 dark:bg-zinc-950">
+                <div className="text-sm font-medium text-zinc-500 dark:text-zinc-400">
+                  COGS (Cost of Goods)
+                </div>
+                <div className="mt-2 text-2xl font-bold tabular-nums tracking-tight text-zinc-900 dark:text-zinc-100">
                   {formatIdr((data as PnlRow).cogs ?? 0)}
                 </div>
               </div>
-              <div className="rounded-lg border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-950 p-3">
-                <div className="text-xs text-zinc-500 dark:text-zinc-400">Profit</div>
-                <div className="mt-1 text-base font-semibold tabular-nums">
+              <div className="rounded-xl border border-zinc-200 bg-white p-5 shadow-sm dark:border-zinc-800 dark:bg-zinc-950">
+                <div className="text-sm font-medium text-zinc-500 dark:text-zinc-400">
+                  Gross Profit
+                </div>
+                <div
+                  className={`mt-2 text-2xl font-bold tabular-nums tracking-tight ${
+                    ((data as PnlRow).profit ?? 0) >= 0
+                      ? 'text-emerald-600 dark:text-emerald-400'
+                      : 'text-red-600 dark:text-red-400'
+                  }`}
+                >
                   {formatIdr((data as PnlRow).profit ?? 0)}
                 </div>
               </div>
@@ -323,21 +383,29 @@ export function ReportsClient() {
             <div className="overflow-x-auto">
               <table className="w-full text-sm">
                 <thead>
-                  <tr className="border-b border-zinc-200 dark:border-zinc-800 text-left text-zinc-500 dark:text-zinc-400">
-                    <th className="py-2">Supplier</th>
-                    <th className="py-2">Qty</th>
-                    <th className="py-2">Value</th>
+                  <tr className="border-b border-zinc-200 bg-zinc-50/50 text-left text-zinc-500 dark:border-zinc-800 dark:bg-zinc-900/50 dark:text-zinc-400">
+                    <th className="px-4 py-3 font-medium">Supplier</th>
+                    <th className="px-4 py-3 font-medium text-right">
+                      Total Qty In
+                    </th>
+                    <th className="px-4 py-3 font-medium text-right">
+                      Purchase Value
+                    </th>
                   </tr>
                 </thead>
-                <tbody>
+                <tbody className="divide-y divide-zinc-100 dark:divide-zinc-800">
                   {(data as SupplierRow[]).map((s, idx) => (
                     <tr
                       key={s.supplierId ?? s.supplierName ?? String(idx)}
-                      className="border-b border-zinc-100 dark:border-zinc-800"
+                      className="group transition-colors hover:bg-zinc-50/50 dark:hover:bg-zinc-900/50"
                     >
-                      <td className="py-2">{s.supplierName ?? '(Unknown)'}</td>
-                      <td className="py-2 tabular-nums">{s.totalQty}</td>
-                      <td className="py-2 tabular-nums">
+                      <td className="px-4 py-3 font-medium text-zinc-900 dark:text-zinc-100">
+                        {s.supplierName ?? '(Unknown)'}
+                      </td>
+                      <td className="px-4 py-3 text-right tabular-nums text-zinc-600 dark:text-zinc-400">
+                        {s.totalQty}
+                      </td>
+                      <td className="px-4 py-3 text-right tabular-nums font-semibold text-zinc-900 dark:text-zinc-100">
                         {formatIdr(s.purchaseValue)}
                       </td>
                     </tr>
