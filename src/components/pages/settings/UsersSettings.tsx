@@ -29,7 +29,9 @@ export function UsersSettings() {
   };
 
   const selected = useMemo(
-    () => users.find((u) => u.id === selectedId) ?? null,
+    () =>
+      (Array.isArray(users) ? users.find((u) => u.id === selectedId) : null) ??
+      null,
     [users, selectedId],
   );
 
@@ -42,17 +44,23 @@ export function UsersSettings() {
       params.append('offset', (p * LIMIT).toString());
 
       const res = await fetch(`/api/users?${params.toString()}`);
-      const body = (await res.json().catch(() => [])) as UserDto[];
+      const body = await res.json().catch(() => []);
 
-      setHasMore(body.length === LIMIT);
+      const newUsers = Array.isArray(body) ? body : [];
+
+      setHasMore(newUsers.length === LIMIT);
 
       if (append) {
         setUsers((prev) => {
-          const existingIds = new Set(prev.map((item) => item.id));
-          return [...prev, ...body.filter((item) => !existingIds.has(item.id))];
+          const safePrev = Array.isArray(prev) ? prev : [];
+          const existingIds = new Set(safePrev.map((item) => item.id));
+          return [
+            ...safePrev,
+            ...newUsers.filter((item: UserDto) => !existingIds.has(item.id)),
+          ];
         });
       } else {
-        setUsers(body);
+        setUsers(newUsers);
       }
     } catch (err) {
       console.error(err);
@@ -122,46 +130,47 @@ export function UsersSettings() {
                   </tr>
                 </thead>
                 <tbody>
-                  {users.map((u) => (
-                    <tr
-                      key={u.id}
-                      className={
-                        u.id === selectedId
-                          ? 'border-b border-zinc-100 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-900 dark:bg-zinc-100'
-                          : 'border-b border-zinc-100 dark:border-zinc-800 hover:bg-zinc-50 dark:hover:bg-zinc-900 dark:bg-zinc-100 dark:bg-zinc-900 dark:bg-zinc-100'
-                      }
-                    >
-                      <td className="py-2">
-                        <button
-                          type="button"
-                          className="font-medium hover:underline"
-                          onClick={() => {
-                            setSelectedId(u.id);
-                            setMode('edit');
-                          }}
-                        >
-                          {u.email}
-                        </button>
-                      </td>
-                      <td className="py-2">{u.name ?? '-'}</td>
-                      <td className="py-2">{u.role}</td>
-                      <td className="py-2 text-right">
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          className="h-8 px-2 text-zinc-500 dark:text-zinc-400 hover:text-zinc-900 dark:text-zinc-50"
-                          onClick={() => {
-                            setSelectedId(u.id);
-                            setMode('edit');
-                          }}
-                          title={t.settings.editUser}
-                        >
-                          <Pencil className="h-4 w-4" />
-                          <span className="sr-only">{t.common.edit}</span>
-                        </Button>
-                      </td>
-                    </tr>
-                  ))}
+                  {Array.isArray(users) &&
+                    users.map((u) => (
+                      <tr
+                        key={u.id}
+                        className={
+                          u.id === selectedId
+                            ? 'border-b border-zinc-100 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-900 dark:bg-zinc-100'
+                            : 'border-b border-zinc-100 dark:border-zinc-800 hover:bg-zinc-50 dark:hover:bg-zinc-900 dark:bg-zinc-100 dark:bg-zinc-900 dark:bg-zinc-100'
+                        }
+                      >
+                        <td className="py-2">
+                          <button
+                            type="button"
+                            className="font-medium hover:underline"
+                            onClick={() => {
+                              setSelectedId(u.id);
+                              setMode('edit');
+                            }}
+                          >
+                            {u.email}
+                          </button>
+                        </td>
+                        <td className="py-2">{u.name ?? '-'}</td>
+                        <td className="py-2">{u.role}</td>
+                        <td className="py-2 text-right">
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            className="h-8 px-2 text-zinc-500 dark:text-zinc-400 hover:text-zinc-900 dark:text-zinc-50"
+                            onClick={() => {
+                              setSelectedId(u.id);
+                              setMode('edit');
+                            }}
+                            title={t.settings.editUser}
+                          >
+                            <Pencil className="h-4 w-4" />
+                            <span className="sr-only">{t.common.edit}</span>
+                          </Button>
+                        </td>
+                      </tr>
+                    ))}
                   {users.length === 0 && !loading && (
                     <tr>
                       <td

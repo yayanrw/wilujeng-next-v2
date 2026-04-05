@@ -1,4 +1,5 @@
 import {
+  boolean,
   date,
   integer,
   pgTable,
@@ -14,7 +15,7 @@ export const users = pgTable(
     id: text('id').primaryKey(),
     name: text('name'),
     email: text('email').notNull(),
-    emailVerified: timestamp('emailVerified', { mode: 'date' }),
+    emailVerified: boolean('emailVerified').notNull().default(false),
     image: text('image'),
     role: text('role').notNull().default('cashier'),
     createdAt: timestamp('createdAt', { mode: 'date' }),
@@ -43,7 +44,7 @@ export const accounts = pgTable(
   {
     id: text('id').primaryKey(),
     userId: text('userId').notNull(),
-    type: text('type').notNull(),
+    type: text('type'),
     providerId: text('providerId').notNull(),
     accountId: text('accountId').notNull(),
     accessToken: text('accessToken'),
