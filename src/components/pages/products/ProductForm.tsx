@@ -157,14 +157,17 @@ export function ProductForm({
         onSaved(true);
       }}
     >
-      <div className="grid grid-cols-2 gap-3">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div>
-          <label className="text-sm font-medium">SKU</label>
-          <div className="flex gap-2 mt-1">
+          <label className="text-xs font-semibold uppercase tracking-wider text-zinc-500 dark:text-zinc-400">
+            SKU
+          </label>
+          <div className="flex gap-2 mt-1.5">
             <Input
               value={sku}
               onChange={(e) => setSku(e.target.value)}
-              className="flex-1"
+              className="flex-1 font-mono text-sm"
+              placeholder="Item SKU"
             />
             <Button
               type="button"
@@ -174,154 +177,230 @@ export function ProductForm({
               className="px-3"
               aria-label="Generate Random SKU"
             >
-              <Dices className="h-4 w-4" />
+              <Dices className="h-4 w-4 text-zinc-500 dark:text-zinc-400" />
             </Button>
           </div>
         </div>
         <div>
-          <label className="text-sm font-medium">Name</label>
+          <label className="text-xs font-semibold uppercase tracking-wider text-zinc-500 dark:text-zinc-400">
+            Name
+          </label>
           <Input
             value={name}
             onChange={(e) => setName(e.target.value)}
-            className="mt-1"
+            className="mt-1.5 font-medium"
+            placeholder="Product Name"
           />
         </div>
       </div>
 
-      <div className="grid grid-cols-2 gap-3">
-        <div>
-          <label className="text-sm font-medium">Base price</label>
-          <Input
-            value={String(basePrice)}
-            onChange={(e) => setBasePrice(Number(e.target.value) || 0)}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div className="space-y-1.5">
+          <AutocompleteInput
+            label="Category"
+            value={categoryName}
+            onChange={setCategoryName}
+            fetchEndpoint="/api/categories"
+            placeholder="Type to create"
           />
         </div>
-        <div>
-          <label className="text-sm font-medium">Buy price</label>
-          <Input
-            value={String(buyPrice)}
-            onChange={(e) => setBuyPrice(Number(e.target.value) || 0)}
+        <div className="space-y-1.5">
+          <AutocompleteInput
+            label="Brand"
+            value={brandName}
+            onChange={setBrandName}
+            fetchEndpoint="/api/brands"
+            placeholder="Type to create"
           />
         </div>
       </div>
 
-      <div className="grid grid-cols-2 gap-3">
+      <div className="h-px w-full bg-zinc-100 dark:bg-zinc-800 my-2" />
+
+      <div className="grid grid-cols-2 gap-4">
         <div>
-          <label className="text-sm font-medium">Stock</label>
+          <label className="text-xs font-semibold uppercase tracking-wider text-zinc-500 dark:text-zinc-400">
+            Base price
+          </label>
+          <div className="relative mt-1.5">
+            <span className="absolute left-3 top-1/2 -translate-y-1/2 text-zinc-500 text-sm font-medium">
+              Rp
+            </span>
+            <Input
+              className="pl-9 font-medium tabular-nums"
+              inputMode="numeric"
+              value={basePrice ? String(basePrice) : ''}
+              onChange={(e) =>
+                setBasePrice(Number(e.target.value.replace(/[^0-9]/g, '')) || 0)
+              }
+              placeholder="0"
+            />
+          </div>
+        </div>
+        <div>
+          <label className="text-xs font-semibold uppercase tracking-wider text-zinc-500 dark:text-zinc-400">
+            Buy price
+          </label>
+          <div className="relative mt-1.5">
+            <span className="absolute left-3 top-1/2 -translate-y-1/2 text-zinc-500 text-sm font-medium">
+              Rp
+            </span>
+            <Input
+              className="pl-9 font-medium tabular-nums"
+              inputMode="numeric"
+              value={buyPrice ? String(buyPrice) : ''}
+              onChange={(e) =>
+                setBuyPrice(Number(e.target.value.replace(/[^0-9]/g, '')) || 0)
+              }
+              placeholder="0"
+            />
+          </div>
+        </div>
+      </div>
+
+      <div className="grid grid-cols-2 gap-4">
+        <div>
+          <label className="text-xs font-semibold uppercase tracking-wider text-zinc-500 dark:text-zinc-400">
+            Current Stock
+          </label>
           <Input
+            className="mt-1.5 font-medium tabular-nums"
+            inputMode="numeric"
             value={String(stock)}
-            onChange={(e) => setStock(Number(e.target.value) || 0)}
+            onChange={(e) =>
+              setStock(Number(e.target.value.replace(/[^0-9]/g, '')) || 0)
+            }
           />
         </div>
         <div>
-          <label className="text-sm font-medium">Min stock threshold</label>
+          <label className="text-xs font-semibold uppercase tracking-wider text-zinc-500 dark:text-zinc-400">
+            Low Stock Alert At
+          </label>
           <Input
+            className="mt-1.5 font-medium tabular-nums"
+            inputMode="numeric"
             value={String(minStockThreshold)}
-            onChange={(e) => setMinStockThreshold(Number(e.target.value) || 0)}
+            onChange={(e) =>
+              setMinStockThreshold(
+                Number(e.target.value.replace(/[^0-9]/g, '')) || 0,
+              )
+            }
           />
         </div>
       </div>
 
-      <div className="grid grid-cols-2 gap-3">
-        <AutocompleteInput
-          label="Category"
-          value={categoryName}
-          onChange={setCategoryName}
-          fetchEndpoint="/api/categories"
-          placeholder="Type to create"
-        />
-        <AutocompleteInput
-          label="Brand"
-          value={brandName}
-          onChange={setBrandName}
-          fetchEndpoint="/api/brands"
-          placeholder="Type to create"
-        />
-      </div>
+      <div className="h-px w-full bg-zinc-100 dark:bg-zinc-800 my-2" />
 
-      <div>
+      <div className="rounded-xl border border-zinc-200 dark:border-zinc-800 bg-zinc-50/50 dark:bg-zinc-900/50 p-4 space-y-4">
         <div className="flex items-center justify-between">
           <div>
-            <div className="text-sm font-semibold">Tier pricing</div>
+            <div className="text-sm font-semibold text-zinc-900 dark:text-zinc-100">
+              Tier Pricing
+            </div>
             <div className="text-xs text-zinc-500 dark:text-zinc-400">
-              Best-match by highest min qty
+              Discounted price for bulk purchases
             </div>
           </div>
           <Button
             type="button"
             variant="secondary"
             size="sm"
+            className="h-8"
             onClick={() =>
               setTiers((t) => [...t, { minQty: 1, price: basePrice }])
             }
           >
-            <Plus className="h-4 w-4" />
+            <Plus className="h-4 w-4 mr-1" />
             Add tier
           </Button>
         </div>
 
-        <div className="mt-2 flex flex-col gap-2">
+        <div className="flex flex-col gap-3">
           {tiers.map((t, idx) => (
             <div
               key={idx}
-              className="grid grid-cols-[1fr_1fr_40px] items-end gap-2"
+              className="flex items-center gap-3 bg-white dark:bg-zinc-950 p-3 rounded-lg border border-zinc-200 dark:border-zinc-800 shadow-sm"
             >
-              <div>
-                <label className="text-xs text-zinc-500 dark:text-zinc-400">Min qty</label>
+              <div className="flex-1">
+                <label className="text-[10px] font-semibold uppercase tracking-wider text-zinc-500 dark:text-zinc-400">
+                  Min Qty
+                </label>
                 <Input
+                  className="mt-1 h-8 text-sm tabular-nums"
+                  inputMode="numeric"
                   value={String(t.minQty)}
                   onChange={(e) =>
                     setTiers((prev) =>
                       prev.map((x, i) =>
                         i === idx
-                          ? { ...x, minQty: Number(e.target.value) || 0 }
+                          ? {
+                              ...x,
+                              minQty:
+                                Number(e.target.value.replace(/[^0-9]/g, '')) ||
+                                0,
+                            }
                           : x,
                       ),
                     )
                   }
                 />
               </div>
-              <div>
-                <label className="text-xs text-zinc-500 dark:text-zinc-400">Price</label>
-                <Input
-                  value={String(t.price)}
-                  onChange={(e) =>
-                    setTiers((prev) =>
-                      prev.map((x, i) =>
-                        i === idx
-                          ? { ...x, price: Number(e.target.value) || 0 }
-                          : x,
-                      ),
-                    )
-                  }
-                />
+              <div className="flex-1">
+                <label className="text-[10px] font-semibold uppercase tracking-wider text-zinc-500 dark:text-zinc-400">
+                  Tier Price
+                </label>
+                <div className="relative mt-1">
+                  <span className="absolute left-2.5 top-1/2 -translate-y-1/2 text-zinc-500 text-xs font-medium">
+                    Rp
+                  </span>
+                  <Input
+                    className="h-8 pl-8 text-sm tabular-nums"
+                    inputMode="numeric"
+                    value={t.price ? String(t.price) : ''}
+                    onChange={(e) =>
+                      setTiers((prev) =>
+                        prev.map((x, i) =>
+                          i === idx
+                            ? {
+                                ...x,
+                                price:
+                                  Number(
+                                    e.target.value.replace(/[^0-9]/g, ''),
+                                  ) || 0,
+                              }
+                            : x,
+                        ),
+                      )
+                    }
+                  />
+                </div>
               </div>
               <button
                 type="button"
-                className="grid h-10 w-10 place-items-center rounded-md border border-zinc-200 dark:border-zinc-800 hover:bg-zinc-50 dark:hover:bg-zinc-900 dark:bg-zinc-100 dark:bg-zinc-900 dark:bg-zinc-100"
+                className="flex h-8 w-8 mt-[18px] shrink-0 items-center justify-center rounded-md border border-zinc-200 dark:border-zinc-800 text-zinc-500 hover:text-red-600 hover:border-red-200 hover:bg-red-50 dark:hover:bg-red-900/20 dark:hover:border-red-900 transition-colors"
                 onClick={() =>
                   setTiers((prev) => prev.filter((_, i) => i !== idx))
                 }
-                aria-label="Remove tier"
               >
-                <Trash2 className="h-4 w-4" />
+                <Trash2 className="h-3.5 w-3.5" />
               </button>
             </div>
           ))}
-
-          {!tiers.length ? (
-            <div className="rounded-lg border border-dashed border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-950 p-4 text-sm text-zinc-500 dark:text-zinc-400">
-              No tiers. Base price will be used.
+          {tiers.length === 0 && (
+            <div className="text-center py-4 text-sm text-zinc-500 dark:text-zinc-400 border border-dashed border-zinc-200 dark:border-zinc-800 rounded-lg">
+              No tier pricing added.
             </div>
-          ) : null}
+          )}
         </div>
       </div>
 
-      <div className="flex items-center justify-end gap-2">
-        <Button type="submit" disabled={pending || !canSave}>
-          {pending ? 'Saving...' : mode === 'create' ? 'Create' : 'Save'}
-        </Button>
-      </div>
+      <Button
+        type="submit"
+        disabled={pending || !canSave}
+        className="mt-4 h-12 text-base font-semibold shadow-sm w-full"
+      >
+        {pending ? 'Saving...' : 'Save Product'}
+      </Button>
     </form>
   );
 }
