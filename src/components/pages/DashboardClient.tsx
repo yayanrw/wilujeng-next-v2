@@ -22,6 +22,7 @@ import CountUp from 'react-countup';
 
 import { Card, CardContent, CardHeader } from '@/components/ui/Card';
 import { formatIdr } from '@/utils/money';
+import { useTranslation } from '@/i18n/useTranslation';
 
 type DashboardData = {
   todaySales: number;
@@ -67,6 +68,7 @@ export function DashboardClient() {
   const [chartFilter, setChartFilter] = useState<
     'daily' | 'weekly' | 'monthly'
   >('daily');
+  const { t } = useTranslation();
 
   useEffect(() => {
     let cancelled = false;
@@ -86,9 +88,11 @@ export function DashboardClient() {
   return (
     <div className="flex flex-col gap-4">
       <div className="flex flex-col gap-1.5">
-        <div className="text-xl font-bold tracking-tight">Dashboard</div>
+        <div className="text-xl font-bold tracking-tight">
+          {t.dashboard.title}
+        </div>
         <div className="text-sm text-zinc-500 dark:text-zinc-400">
-          Executive summary and business overview
+          {t.dashboard.subtitle}
         </div>
       </div>
 
@@ -130,7 +134,7 @@ export function DashboardClient() {
             <Card>
               <CardHeader className="flex flex-row items-center justify-between pb-2">
                 <div className="text-sm font-medium text-zinc-500 dark:text-zinc-400">
-                  Today Transactions
+                  {t.dashboard.todayTransactions}
                 </div>
                 <ShoppingCart className="h-4 w-4 text-zinc-400" />
               </CardHeader>
@@ -147,7 +151,7 @@ export function DashboardClient() {
             <Card>
               <CardHeader className="flex flex-row items-center justify-between pb-2">
                 <div className="text-sm font-medium text-zinc-500 dark:text-zinc-400">
-                  Today Sales
+                  {t.dashboard.todaySales}
                 </div>
                 <TrendingUp className="h-4 w-4 text-zinc-400" />
               </CardHeader>
@@ -165,7 +169,7 @@ export function DashboardClient() {
             <Card>
               <CardHeader className="flex flex-row items-center justify-between pb-2">
                 <div className="text-sm font-medium text-zinc-500 dark:text-zinc-400">
-                  Today Gross Profit
+                  {t.dashboard.todayGrossProfit}
                 </div>
                 <Banknote className="h-4 w-4 text-emerald-500" />
               </CardHeader>
@@ -183,7 +187,7 @@ export function DashboardClient() {
             <Card>
               <CardHeader className="flex flex-row items-center justify-between pb-2">
                 <div className="text-sm font-medium text-zinc-500 dark:text-zinc-400">
-                  Low Stock Items
+                  {t.dashboard.lowStockItems}
                 </div>
                 <AlertTriangle className="h-4 w-4 text-amber-500" />
               </CardHeader>
@@ -200,7 +204,7 @@ export function DashboardClient() {
             <Card>
               <CardHeader className="flex flex-row items-center justify-between pb-2">
                 <div className="text-sm font-medium text-zinc-500 dark:text-zinc-400">
-                  Receivables
+                  {t.dashboard.receivables}
                 </div>
                 <Users className="h-4 w-4 text-red-500" />
               </CardHeader>
@@ -221,10 +225,10 @@ export function DashboardClient() {
             <CardHeader className="flex flex-row items-center justify-between pb-2">
               <div className="space-y-1">
                 <div className="text-sm font-semibold">
-                  Sales & Profit Overview
+                  {t.dashboard.salesProfitOverview}
                 </div>
                 <div className="text-xs text-zinc-500 dark:text-zinc-400">
-                  Revenue vs Gross Profit over time
+                  {t.dashboard.revenueVsProfit}
                 </div>
               </div>
               <div className="flex gap-2">
@@ -238,7 +242,7 @@ export function DashboardClient() {
                         : 'bg-zinc-100 text-zinc-600 hover:bg-zinc-200 dark:bg-zinc-800 dark:text-zinc-400 dark:hover:bg-zinc-700'
                     }`}
                   >
-                    {filter}
+                    {t.dashboard[filter]}
                   </button>
                 ))}
               </div>
@@ -334,7 +338,7 @@ export function DashboardClient() {
                     <Area
                       type="monotone"
                       dataKey="sales"
-                      name="Total Sales"
+                      name={t.reports.totalSales}
                       stroke="#18181b"
                       fillOpacity={1}
                       fill="url(#colorSales)"
@@ -343,7 +347,7 @@ export function DashboardClient() {
                     <Area
                       type="monotone"
                       dataKey="grossProfit"
-                      name="Gross Profit"
+                      name={t.reports.grossProfit}
                       stroke="#10b981"
                       fillOpacity={1}
                       fill="url(#colorProfit)"
@@ -358,10 +362,10 @@ export function DashboardClient() {
             <Card className="flex flex-col">
               <CardHeader className="border-b border-zinc-100 dark:border-zinc-800 bg-zinc-50/50 dark:bg-zinc-900/50 pb-4">
                 <div className="text-sm font-semibold text-zinc-900 dark:text-zinc-100">
-                  Low Stock Items
+                  {t.dashboard.lowStockItems}
                 </div>
                 <div className="text-xs text-zinc-500 dark:text-zinc-400">
-                  Items that need to be restocked
+                  {t.dashboard.itemsNeedRestock}
                 </div>
               </CardHeader>
               <CardContent className="flex-1 p-0">
@@ -369,9 +373,11 @@ export function DashboardClient() {
                   <table className="w-full text-sm">
                     <thead>
                       <tr className="border-y border-zinc-200 bg-zinc-50/50 text-left text-zinc-500 dark:border-zinc-800 dark:bg-zinc-900/50 dark:text-zinc-400">
-                        <th className="px-4 py-2 font-medium">Product</th>
+                        <th className="px-4 py-2 font-medium">
+                          {t.dashboard.product}
+                        </th>
                         <th className="px-4 py-2 font-medium text-right">
-                          Stock
+                          {t.dashboard.stock}
                         </th>
                       </tr>
                     </thead>
@@ -382,7 +388,7 @@ export function DashboardClient() {
                             colSpan={2}
                             className="px-4 py-6 text-center text-zinc-500 dark:text-zinc-400"
                           >
-                            No low stock items.
+                            {t.dashboard.noLowStock}
                           </td>
                         </tr>
                       ) : (
@@ -419,10 +425,10 @@ export function DashboardClient() {
             <Card className="flex flex-col">
               <CardHeader className="border-b border-zinc-100 dark:border-zinc-800 bg-zinc-50/50 dark:bg-zinc-900/50 pb-4">
                 <div className="text-sm font-semibold text-zinc-900 dark:text-zinc-100">
-                  Top Receivables
+                  {t.dashboard.topReceivables}
                 </div>
                 <div className="text-xs text-zinc-500 dark:text-zinc-400">
-                  Customers with highest outstanding debt
+                  {t.dashboard.customersHighestDebt}
                 </div>
               </CardHeader>
               <CardContent className="flex-1 p-0">
@@ -430,9 +436,11 @@ export function DashboardClient() {
                   <table className="w-full text-sm">
                     <thead>
                       <tr className="border-y border-zinc-200 bg-zinc-50/50 text-left text-zinc-500 dark:border-zinc-800 dark:bg-zinc-900/50 dark:text-zinc-400">
-                        <th className="px-4 py-2 font-medium">Customer</th>
+                        <th className="px-4 py-2 font-medium">
+                          {t.dashboard.customer}
+                        </th>
                         <th className="px-4 py-2 font-medium text-right">
-                          Debt
+                          {t.dashboard.debt}
                         </th>
                       </tr>
                     </thead>
@@ -443,7 +451,7 @@ export function DashboardClient() {
                             colSpan={2}
                             className="px-4 py-6 text-center text-zinc-500 dark:text-zinc-400"
                           >
-                            No outstanding receivables.
+                            {t.dashboard.noReceivables}
                           </td>
                         </tr>
                       ) : (
@@ -470,10 +478,10 @@ export function DashboardClient() {
             <Card className="flex flex-col">
               <CardHeader className="border-b border-zinc-100 dark:border-zinc-800 bg-zinc-50/50 dark:bg-zinc-900/50 pb-4">
                 <div className="text-sm font-semibold text-zinc-900 dark:text-zinc-100">
-                  Top Sales Products
+                  {t.dashboard.topSalesProducts}
                 </div>
                 <div className="text-xs text-zinc-500 dark:text-zinc-400">
-                  Best selling products all time
+                  {t.dashboard.bestSelling}
                 </div>
               </CardHeader>
               <CardContent className="flex-1 p-0">
@@ -481,9 +489,11 @@ export function DashboardClient() {
                   <table className="w-full text-sm">
                     <thead>
                       <tr className="border-y border-zinc-200 bg-zinc-50/50 text-left text-zinc-500 dark:border-zinc-800 dark:bg-zinc-900/50 dark:text-zinc-400">
-                        <th className="px-4 py-2 font-medium">Product</th>
+                        <th className="px-4 py-2 font-medium">
+                          {t.dashboard.product}
+                        </th>
                         <th className="px-4 py-2 font-medium text-right">
-                          Sold Qty
+                          {t.dashboard.soldQty}
                         </th>
                       </tr>
                     </thead>
@@ -494,7 +504,7 @@ export function DashboardClient() {
                             colSpan={2}
                             className="px-4 py-6 text-center text-zinc-500 dark:text-zinc-400"
                           >
-                            No sales data.
+                            {t.dashboard.noSalesData}
                           </td>
                         </tr>
                       ) : (
@@ -526,10 +536,10 @@ export function DashboardClient() {
             <Card className="flex flex-col">
               <CardHeader className="border-b border-zinc-100 dark:border-zinc-800 bg-zinc-50/50 dark:bg-zinc-900/50 pb-4">
                 <div className="text-sm font-semibold text-zinc-900 dark:text-zinc-100">
-                  Top Suppliers (last 30 days)
+                  {t.dashboard.topSuppliers}
                 </div>
                 <div className="text-xs text-zinc-500 dark:text-zinc-400">
-                  By purchase value
+                  {t.dashboard.byPurchaseValue}
                 </div>
               </CardHeader>
               <CardContent className="flex-1 p-0">
@@ -537,9 +547,11 @@ export function DashboardClient() {
                   <table className="w-full text-sm">
                     <thead>
                       <tr className="border-y border-zinc-200 bg-zinc-50/50 text-left text-zinc-500 dark:border-zinc-800 dark:bg-zinc-900/50 dark:text-zinc-400">
-                        <th className="px-4 py-2 font-medium">Supplier</th>
+                        <th className="px-4 py-2 font-medium">
+                          {t.dashboard.supplier}
+                        </th>
                         <th className="px-4 py-2 font-medium text-right">
-                          Value
+                          {t.dashboard.value}
                         </th>
                       </tr>
                     </thead>
@@ -550,7 +562,7 @@ export function DashboardClient() {
                             colSpan={2}
                             className="px-4 py-6 text-center text-zinc-500 dark:text-zinc-400"
                           >
-                            No supplier data.
+                            {t.dashboard.noSupplierData}
                           </td>
                         </tr>
                       ) : (

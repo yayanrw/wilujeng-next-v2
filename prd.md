@@ -72,11 +72,11 @@ Berikut adalah dokumen **Product Requirements Document (PRD)** yang komprehensif
   - **Tiering Price Logic:** Harga satuan otomatis berubah berdasarkan total Qty per item (Lihat Bagian 4.1).
   - Tampilkan toast sukses saat produk ditambahkan ke keranjang (menampilkan nama produk dan qty).
 - **Checkout Modal:**
-    - Pilihan pelanggan (Customer) diposisikan di paling atas dengan mode default "Walk-in" dan menggunakan komponen **Customer Picker** (Autocomplete dropdown).
-    - Menampilkan ringkasan total dan input nominal yang diterima (Amount Received).
-    - Metode Pembayaran: Tunai, QRIS, Transfer, Hutang.
-    - **Quick Cash Buttons:** Tombol nominal cepat (Exact, 1.000, 2.000, 5.000, 10.000, 20.000, 50.000, 100.000) dan tombol "Uang Pas".
-    - **Hutang Logic:** Jika memilih "Hutang", wajib memilih pelanggan terdaftar. Jika belum ada, tersedia tombol "Add Pelanggan Baru".
+  - Pilihan pelanggan (Customer) diposisikan di paling atas dengan mode default "Walk-in" dan menggunakan komponen **Customer Picker** (Autocomplete dropdown).
+  - Menampilkan ringkasan total dan input nominal yang diterima (Amount Received).
+  - Metode Pembayaran: Tunai, QRIS, Transfer, Hutang.
+  - **Quick Cash Buttons:** Tombol nominal cepat (Exact, 1.000, 2.000, 5.000, 10.000, 20.000, 50.000, 100.000) dan tombol "Uang Pas".
+  - **Hutang Logic:** Jika memilih "Hutang", wajib memilih pelanggan terdaftar. Jika belum ada, tersedia tombol "Add Pelanggan Baru".
   - Perhitungan otomatis untuk kembalian (Change) atau sisa hutang (Outstanding Debt) secara real-time; dukung skenario “kurang bayar”:
     - Kurang Bayar (Partial Payment): Jika amount_received < total_amount → wajib pilih pelanggan; status transaksi = 'hutang'; outstanding_debt = total_amount - amount_received; change = 0.
     - Hutang Penuh: Jika memilih metode 'Hutang' dan amount_received 0 → wajib pilih pelanggan; status = 'hutang'; outstanding_debt = total_amount; change = 0.
@@ -132,7 +132,9 @@ Menu ini digunakan untuk menentukan identitas visual toko tanpa perlu mengunggah
 - **Manajemen Pengguna (User Management)**:
   - **List Pengguna**: Tabel dengan fitur pencarian (debounce 500ms), paginasi (menggunakan tombol Load More), dan menampilkan email, nama, serta role pengguna. Terdapat kolom "Action" dengan ikon pensil untuk mengedit detail pengguna.
   - **Tambah/Edit Pengguna**: Form untuk menambah pengguna baru (membutuhkan email dan password) atau mengedit pengguna yang sudah ada (mengubah role atau nama). Dilengkapi dengan notifikasi Toast untuk setiap aksi sukses atau gagal, serta otomatis me-reset form setelah penambahan berhasil.
-- **Appearance**: Terdapat pilihan untuk mengganti tema (Light, Dark, System) menggunakan next-themes. Theme ini tersimpan secara lokal dan merubah mode visual aplikasi secara keseluruhan.
+- **Appearance**:
+  - Terdapat pilihan untuk mengganti tema (Light, Dark, System) menggunakan next-themes. Theme ini tersimpan secara lokal dan merubah mode visual aplikasi secara keseluruhan.
+  - Terdapat pilihan untuk mengganti Bahasa aplikasi (English, Bahasa Indonesia). State bahasa dikelola secara global menggunakan Zustand dan disimpan (persisted) ke local storage. Seluruh teks aplikasi (mulai dari Dashboard, POS, Produk, Stok, Pelanggan, Laporan, hingga Pengaturan) disimpan dalam file JSON terpusat (`en.json` dan `id.json`) dan dirender secara dinamis menggunakan custom hook `useTranslation`.
 
 ### 3.9 Menu Kasir & Struk
 

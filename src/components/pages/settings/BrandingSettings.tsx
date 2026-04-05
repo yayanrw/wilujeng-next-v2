@@ -6,6 +6,7 @@ import * as LucideIcons from 'lucide-react';
 import { Button } from '@/components/ui/Button';
 import { Card, CardContent, CardHeader } from '@/components/ui/Card';
 import { Input } from '@/components/ui/Input';
+import { useTranslation } from '@/i18n/useTranslation';
 
 type Branding = {
   storeName: string;
@@ -28,6 +29,7 @@ export function BrandingSettings() {
   const [branding, setBranding] = useState<Branding | null>(null);
   const [pending, setPending] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
+  const { t } = useTranslation();
 
   async function loadBranding() {
     const res = await fetch('/api/settings');
@@ -47,9 +49,9 @@ export function BrandingSettings() {
   return (
     <Card>
       <CardHeader>
-        <div className="text-sm font-semibold">Store branding</div>
+        <div className="text-sm font-semibold">{t.settings.storeBranding}</div>
         <div className="text-xs text-zinc-500 dark:text-zinc-400">
-          Used in sidebar, login, and receipts
+          {t.settings.storeBrandingDesc}
         </div>
       </CardHeader>
       <CardContent>
@@ -84,12 +86,14 @@ export function BrandingSettings() {
                 );
                 return;
               }
-              setMessage('Saved');
+              setMessage(t.common.saved);
               await loadBranding();
             }}
           >
             <div>
-              <label className="text-sm font-medium">Store name</label>
+              <label className="text-sm font-medium">
+                {t.settings.storeName}
+              </label>
               <Input
                 value={branding.storeName}
                 onChange={(e) =>
@@ -99,7 +103,9 @@ export function BrandingSettings() {
             </div>
 
             <div>
-              <label className="text-sm font-medium">Icon</label>
+              <label className="text-sm font-medium">
+                {t.settings.storeIcon}
+              </label>
               <div className="mt-2 flex flex-wrap gap-2">
                 {iconOptions.map((i) => {
                   const Icon =
@@ -138,7 +144,9 @@ export function BrandingSettings() {
 
             <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
               <div>
-                <label className="text-sm font-medium">Phone</label>
+                <label className="text-sm font-medium">
+                  {t.settings.storePhone}
+                </label>
                 <Input
                   value={branding.storePhone}
                   onChange={(e) =>
@@ -147,7 +155,9 @@ export function BrandingSettings() {
                 />
               </div>
               <div>
-                <label className="text-sm font-medium">Address</label>
+                <label className="text-sm font-medium">
+                  {t.settings.storeAddress}
+                </label>
                 <Input
                   value={branding.storeAddress}
                   onChange={(e) =>
@@ -158,7 +168,9 @@ export function BrandingSettings() {
             </div>
 
             <div>
-              <label className="text-sm font-medium">Receipt footer</label>
+              <label className="text-sm font-medium">
+                {t.settings.receiptFooter}
+              </label>
               <Input
                 value={branding.receiptFooter}
                 onChange={(e) =>
@@ -168,7 +180,7 @@ export function BrandingSettings() {
             </div>
 
             <Button type="submit" disabled={pending || !canSaveBranding}>
-              {pending ? 'Saving...' : 'Save'}
+              {pending ? t.common.saving : t.common.save}
             </Button>
           </form>
         ) : (
@@ -176,7 +188,7 @@ export function BrandingSettings() {
             <div className="flex flex-col items-center gap-3">
               <div className="h-6 w-6 animate-spin rounded-full border-2 border-zinc-200 border-t-zinc-900 dark:border-zinc-800 dark:border-t-zinc-100" />
               <div className="text-sm font-medium text-zinc-500 dark:text-zinc-400">
-                Loading store branding...
+                {t.settings.loadingBranding}
               </div>
             </div>
           </div>

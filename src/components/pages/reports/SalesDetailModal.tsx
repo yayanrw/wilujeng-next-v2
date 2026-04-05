@@ -1,7 +1,8 @@
-"use client";
+'use client';
 
-import { useEffect, useState } from "react";
-import { formatIdr } from "@/utils/money";
+import { useEffect, useState } from 'react';
+import { formatIdr } from '@/utils/money';
+import { useTranslation } from '@/i18n/useTranslation';
 
 type TransactionItem = {
   id: string;
@@ -32,6 +33,7 @@ export function SalesDetailModal({
 }) {
   const [detail, setDetail] = useState<TransactionDetail | null>(null);
   const [loading, setLoading] = useState(true);
+  const { t } = useTranslation();
 
   useEffect(() => {
     let cancelled = false;
@@ -54,58 +56,82 @@ export function SalesDetailModal({
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
       <div className="w-full max-w-2xl rounded-lg bg-white dark:bg-zinc-950 p-6 shadow-xl max-h-[90vh] overflow-y-auto">
         <div className="flex items-center justify-between mb-4">
-          <h2 className="text-xl font-semibold">Transaction Detail</h2>
-          <button onClick={onClose} className="text-zinc-500 dark:text-zinc-400 hover:text-zinc-900 dark:text-zinc-50">
-            Close
+          <h2 className="text-xl font-semibold">{t.reports.salesDetails}</h2>
+          <button
+            onClick={onClose}
+            className="text-zinc-500 dark:text-zinc-400 hover:text-zinc-900 dark:text-zinc-50"
+          >
+            {t.common.cancel}
           </button>
         </div>
 
         {loading ? (
-          <div className="py-8 text-center text-zinc-500 dark:text-zinc-400">Loading...</div>
+          <div className="py-8 text-center text-zinc-500 dark:text-zinc-400">
+            {t.common.loading}
+          </div>
         ) : detail ? (
           <div className="space-y-6">
             <div className="grid grid-cols-2 gap-4 text-sm">
               <div>
-                <span className="block text-zinc-500 dark:text-zinc-400">ID</span>
+                <span className="block text-zinc-500 dark:text-zinc-400">
+                  {t.reports.id}
+                </span>
                 <span className="font-mono">{detail.id}</span>
               </div>
               <div>
-                <span className="block text-zinc-500 dark:text-zinc-400">Date</span>
+                <span className="block text-zinc-500 dark:text-zinc-400">
+                  {t.reports.date}
+                </span>
                 <span>{new Date(detail.createdAt).toLocaleString()}</span>
               </div>
               <div>
-                <span className="block text-zinc-500 dark:text-zinc-400">Status</span>
+                <span className="block text-zinc-500 dark:text-zinc-400">
+                  {t.reports.status}
+                </span>
                 <span className="capitalize">{detail.status}</span>
               </div>
               <div>
-                <span className="block text-zinc-500 dark:text-zinc-400">Payment Method</span>
+                <span className="block text-zinc-500 dark:text-zinc-400">
+                  {t.pos.paymentMethod}
+                </span>
                 <span className="capitalize">{detail.paymentMethod}</span>
               </div>
             </div>
 
             <div>
-              <h3 className="mb-2 font-medium">Items</h3>
+              <h3 className="mb-2 font-medium">{t.pos.items}</h3>
               <div className="overflow-x-auto rounded-md border border-zinc-200 dark:border-zinc-800">
                 <table className="w-full text-sm">
                   <thead className="bg-zinc-50 dark:bg-zinc-900 dark:bg-zinc-100">
                     <tr className="border-b border-zinc-200 dark:border-zinc-800 text-left text-zinc-500 dark:text-zinc-400">
-                      <th className="px-3 py-2">Item</th>
-                      <th className="px-3 py-2 text-right">Price</th>
-                      <th className="px-3 py-2 text-right">Qty</th>
-                      <th className="px-3 py-2 text-right">Subtotal</th>
+                      <th className="px-3 py-2">{t.pos.item}</th>
+                      <th className="px-3 py-2 text-right">
+                        {t.products.price}
+                      </th>
+                      <th className="px-3 py-2 text-right">{t.stock.qty}</th>
+                      <th className="px-3 py-2 text-right">
+                        {t.reports.subtotal}
+                      </th>
                     </tr>
                   </thead>
                   <tbody>
                     {detail.items?.map((item) => (
-                      <tr key={item.id} className="border-b border-zinc-100 dark:border-zinc-800 last:border-0">
+                      <tr
+                        key={item.id}
+                        className="border-b border-zinc-100 dark:border-zinc-800 last:border-0"
+                      >
                         <td className="px-3 py-2">
                           <div className="font-medium">{item.productName}</div>
-                          <div className="text-xs text-zinc-500 dark:text-zinc-400 font-mono">{item.productSku}</div>
+                          <div className="text-xs text-zinc-500 dark:text-zinc-400 font-mono">
+                            {item.productSku}
+                          </div>
                         </td>
                         <td className="px-3 py-2 text-right tabular-nums">
                           {formatIdr(item.priceAtTransaction)}
                         </td>
-                        <td className="px-3 py-2 text-right tabular-nums">{item.qty}</td>
+                        <td className="px-3 py-2 text-right tabular-nums">
+                          {item.qty}
+                        </td>
                         <td className="px-3 py-2 text-right tabular-nums">
                           {formatIdr(item.subtotal)}
                         </td>
@@ -118,21 +144,33 @@ export function SalesDetailModal({
 
             <div className="flex flex-col items-end gap-1 text-sm">
               <div className="flex w-48 justify-between">
-                <span className="text-zinc-500 dark:text-zinc-400">Total Amount:</span>
-                <span className="font-medium tabular-nums">{formatIdr(detail.totalAmount)}</span>
+                <span className="text-zinc-500 dark:text-zinc-400">
+                  {t.pos.totalAmount}:
+                </span>
+                <span className="font-medium tabular-nums">
+                  {formatIdr(detail.totalAmount)}
+                </span>
               </div>
               <div className="flex w-48 justify-between">
-                <span className="text-zinc-500 dark:text-zinc-400">Amount Received:</span>
-                <span className="tabular-nums">{formatIdr(detail.amountReceived)}</span>
+                <span className="text-zinc-500 dark:text-zinc-400">
+                  {t.pos.amountReceived}:
+                </span>
+                <span className="tabular-nums">
+                  {formatIdr(detail.amountReceived)}
+                </span>
               </div>
               <div className="flex w-48 justify-between">
-                <span className="text-zinc-500 dark:text-zinc-400">Change:</span>
+                <span className="text-zinc-500 dark:text-zinc-400">
+                  {t.pos.change}:
+                </span>
                 <span className="tabular-nums">{formatIdr(detail.change)}</span>
               </div>
             </div>
           </div>
         ) : (
-          <div className="py-8 text-center text-red-500">Failed to load transaction</div>
+          <div className="py-8 text-center text-red-500">
+            {t.reports.failedToLoadTransaction}
+          </div>
         )}
       </div>
     </div>

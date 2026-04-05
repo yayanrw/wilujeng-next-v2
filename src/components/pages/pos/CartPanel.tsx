@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/Button';
 import { Card, CardHeader } from '@/components/ui/Card';
 import { usePosStore } from '@/stores/posStore';
 import { formatIdr } from '@/utils/money';
+import { useTranslation } from '@/i18n/useTranslation';
 
 export function CartPanel({
   total,
@@ -18,6 +19,7 @@ export function CartPanel({
   const setQty = usePosStore((s) => s.setQty);
   const removeItem = usePosStore((s) => s.removeItem);
   const clear = usePosStore((s) => s.clear);
+  const { t } = useTranslation();
 
   return (
     <Card className="flex flex-col h-full overflow-hidden border-zinc-200 dark:border-zinc-800 shadow-sm">
@@ -29,10 +31,11 @@ export function CartPanel({
             </div>
             <div>
               <h2 className="text-sm font-semibold leading-none text-zinc-900 dark:text-zinc-50">
-                Current Order
+                {t.pos.currentOrder}
               </h2>
               <p className="text-xs text-zinc-500 dark:text-zinc-400 mt-1">
-                {items.length} {items.length === 1 ? 'item' : 'items'} in cart
+                {items.length} {items.length === 1 ? t.pos.item : t.pos.items}{' '}
+                {t.pos.inCart}
               </p>
             </div>
           </div>
@@ -43,7 +46,7 @@ export function CartPanel({
             onClick={clear}
             disabled={!items.length}
           >
-            Clear All
+            {t.pos.clearAll}
           </Button>
         </div>
       </CardHeader>
@@ -98,7 +101,7 @@ export function CartPanel({
                 type="button"
                 className="flex h-8 items-center justify-center rounded-md px-2 text-zinc-400 hover:text-red-600 hover:bg-red-50 transition-colors"
                 onClick={() => removeItem(i.productId)}
-                title="Remove item"
+                title={t.pos.removeItem}
               >
                 <Trash2 className="h-4 w-4" />
               </button>
@@ -112,11 +115,10 @@ export function CartPanel({
               <ShoppingCart className="h-6 w-6 text-zinc-300" />
             </div>
             <p className="text-sm font-medium text-zinc-900 dark:text-zinc-50">
-              Your cart is empty
+              {t.pos.emptyCart}
             </p>
             <p className="text-xs text-zinc-500 dark:text-zinc-400 mt-1 max-w-[200px]">
-              Scan a barcode or select products from the list to start adding to
-              your order.
+              {t.pos.cartEmptyDesc}
             </p>
           </div>
         ) : null}
@@ -125,7 +127,7 @@ export function CartPanel({
       <div className="shrink-0 border-t border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-950 p-4 shadow-[0_-4px_15px_-3px_rgba(0,0,0,0.05)] z-10">
         <div className="flex items-center justify-between mb-4">
           <span className="text-zinc-500 dark:text-zinc-400 font-medium">
-            Total Amount
+            {t.pos.totalAmount}
           </span>
           <span className="text-2xl font-bold tabular-nums text-zinc-900 dark:text-zinc-50 tracking-tight">
             {formatIdr(total)}
@@ -136,7 +138,7 @@ export function CartPanel({
           disabled={!items.length}
           onClick={onCheckout}
         >
-          Proceed to Checkout
+          {t.pos.proceedToCheckout}
         </Button>
       </div>
     </Card>

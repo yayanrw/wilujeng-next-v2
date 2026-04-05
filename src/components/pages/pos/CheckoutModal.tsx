@@ -9,6 +9,7 @@ import { CustomerPicker } from '@/components/shared/CustomerPicker';
 import { usePosStore } from '@/stores/posStore';
 import type { PaymentMethod } from '@/utils/checkout';
 import { formatIdr } from '@/utils/money';
+import { useTranslation } from '@/i18n/useTranslation';
 
 export function CheckoutModal({
   open,
@@ -43,6 +44,7 @@ export function CheckoutModal({
   const [newCustomerName, setNewCustomerName] = useState('');
   const [newCustomerPhone, setNewCustomerPhone] = useState('');
   const [isCreatingCustomer, setIsCreatingCustomer] = useState(false);
+  const { t } = useTranslation();
 
   useEffect(() => {
     if (!open) return;
@@ -65,10 +67,10 @@ export function CheckoutModal({
       throw new Error(
         body && 'error' in body
           ? body.error.message
-          : 'Failed to create customer',
+          : t.customers.failedToCreate,
       );
     }
-    if (!body || !('id' in body)) throw new Error('Failed to create customer');
+    if (!body || !('id' in body)) throw new Error(t.customers.failedToCreate);
     setCustomerId(body.id);
     setNewCustomerName('');
     setNewCustomerPhone('');
@@ -83,7 +85,7 @@ export function CheckoutModal({
           <div className="flex items-center gap-2">
             <Wallet className="h-5 w-5 text-zinc-600 dark:text-zinc-400" />
             <h2 className="text-lg font-semibold text-zinc-900 dark:text-zinc-50">
-              Checkout
+              {t.pos.checkoutTitle}
             </h2>
           </div>
           <button
@@ -114,7 +116,7 @@ export function CheckoutModal({
             <div className="flex items-center justify-between">
               <label className="flex items-center gap-2 text-sm font-semibold text-zinc-900 dark:text-zinc-50">
                 <User className="h-4 w-4 text-zinc-500 dark:text-zinc-400" />
-                Customer
+                {t.dashboard.customer}
               </label>
               {!customerId && !isCreatingCustomer && (
                 <button
@@ -122,7 +124,7 @@ export function CheckoutModal({
                   className="text-xs font-medium text-blue-600 hover:text-blue-700"
                   onClick={() => setIsCreatingCustomer(true)}
                 >
-                  + New Customer
+                  + {t.customers.newCustomer}
                 </button>
               )}
               {isCreatingCustomer && (
@@ -131,7 +133,7 @@ export function CheckoutModal({
                   className="text-xs font-medium text-zinc-500 dark:text-zinc-400 hover:text-zinc-700 dark:text-zinc-300"
                   onClick={() => setIsCreatingCustomer(false)}
                 >
-                  Cancel
+                  {t.common.cancel}
                 </button>
               )}
             </div>
@@ -141,7 +143,7 @@ export function CheckoutModal({
                 <div className="grid grid-cols-2 gap-3">
                   <div>
                     <label className="text-xs font-medium text-blue-900">
-                      Name
+                      {t.customers.name}
                     </label>
                     <Input
                       className="mt-1 bg-white dark:bg-zinc-950 border-blue-200 focus-visible:ring-blue-500"
@@ -152,7 +154,7 @@ export function CheckoutModal({
                   </div>
                   <div>
                     <label className="text-xs font-medium text-blue-900">
-                      Phone
+                      {t.customers.phone}
                     </label>
                     <Input
                       className="mt-1 bg-white dark:bg-zinc-950 border-blue-200 focus-visible:ring-blue-500"
@@ -168,18 +170,18 @@ export function CheckoutModal({
                   onClick={async () => {
                     try {
                       await createCustomerQuick();
-                      onToast('Customer created & selected');
+                      onToast(t.customers.customerCreatedAndSelected);
                       setIsCreatingCustomer(false);
                     } catch (e) {
                       onToast(
                         e instanceof Error
                           ? e.message
-                          : 'Failed to create customer',
+                          : t.customers.failedToCreate,
                       );
                     }
                   }}
                 >
-                  Save Customer
+                  {t.common.save} {t.dashboard.customer}
                 </Button>
               </div>
             ) : (
@@ -192,7 +194,7 @@ export function CheckoutModal({
           {/* Payment Method Section */}
           <div className="space-y-3">
             <label className="text-sm font-semibold text-zinc-900 dark:text-zinc-50">
-              Payment Method
+              {t.pos.paymentMethod}
             </label>
             <div className="grid grid-cols-4 gap-2">
               {(['cash', 'qris', 'transfer', 'debt'] as PaymentMethod[]).map(
@@ -208,7 +210,7 @@ export function CheckoutModal({
                     onClick={() => onPaymentMethodChange(m)}
                   >
                     <span className="relative z-10 font-medium uppercase tracking-wider text-xs">
-                      {m}
+                      {t.pos[m as keyof typeof t.pos]}
                     </span>
                   </button>
                 ),
@@ -218,7 +220,7 @@ export function CheckoutModal({
             {paymentMethod === 'debt' && !customerId && (
               <div className="flex items-center gap-2 rounded-lg bg-red-50 p-3 text-sm text-red-600 border border-red-100 animate-in fade-in duration-300">
                 <AlertCircle className="h-4 w-4 shrink-0" />
-                <p>A customer must be selected for debt transactions.</p>
+                <p>{t.pos.selectCustomerForDebt}</p>
               </div>
             )}
           </div>
@@ -227,7 +229,7 @@ export function CheckoutModal({
           <div className="space-y-3">
             <div className="flex items-center justify-between">
               <label className="text-sm font-semibold text-zinc-900 dark:text-zinc-50">
-                Amount Received
+                {t.pos.amountReceived}
               </label>
               {amountReceived > 0 && (
                 <button
@@ -236,7 +238,7 @@ export function CheckoutModal({
                   className="flex items-center gap-1 text-xs font-medium text-zinc-500 dark:text-zinc-400 hover:text-zinc-700 dark:text-zinc-300"
                 >
                   <RefreshCw className="h-3 w-3" />
-                  Reset
+                  {t.customers.reset}
                 </button>
               )}
             </div>
@@ -278,7 +280,7 @@ export function CheckoutModal({
                 className="col-span-4 rounded-lg border border-emerald-200 bg-emerald-50 py-2 text-sm font-semibold text-emerald-700 transition-colors hover:bg-emerald-100"
                 onClick={() => onAmountReceivedChange(total)}
               >
-                Exact Amount ({formatIdr(total)})
+                {t.pos.exactAmount} ({formatIdr(total)})
               </button>
             </div>
           </div>
@@ -289,7 +291,7 @@ export function CheckoutModal({
           <div className="grid grid-cols-2 gap-4">
             <div className="rounded-xl bg-zinc-50 dark:bg-zinc-900 dark:bg-zinc-100 p-4">
               <div className="text-xs font-medium text-zinc-500 dark:text-zinc-400 uppercase tracking-wider">
-                Total
+                {t.pos.total}
               </div>
               <div className="mt-1 text-2xl font-bold tracking-tight text-zinc-900 dark:text-zinc-50">
                 {formatIdr(total)}
@@ -313,7 +315,9 @@ export function CheckoutModal({
                       : 'text-zinc-500 dark:text-zinc-400'
                 }`}
               >
-                {paymentStatus === 'debt' ? 'Outstanding Debt' : 'Change'}
+                {paymentStatus === 'debt'
+                  ? t.pos.outstandingDebt
+                  : t.pos.change}
               </div>
               <div className="mt-1 text-2xl font-bold tracking-tight">
                 {formatIdr(outstandingOrChange)}
@@ -328,7 +332,7 @@ export function CheckoutModal({
             onClick={onConfirm}
             disabled={pending || (paymentMethod === 'debt' && !customerId)}
           >
-            {pending ? 'Processing Transaction...' : 'Confirm Payment'}
+            {pending ? t.pos.processing : t.pos.confirmPayment}
           </Button>
         </div>
       </div>

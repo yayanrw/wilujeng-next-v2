@@ -10,6 +10,7 @@ import { Card, CardContent, CardHeader } from '@/components/ui/Card';
 import { Input } from '@/components/ui/Input';
 import { usePosStore, type PosProduct } from '@/stores/posStore';
 import { formatIdr } from '@/utils/money';
+import { useTranslation } from '@/i18n/useTranslation';
 
 type SearchResult = PosProduct & {
   category: { id: string; name: string } | null;
@@ -34,6 +35,7 @@ export function SearchPanel({
   const [page, setPage] = useState(0);
   const [hasMore, setHasMore] = useState(true);
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
+  const { t } = useTranslation();
 
   const LIMIT = 20;
 
@@ -116,7 +118,7 @@ export function SearchPanel({
             <Input
               ref={inputRef}
               className="pl-9"
-              placeholder="Search name or scan SKU..."
+              placeholder={t.pos.searchPlaceholder}
               value={query}
               onChange={(e) => setQuery(e.target.value)}
               onKeyDown={(e) => {
@@ -127,11 +129,13 @@ export function SearchPanel({
                 const exact = results.find((r) => r.sku === q);
                 if (exact) {
                   if (exact.stock <= 0) {
-                    onToast(`Cannot add ${exact.name}, out of stock!`);
+                    onToast(
+                      `${t.pos.cannotAdd} ${exact.name}, ${t.pos.outOfStock}`,
+                    );
                     return;
                   }
                   addProduct(exact, 1);
-                  onToast(`${exact.name} added`);
+                  onToast(`${exact.name} ${t.pos.added}`);
 
                   // Reset query which clears the input without triggering the debounce API call for empty string immediately
                   setQuery('');
@@ -189,7 +193,7 @@ export function SearchPanel({
                 : 'bg-zinc-100 text-zinc-600 hover:bg-zinc-200 dark:bg-zinc-800 dark:text-zinc-400 dark:hover:bg-zinc-700'
             }`}
           >
-            All Categories
+            {t.common.allCategories}
           </button>
           {categories.map((cat) => (
             <button
@@ -213,7 +217,7 @@ export function SearchPanel({
             <div className="flex flex-col items-center gap-3">
               <div className="h-6 w-6 animate-spin rounded-full border-2 border-zinc-200 border-t-zinc-900 dark:border-zinc-800 dark:border-t-zinc-100" />
               <div className="text-sm font-medium text-zinc-500 dark:text-zinc-400">
-                Loading products...
+                {t.pos.loadingProducts}
               </div>
             </div>
           </div>
@@ -236,11 +240,13 @@ export function SearchPanel({
                 }`}
                 onClick={() => {
                   if (p.stock <= 0) {
-                    onToast(`Cannot add ${p.name}, out of stock!`);
+                    onToast(
+                      `${t.pos.cannotAdd} ${p.name}, ${t.pos.outOfStock}`,
+                    );
                     return;
                   }
                   addProduct(p, 1);
-                  onToast(`${p.name} added`);
+                  onToast(`${p.name} ${t.pos.added}`);
                   inputRef.current?.focus();
                 }}
               >
@@ -339,14 +345,14 @@ export function SearchPanel({
 
         {loading && results.length > 0 && (
           <div className="py-8 text-center text-sm text-zinc-500 dark:text-zinc-400">
-            Loading more products...
+            {t.pos.loadingMore}
           </div>
         )}
 
         {!loading && !results.length ? (
           <div className="py-12 text-center text-sm text-zinc-500 dark:text-zinc-400 flex flex-col items-center gap-2">
             <Search className="h-8 w-8 text-zinc-300" />
-            <p>No products found in this category.</p>
+            <p>{t.pos.noProducts}</p>
           </div>
         ) : null}
 
@@ -358,7 +364,7 @@ export function SearchPanel({
               className="w-full md:w-auto"
             >
               <ChevronDown className="mr-2 h-4 w-4" />
-              Load More Products
+              {t.products.loadMore}
             </Button>
           </div>
         )}

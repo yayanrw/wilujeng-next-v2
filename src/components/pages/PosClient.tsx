@@ -7,6 +7,7 @@ import { Printer } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
 import { usePosStore } from '@/stores/posStore';
 import { computePayment, type PaymentMethod } from '@/utils/checkout';
+import { useTranslation } from '@/i18n/useTranslation';
 
 import { CartPanel } from './pos/CartPanel';
 import { CheckoutModal } from './pos/CheckoutModal';
@@ -22,6 +23,7 @@ export function PosClient() {
   const [checkoutPending, setCheckoutPending] = useState(false);
   const [lastTxId, setLastTxId] = useState<string | null>(null);
   const [refreshKey, setRefreshKey] = useState(0);
+  const { t } = useTranslation();
 
   const items = usePosStore((s) => s.items);
   const customerId = usePosStore((s) => s.customerId);
@@ -49,7 +51,7 @@ export function PosClient() {
   async function doCheckout() {
     if (!items.length) return;
     if (payment.status === 'debt' && !customerId) {
-      setToast('Customer required for debt/partial payment');
+      setToast(t.pos.selectCustomerForDebt);
       return;
     }
 
@@ -71,19 +73,19 @@ export function PosClient() {
     setCheckoutPending(false);
     if (!res.ok) {
       setToast(
-        body && 'error' in body ? body.error.message : 'Checkout failed',
+        body && 'error' in body ? body.error.message : t.pos.checkoutFailed,
       );
       return;
     }
 
     if (!body || !('transactionId' in body)) {
-      setToast('Checkout failed');
+      setToast(t.pos.checkoutFailed);
       return;
     }
 
     setLastTxId(body.transactionId);
     setCheckoutOpen(false);
-    setToast('Transaction saved');
+    setToast(t.pos.transactionSaved);
     clear();
     setAmountReceived(0);
     setPaymentMethod('cash');
@@ -94,7 +96,7 @@ export function PosClient() {
   return (
     <div className="flex h-[calc(100vh-6rem)] flex-col gap-4">
       <div className="flex items-center justify-between shrink-0">
-        <div className="text-lg font-semibold">POS</div>
+        <div className="text-lg font-semibold">{t.nav.pos}</div>
         {lastTxId ? (
           <Button
             variant="secondary"
@@ -107,7 +109,7 @@ export function PosClient() {
             }}
           >
             <Printer className="h-4 w-4" />
-            Print last receipt
+            {t.pos.printLastReceipt}
           </Button>
         ) : null}
       </div>

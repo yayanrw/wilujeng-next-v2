@@ -10,6 +10,7 @@ import { formatIdr } from '@/utils/money';
 
 import { SalesDetailModal } from './reports/SalesDetailModal';
 import { ReceivableDetailModal } from './reports/ReceivableDetailModal';
+import { useTranslation } from '@/i18n/useTranslation';
 
 type Tab = 'sales' | 'stock' | 'receivables' | 'pnl' | 'suppliers';
 
@@ -60,6 +61,7 @@ export function ReportsClient() {
   const [selectedReceivableId, setSelectedReceivableId] = useState<
     string | null
   >(null);
+  const { t } = useTranslation();
 
   async function run() {
     setPending(true);
@@ -78,7 +80,7 @@ export function ReportsClient() {
     const body = await res.json().catch(() => null);
     setPending(false);
     if (!res.ok) {
-      setError(body?.error?.message ?? 'Failed to load report');
+      setError(body?.error?.message ?? t.reports.failedToLoad);
       return;
     }
     setData(body);
@@ -91,26 +93,28 @@ export function ReportsClient() {
   return (
     <div className="flex flex-col gap-4">
       <div className="space-y-1.5">
-        <div className="text-xl font-bold tracking-tight">Reports</div>
+        <div className="text-xl font-bold tracking-tight">
+          {t.reports.title}
+        </div>
         <div className="text-sm text-zinc-500 dark:text-zinc-400">
-          View analytics, sales, stock alerts, and financial summaries
+          {t.reports.subtitle}
         </div>
       </div>
 
       <div className="flex flex-wrap gap-2">
         {(['sales', 'stock', 'receivables', 'pnl', 'suppliers'] as Tab[]).map(
-          (t) => (
+          (tTab) => (
             <button
-              key={t}
+              key={tTab}
               type="button"
               className={
-                t === tab
+                tTab === tab
                   ? 'rounded-full bg-zinc-900 px-4 py-2 text-sm text-white shadow-sm dark:bg-zinc-100 dark:text-zinc-900'
                   : 'rounded-full border border-zinc-200 bg-white px-4 py-2 text-sm transition-colors hover:bg-zinc-50 dark:border-zinc-800 dark:bg-zinc-950 dark:text-zinc-400 dark:hover:bg-zinc-900'
               }
-              onClick={() => setTab(t)}
+              onClick={() => setTab(tTab)}
             >
-              {t.toUpperCase()}
+              {t.reports[tTab as keyof typeof t.reports]}
             </button>
           ),
         )}
@@ -121,14 +125,14 @@ export function ReportsClient() {
           <div className="flex flex-wrap items-end justify-between gap-4">
             <div className="space-y-1">
               <div className="text-base font-semibold text-zinc-900 dark:text-zinc-100">
-                {tab === 'sales' && 'Daily Sales Report'}
-                {tab === 'stock' && 'Low Stock Alerts'}
-                {tab === 'receivables' && 'Accounts Receivable'}
-                {tab === 'pnl' && 'Profit & Loss Statement'}
-                {tab === 'suppliers' && 'Supplier Summary'}
+                {tab === 'sales' && t.reports.dailySalesReport}
+                {tab === 'stock' && t.reports.lowStockAlerts}
+                {tab === 'receivables' && t.reports.accountsReceivable}
+                {tab === 'pnl' && t.reports.profitAndLoss}
+                {tab === 'suppliers' && t.reports.supplierSummary}
               </div>
               <div className="text-sm text-zinc-500 dark:text-zinc-400">
-                Adjust filters below and run to see the report
+                {t.reports.adjustFilters}
               </div>
             </div>
 
@@ -136,7 +140,7 @@ export function ReportsClient() {
               {tab === 'sales' ? (
                 <div>
                   <label className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-zinc-500 dark:text-zinc-400">
-                    Date
+                    {t.reports.date}
                   </label>
                   <Input
                     className="h-9 w-40 text-sm"
@@ -151,7 +155,7 @@ export function ReportsClient() {
                 <>
                   <div>
                     <label className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-zinc-500 dark:text-zinc-400">
-                      From
+                      {t.reports.from}
                     </label>
                     <Input
                       className="h-9 w-40 text-sm"
@@ -162,7 +166,7 @@ export function ReportsClient() {
                   </div>
                   <div>
                     <label className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-zinc-500 dark:text-zinc-400">
-                      To
+                      {t.reports.to}
                     </label>
                     <Input
                       className="h-9 w-40 text-sm"
@@ -180,7 +184,7 @@ export function ReportsClient() {
                 onClick={() => void run()}
                 disabled={pending}
               >
-                {pending ? 'Running...' : 'Run Report'}
+                {pending ? t.reports.running : t.reports.runReport}
               </Button>
             </div>
           </div>
@@ -197,7 +201,7 @@ export function ReportsClient() {
               <div className="flex flex-col items-center gap-3">
                 <div className="h-6 w-6 animate-spin rounded-full border-2 border-zinc-200 border-t-zinc-900 dark:border-zinc-800 dark:border-t-zinc-100" />
                 <div className="text-sm font-medium text-zinc-500 dark:text-zinc-400">
-                  Loading report data...
+                  {t.reports.loadingData}
                 </div>
               </div>
             </div>
@@ -206,49 +210,59 @@ export function ReportsClient() {
               <table className="w-full text-sm">
                 <thead>
                   <tr className="border-b border-zinc-200 bg-zinc-50/50 text-left text-zinc-500 dark:border-zinc-800 dark:bg-zinc-900/50 dark:text-zinc-400">
-                    <th className="px-4 py-3 font-medium">Date</th>
-                    <th className="px-4 py-3 font-medium">ID</th>
-                    <th className="px-4 py-3 font-medium">Customer</th>
-                    <th className="px-4 py-3 font-medium text-right">Total</th>
-                    <th className="px-4 py-3 font-medium">Method</th>
-                    <th className="px-4 py-3 font-medium">Status</th>
-                    <th className="px-4 py-3 font-medium text-right">Action</th>
+                    <th className="px-4 py-3 font-medium">{t.reports.date}</th>
+                    <th className="px-4 py-3 font-medium">{t.reports.id}</th>
+                    <th className="px-4 py-3 font-medium">
+                      {t.dashboard.customer}
+                    </th>
+                    <th className="px-4 py-3 font-medium text-right">
+                      {t.reports.total}
+                    </th>
+                    <th className="px-4 py-3 font-medium">
+                      {t.reports.method}
+                    </th>
+                    <th className="px-4 py-3 font-medium">
+                      {t.reports.status}
+                    </th>
+                    <th className="px-4 py-3 font-medium text-right">
+                      {t.common.action}
+                    </th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-zinc-100 dark:divide-zinc-800">
-                  {(data as SalesRow[]).map((t) => (
+                  {(data as SalesRow[]).map((tItem) => (
                     <tr
-                      key={t.id}
+                      key={tItem.id}
                       className="group transition-colors hover:bg-zinc-50/50 dark:hover:bg-zinc-900/50"
                     >
                       <td className="whitespace-nowrap px-4 py-3 text-zinc-600 dark:text-zinc-400">
-                        {new Date(t.createdAt).toLocaleDateString()}{' '}
-                        {new Date(t.createdAt).toLocaleTimeString([], {
+                        {new Date(tItem.createdAt).toLocaleDateString()}{' '}
+                        {new Date(tItem.createdAt).toLocaleTimeString([], {
                           hour: '2-digit',
                           minute: '2-digit',
                         })}
                       </td>
                       <td className="px-4 py-3 font-mono text-xs text-zinc-500 dark:text-zinc-400">
-                        {String(t.id).slice(0, 8)}
+                        {String(tItem.id).slice(0, 8)}
                       </td>
                       <td className="px-4 py-3 font-medium text-zinc-900 dark:text-zinc-100">
-                        {t.customerName ?? '-'}
+                        {tItem.customerName ?? '-'}
                       </td>
                       <td className="px-4 py-3 text-right tabular-nums font-semibold text-zinc-900 dark:text-zinc-100">
-                        {formatIdr(t.totalAmount)}
+                        {formatIdr(tItem.totalAmount)}
                       </td>
                       <td className="px-4 py-3 capitalize text-zinc-600 dark:text-zinc-400">
-                        {t.paymentMethod}
+                        {tItem.paymentMethod}
                       </td>
                       <td className="px-4 py-3">
                         <span
                           className={`rounded-full px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider ${
-                            t.status === 'paid' || t.status === 'lunas'
+                            tItem.status === 'paid' || tItem.status === 'lunas'
                               ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400'
                               : 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400'
                           }`}
                         >
-                          {t.status}
+                          {tItem.status}
                         </span>
                       </td>
                       <td className="px-4 py-3 text-right">
@@ -256,11 +270,11 @@ export function ReportsClient() {
                           variant="ghost"
                           size="sm"
                           className="h-8 w-8 p-0 text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-50"
-                          onClick={() => setSelectedSalesId(t.id)}
-                          title="View detail"
+                          onClick={() => setSelectedSalesId(tItem.id)}
+                          title={t.stock.viewDetail}
                         >
                           <Eye className="h-4 w-4" />
-                          <span className="sr-only">View Detail</span>
+                          <span className="sr-only">{t.stock.viewDetail}</span>
                         </Button>
                       </td>
                     </tr>
@@ -275,11 +289,13 @@ export function ReportsClient() {
               <table className="w-full text-sm">
                 <thead>
                   <tr className="border-b border-zinc-200 bg-zinc-50/50 text-left text-zinc-500 dark:border-zinc-800 dark:bg-zinc-900/50 dark:text-zinc-400">
-                    <th className="px-4 py-3 font-medium">SKU</th>
-                    <th className="px-4 py-3 font-medium">Name</th>
-                    <th className="px-4 py-3 font-medium text-right">Stock</th>
+                    <th className="px-4 py-3 font-medium">{t.products.sku}</th>
+                    <th className="px-4 py-3 font-medium">{t.products.name}</th>
                     <th className="px-4 py-3 font-medium text-right">
-                      Threshold
+                      {t.products.stock}
+                    </th>
+                    <th className="px-4 py-3 font-medium text-right">
+                      {t.reports.threshold}
                     </th>
                   </tr>
                 </thead>
@@ -313,10 +329,18 @@ export function ReportsClient() {
               <table className="w-full text-sm">
                 <thead>
                   <tr className="border-b border-zinc-200 bg-zinc-50/50 text-left text-zinc-500 dark:border-zinc-800 dark:bg-zinc-900/50 dark:text-zinc-400">
-                    <th className="px-4 py-3 font-medium">Customer</th>
-                    <th className="px-4 py-3 font-medium">Phone</th>
-                    <th className="px-4 py-3 font-medium text-right">Debt</th>
-                    <th className="px-4 py-3 font-medium text-right">Action</th>
+                    <th className="px-4 py-3 font-medium">
+                      {t.dashboard.customer}
+                    </th>
+                    <th className="px-4 py-3 font-medium">
+                      {t.customers.phone}
+                    </th>
+                    <th className="px-4 py-3 font-medium text-right">
+                      {t.reports.debt}
+                    </th>
+                    <th className="px-4 py-3 font-medium text-right">
+                      {t.common.action}
+                    </th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-zinc-100 dark:divide-zinc-800">
@@ -340,10 +364,10 @@ export function ReportsClient() {
                           size="sm"
                           className="h-8 w-8 p-0 text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-50"
                           onClick={() => setSelectedReceivableId(c.id)}
-                          title="View detail"
+                          title={t.stock.viewDetail}
                         >
                           <Eye className="h-4 w-4" />
-                          <span className="sr-only">View Detail</span>
+                          <span className="sr-only">{t.stock.viewDetail}</span>
                         </Button>
                       </td>
                     </tr>
@@ -357,7 +381,7 @@ export function ReportsClient() {
             <div className="grid grid-cols-1 gap-4 p-4 md:grid-cols-3">
               <div className="rounded-xl border border-zinc-200 bg-white p-5 shadow-sm dark:border-zinc-800 dark:bg-zinc-950">
                 <div className="text-sm font-medium text-zinc-500 dark:text-zinc-400">
-                  Total Sales
+                  {t.reports.totalSales}
                 </div>
                 <div className="mt-2 text-2xl font-bold tabular-nums tracking-tight text-zinc-900 dark:text-zinc-100">
                   {formatIdr((data as PnlRow).sales ?? 0)}
@@ -365,7 +389,7 @@ export function ReportsClient() {
               </div>
               <div className="rounded-xl border border-zinc-200 bg-white p-5 shadow-sm dark:border-zinc-800 dark:bg-zinc-950">
                 <div className="text-sm font-medium text-zinc-500 dark:text-zinc-400">
-                  COGS (Cost of Goods)
+                  {t.reports.cogs}
                 </div>
                 <div className="mt-2 text-2xl font-bold tabular-nums tracking-tight text-zinc-900 dark:text-zinc-100">
                   {formatIdr((data as PnlRow).cogs ?? 0)}
@@ -373,7 +397,7 @@ export function ReportsClient() {
               </div>
               <div className="rounded-xl border border-zinc-200 bg-white p-5 shadow-sm dark:border-zinc-800 dark:bg-zinc-950">
                 <div className="text-sm font-medium text-zinc-500 dark:text-zinc-400">
-                  Gross Profit
+                  {t.reports.grossProfit}
                 </div>
                 <div
                   className={`mt-2 text-2xl font-bold tabular-nums tracking-tight ${
@@ -393,12 +417,14 @@ export function ReportsClient() {
               <table className="w-full text-sm">
                 <thead>
                   <tr className="border-b border-zinc-200 bg-zinc-50/50 text-left text-zinc-500 dark:border-zinc-800 dark:bg-zinc-900/50 dark:text-zinc-400">
-                    <th className="px-4 py-3 font-medium">Supplier</th>
-                    <th className="px-4 py-3 font-medium text-right">
-                      Total Qty In
+                    <th className="px-4 py-3 font-medium">
+                      {t.dashboard.supplier}
                     </th>
                     <th className="px-4 py-3 font-medium text-right">
-                      Purchase Value
+                      {t.reports.totalQtyIn}
+                    </th>
+                    <th className="px-4 py-3 font-medium text-right">
+                      {t.reports.purchaseValue}
                     </th>
                   </tr>
                 </thead>

@@ -11,6 +11,7 @@ import { Input } from '@/components/ui/Input';
 import { formatIdr } from '@/utils/money';
 import { Toast } from './pos/Toast';
 import { CustomerForm, type CustomerDto } from './customers/CustomerForm';
+import { useTranslation } from '@/i18n/useTranslation';
 
 type CustomerDetail = {
   customer: CustomerDto;
@@ -34,6 +35,7 @@ export function CustomersClient() {
   const [page, setPage] = useState(0);
   const [hasMore, setHasMore] = useState(true);
   const [toastMessage, setToastMessage] = useState<string | null>(null);
+  const { t } = useTranslation();
   const LIMIT = 50;
 
   const showToast = (msg: string) => {
@@ -124,9 +126,11 @@ export function CustomersClient() {
   return (
     <div className="flex flex-col gap-4">
       <div className="space-y-1.5">
-        <div className="text-xl font-bold tracking-tight">Customers</div>
+        <div className="text-xl font-bold tracking-tight">
+          {t.customers.title}
+        </div>
         <div className="text-sm text-zinc-500 dark:text-zinc-400">
-          Manage your customer directory and view their history
+          {t.customers.subtitle}
         </div>
       </div>
 
@@ -135,7 +139,7 @@ export function CustomersClient() {
           <CardHeader className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between pb-6">
             <div className="w-full sm:w-72">
               <Input
-                placeholder="Search name or phone..."
+                placeholder={t.customers.searchPlaceholder}
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
               />
@@ -147,7 +151,7 @@ export function CustomersClient() {
                 <div className="flex flex-col items-center gap-3">
                   <div className="h-6 w-6 animate-spin rounded-full border-2 border-zinc-200 border-t-zinc-900 dark:border-zinc-800 dark:border-t-zinc-100" />
                   <div className="text-sm font-medium text-zinc-500 dark:text-zinc-400">
-                    Loading customers...
+                    {t.customers.loading}
                   </div>
                 </div>
               </div>
@@ -157,16 +161,16 @@ export function CustomersClient() {
                   <thead>
                     <tr className="border-y border-zinc-200 dark:border-zinc-800 bg-zinc-50/50 dark:bg-zinc-900/50 text-left text-zinc-500 dark:text-zinc-400">
                       <th className="py-3 px-4 font-medium">
-                        Customer Details
+                        {t.customers.customerDetails}
                       </th>
                       <th className="py-3 px-4 font-medium text-right">
-                        Points
+                        {t.customers.points}
                       </th>
                       <th className="py-3 px-4 font-medium text-right">
-                        Outstanding Debt
+                        {t.pos.outstandingDebt}
                       </th>
                       <th className="py-3 px-4 font-medium text-right">
-                        Action
+                        {t.common.action}
                       </th>
                     </tr>
                   </thead>
@@ -198,12 +202,12 @@ export function CustomersClient() {
                                   tone="danger"
                                   className="h-5 px-1.5 py-0 text-[10px] font-semibold uppercase tracking-wider"
                                 >
-                                  Has debt
+                                  {t.customers.hasDebt}
                                 </Badge>
                               ) : null}
                             </div>
                             <div className="text-[11px] font-medium text-zinc-500 dark:text-zinc-400 font-mono">
-                              {c.phone ?? 'No phone provided'}
+                              {c.phone ?? t.customers.noPhone}
                             </div>
                           </div>
                         </td>
@@ -226,10 +230,10 @@ export function CustomersClient() {
                               setSelectedId(c.id);
                               setMode('edit');
                             }}
-                            title="Edit customer"
+                            title={t.customers.editCustomer}
                           >
                             <Pencil className="h-4 w-4" />
-                            <span className="sr-only">Edit</span>
+                            <span className="sr-only">{t.common.edit}</span>
                           </Button>
                         </td>
                       </tr>
@@ -241,7 +245,7 @@ export function CustomersClient() {
 
             {!loading && customers.length === 0 ? (
               <div className="mt-3 text-sm text-zinc-500 dark:text-zinc-400 text-center py-8">
-                No customers found.
+                {t.customers.noCustomers}
               </div>
             ) : null}
 
@@ -253,7 +257,7 @@ export function CustomersClient() {
                   disabled={loading}
                   className="w-full max-w-xs"
                 >
-                  Load More Customers
+                  {t.customers.loadMore}
                 </Button>
               </div>
             )}
@@ -264,12 +268,14 @@ export function CustomersClient() {
           <CardHeader className="flex flex-row items-center justify-between border-b border-zinc-100 dark:border-zinc-800 bg-zinc-50/50 dark:bg-zinc-900/50 pb-4">
             <div className="space-y-1">
               <div className="text-base font-semibold text-zinc-900 dark:text-zinc-100">
-                {mode === 'create' ? 'Add Customer' : 'Edit Customer'}
+                {mode === 'create'
+                  ? t.customers.addCustomer
+                  : t.customers.editCustomer}
               </div>
               <div className="text-xs text-zinc-500 dark:text-zinc-400">
                 {mode === 'create'
-                  ? 'Create a new profile'
-                  : 'Update details or view history'}
+                  ? t.customers.createProfile
+                  : t.customers.updateProfile}
               </div>
             </div>
             {mode === 'edit' && (
@@ -283,7 +289,7 @@ export function CustomersClient() {
                 }}
               >
                 <Plus className="h-4 w-4 mr-1" />
-                New
+                {t.common.new}
               </Button>
             )}
           </CardHeader>
@@ -300,11 +306,11 @@ export function CustomersClient() {
                     }
                     showToast(
                       mode === 'create'
-                        ? 'Customer created successfully'
-                        : 'Customer updated successfully',
+                        ? t.customers.createdSuccess
+                        : t.customers.updatedSuccess,
                     );
                   } else {
-                    showToast(errorMsg || 'Failed to save customer');
+                    showToast(errorMsg || t.customers.saveFailed);
                   }
                 }}
               />
@@ -312,38 +318,41 @@ export function CustomersClient() {
               {mode === 'edit' && detail && (
                 <div className="border-t border-zinc-200 dark:border-zinc-800 pt-6">
                   <div className="text-sm font-semibold mb-3">
-                    Recent transactions
+                    {t.customers.recentTransactions}
                   </div>
                   {detail.transactions.length > 0 ? (
                     <div className="overflow-x-auto">
                       <table className="w-full text-sm">
                         <thead>
                           <tr className="border-b border-zinc-200 dark:border-zinc-800 text-left text-zinc-500 dark:text-zinc-400">
-                            <th className="py-2">ID</th>
-                            <th className="py-2">Total</th>
-                            <th className="py-2">Status</th>
+                            <th className="py-2">{t.reports.id}</th>
+                            <th className="py-2">{t.reports.total}</th>
+                            <th className="py-2">{t.reports.status}</th>
                           </tr>
                         </thead>
                         <tbody>
-                          {detail.transactions.map((t) => (
+                          {detail.transactions.map((tItem) => (
                             <tr
-                              key={t.id}
+                              key={tItem.id}
                               className="border-b border-zinc-100 dark:border-zinc-800"
                             >
                               <td className="py-2 font-mono text-xs">
-                                {t.id.slice(0, 8)}
+                                {tItem.id.slice(0, 8)}
                               </td>
                               <td className="py-2 tabular-nums">
-                                {formatIdr(t.totalAmount)}
+                                {formatIdr(tItem.totalAmount)}
                               </td>
                               <td className="py-2">
                                 <Badge
                                   tone={
-                                    t.status === 'debt' ? 'danger' : 'success'
+                                    tItem.status === 'debt'
+                                      ? 'danger'
+                                      : 'success'
                                   }
                                   className="text-[10px] px-1.5 py-0 h-4"
                                 >
-                                  {t.status}
+                                  {t.pos[tItem.status as keyof typeof t.pos] ||
+                                    tItem.status}
                                 </Badge>
                               </td>
                             </tr>
@@ -353,7 +362,7 @@ export function CustomersClient() {
                     </div>
                   ) : (
                     <div className="text-sm text-zinc-500 dark:text-zinc-400 bg-zinc-50 dark:bg-zinc-900 dark:bg-zinc-100 rounded-lg p-4 text-center border border-zinc-100 dark:border-zinc-800">
-                      No recent transactions
+                      {t.customers.noRecentTransactions}
                     </div>
                   )}
                 </div>

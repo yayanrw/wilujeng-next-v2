@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState } from 'react';
 
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
+import { useTranslation } from '@/i18n/useTranslation';
 
 export type CustomerDto = {
   id: string;
@@ -32,6 +33,7 @@ export function CustomerForm({
   const [address, setAddress] = useState(initial?.address ?? '');
   const [points, setPoints] = useState(initial?.points ?? 0);
   const [pending, setPending] = useState(false);
+  const { t } = useTranslation();
 
   // Sync state when initial customer changes
   useEffect(() => {
@@ -53,7 +55,7 @@ export function CustomerForm({
   if (missingEdit) {
     return (
       <div className="rounded-lg border border-dashed border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-950 p-4 text-sm text-zinc-500 dark:text-zinc-400">
-        Select a customer to edit.
+        {t.customers.selectToEdit}
       </div>
     );
   }
@@ -111,7 +113,7 @@ export function CustomerForm({
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div>
           <label className="text-xs font-semibold uppercase tracking-wider text-zinc-500 dark:text-zinc-400">
-            Name
+            {t.customers.name}
           </label>
           <Input
             value={name}
@@ -123,7 +125,7 @@ export function CustomerForm({
 
         <div>
           <label className="text-xs font-semibold uppercase tracking-wider text-zinc-500 dark:text-zinc-400">
-            Phone
+            {t.customers.phone}
           </label>
           <Input
             value={phone}
@@ -136,7 +138,7 @@ export function CustomerForm({
 
       <div>
         <label className="text-xs font-semibold uppercase tracking-wider text-zinc-500 dark:text-zinc-400">
-          Address
+          {t.customers.address}
         </label>
         <Input
           value={address}
@@ -149,7 +151,7 @@ export function CustomerForm({
       {mode === 'edit' && (
         <div className="p-4 bg-zinc-50 dark:bg-zinc-900 rounded-lg border border-zinc-100 dark:border-zinc-800">
           <label className="text-xs font-semibold uppercase tracking-wider text-zinc-500 dark:text-zinc-400">
-            Loyalty Points
+            {t.customers.loyaltyPoints}
           </label>
           <div className="flex gap-2 mt-1.5">
             <Input
@@ -163,14 +165,14 @@ export function CustomerForm({
               type="button"
               variant="secondary"
               onClick={() => setPoints(0)}
-              title="Reset Points"
+              title={t.customers.resetPoints}
               className="px-4"
             >
-              Reset
+              {t.customers.reset}
             </Button>
           </div>
           <p className="text-xs text-zinc-500 dark:text-zinc-400 mt-2">
-            Admin can reset or adjust points manually.
+            {t.customers.adminCanReset}
           </p>
         </div>
       )}
@@ -183,15 +185,15 @@ export function CustomerForm({
             onClick={onCancel}
             disabled={pending}
           >
-            Cancel
+            {t.common.cancel}
           </Button>
         )}
         <Button type="submit" disabled={pending || !canSave}>
           {pending
-            ? 'Saving...'
+            ? t.common.saving
             : mode === 'create'
-              ? 'Create Customer'
-              : 'Save Changes'}
+              ? t.customers.createCustomer
+              : t.common.saveChanges}
         </Button>
       </div>
     </form>

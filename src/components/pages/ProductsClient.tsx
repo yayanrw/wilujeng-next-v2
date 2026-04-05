@@ -12,6 +12,7 @@ import { formatIdr } from '@/utils/money';
 
 import { ProductForm, type ProductDto } from './products/ProductForm';
 import { Toast } from './pos/Toast';
+import { useTranslation } from '@/i18n/useTranslation';
 
 export function ProductsClient() {
   const [search, setSearch] = useState('');
@@ -28,6 +29,7 @@ export function ProductsClient() {
     [],
   );
   const [brands, setBrands] = useState<{ id: string; name: string }[]>([]);
+  const { t } = useTranslation();
   const LIMIT = 50;
 
   const showToast = (msg: string) => {
@@ -127,14 +129,16 @@ export function ProductsClient() {
       <Card className="h-fit">
         <CardHeader className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between pb-6">
           <div className="space-y-1.5">
-            <div className="text-xl font-bold tracking-tight">Products</div>
+            <div className="text-xl font-bold tracking-tight">
+              {t.products.title}
+            </div>
             <div className="text-sm text-zinc-500 dark:text-zinc-400">
-              Manage your product catalog and inventory
+              {t.products.subtitle}
             </div>
           </div>
           <div className="flex flex-col sm:flex-row gap-3 w-full md:w-auto">
             <Input
-              placeholder="Search by name or SKU..."
+              placeholder={t.products.searchPlaceholder}
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               className="flex-1"
@@ -145,7 +149,7 @@ export function ProductsClient() {
                 value={categoryId}
                 onChange={(e) => setCategoryId(e.target.value)}
               >
-                <option value="all">All Categories</option>
+                <option value="all">{t.common.allCategories}</option>
                 {categories.map((c) => (
                   <option key={c.id} value={c.id}>
                     {c.name}
@@ -157,7 +161,7 @@ export function ProductsClient() {
                 value={brandId}
                 onChange={(e) => setBrandId(e.target.value)}
               >
-                <option value="all">All Brands</option>
+                <option value="all">{t.common.allBrands}</option>
                 {brands.map((b) => (
                   <option key={b.id} value={b.id}>
                     {b.name}
@@ -173,7 +177,7 @@ export function ProductsClient() {
               <div className="flex flex-col items-center gap-3">
                 <div className="h-6 w-6 animate-spin rounded-full border-2 border-zinc-200 border-t-zinc-900 dark:border-zinc-800 dark:border-t-zinc-100" />
                 <div className="text-sm font-medium text-zinc-500 dark:text-zinc-400">
-                  Loading products...
+                  {t.products.loading}
                 </div>
               </div>
             </div>
@@ -182,11 +186,17 @@ export function ProductsClient() {
               <table className="w-full text-sm">
                 <thead>
                   <tr className="border-y border-zinc-200 dark:border-zinc-800 bg-zinc-50/50 dark:bg-zinc-900/50 text-left text-zinc-500 dark:text-zinc-400">
-                    <th className="py-3 px-4 font-medium">SKU</th>
-                    <th className="py-3 px-4 font-medium">Name</th>
-                    <th className="py-3 px-4 font-medium">Price</th>
-                    <th className="py-3 px-4 font-medium">Stock</th>
-                    <th className="py-3 px-4 font-medium text-right">Action</th>
+                    <th className="py-3 px-4 font-medium">{t.products.sku}</th>
+                    <th className="py-3 px-4 font-medium">{t.products.name}</th>
+                    <th className="py-3 px-4 font-medium">
+                      {t.products.price}
+                    </th>
+                    <th className="py-3 px-4 font-medium">
+                      {t.products.stock}
+                    </th>
+                    <th className="py-3 px-4 font-medium text-right">
+                      {t.products.action}
+                    </th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-zinc-100 dark:divide-zinc-800">
@@ -223,7 +233,7 @@ export function ProductsClient() {
                                 tone="warning"
                                 className="h-5 px-1.5 py-0 text-[10px]"
                               >
-                                Low Stock
+                                {t.products.lowStock}
                               </Badge>
                             ) : null}
                           </div>
@@ -258,10 +268,10 @@ export function ProductsClient() {
                             setSelectedId(p.id);
                             setMode('edit');
                           }}
-                          title="Edit product"
+                          title={t.products.editProduct}
                         >
                           <Pencil className="h-4 w-4" />
-                          <span className="sr-only">Edit</span>
+                          <span className="sr-only">{t.common.edit}</span>
                         </Button>
                       </td>
                     </tr>
@@ -272,7 +282,7 @@ export function ProductsClient() {
           )}
           {!loading && products.length === 0 ? (
             <div className="mt-3 text-sm text-zinc-500 dark:text-zinc-400 text-center py-4">
-              No products found.
+              {t.products.noProducts}
             </div>
           ) : null}
 
@@ -284,7 +294,7 @@ export function ProductsClient() {
                 disabled={loading}
                 className="w-full sm:w-auto"
               >
-                Load More Products
+                {t.products.loadMore}
               </Button>
             </div>
           )}
@@ -296,10 +306,12 @@ export function ProductsClient() {
           <div className="flex items-center justify-between">
             <div>
               <div className="text-sm font-semibold">
-                {mode === 'create' ? 'New product' : 'Edit product'}
+                {mode === 'create'
+                  ? t.products.newProduct
+                  : t.products.editProduct}
               </div>
               <div className="text-xs text-zinc-500 dark:text-zinc-400">
-                Admin only
+                {t.common.adminOnly}
               </div>
             </div>
             {mode === 'edit' && (
@@ -312,7 +324,7 @@ export function ProductsClient() {
                 }}
               >
                 <Plus className="h-3 w-3 mr-1" />
-                New Product
+                {t.products.newProduct}
               </Button>
             )}
           </div>
@@ -329,11 +341,11 @@ export function ProductsClient() {
                 }
                 showToast(
                   mode === 'create'
-                    ? 'Product created successfully'
-                    : 'Product updated successfully',
+                    ? t.products.createdSuccess
+                    : t.products.updatedSuccess,
                 );
               } else {
-                showToast(errorMsg || 'Failed to save product');
+                showToast(errorMsg || t.products.saveFailed);
               }
             }}
           />

@@ -8,6 +8,7 @@ import { Card, CardContent, CardHeader } from '@/components/ui/Card';
 import { Input } from '@/components/ui/Input';
 import { Toast } from '@/components/pages/pos/Toast';
 import { UserForm, type UserDto } from './UserForm';
+import { useTranslation } from '@/i18n/useTranslation';
 
 export function UsersSettings() {
   const [search, setSearch] = useState('');
@@ -20,6 +21,7 @@ export function UsersSettings() {
   const [hasMore, setHasMore] = useState(true);
   const [toastMessage, setToastMessage] = useState<string | null>(null);
   const LIMIT = 50;
+  const { t } = useTranslation();
 
   const showToast = (msg: string) => {
     setToastMessage(msg);
@@ -89,10 +91,10 @@ export function UsersSettings() {
     <div className="grid grid-cols-1 gap-4 lg:grid-cols-[1fr_420px]">
       <Card>
         <CardHeader>
-          <div className="text-lg font-semibold">Users</div>
+          <div className="text-lg font-semibold">{t.settings.users}</div>
           <div className="mt-3">
             <Input
-              placeholder="Search by name or email"
+              placeholder={t.settings.searchUsers}
               value={search}
               onChange={(e) => setSearch(e.target.value)}
             />
@@ -104,7 +106,7 @@ export function UsersSettings() {
               <div className="flex flex-col items-center gap-3">
                 <div className="h-6 w-6 animate-spin rounded-full border-2 border-zinc-200 border-t-zinc-900 dark:border-zinc-800 dark:border-t-zinc-100" />
                 <div className="text-sm font-medium text-zinc-500 dark:text-zinc-400">
-                  Loading users...
+                  {t.settings.loadingUsers}
                 </div>
               </div>
             </div>
@@ -113,10 +115,10 @@ export function UsersSettings() {
               <table className="w-full text-sm">
                 <thead>
                   <tr className="border-b border-zinc-200 dark:border-zinc-800 text-left text-zinc-500 dark:text-zinc-400">
-                    <th className="py-2">Email</th>
-                    <th className="py-2">Name</th>
-                    <th className="py-2">Role</th>
-                    <th className="py-2 text-right">Action</th>
+                    <th className="py-2">{t.settings.email}</th>
+                    <th className="py-2">{t.settings.name}</th>
+                    <th className="py-2">{t.settings.role}</th>
+                    <th className="py-2 text-right">{t.common.action}</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -152,10 +154,10 @@ export function UsersSettings() {
                             setSelectedId(u.id);
                             setMode('edit');
                           }}
-                          title="Edit user"
+                          title={t.settings.editUser}
                         >
                           <Pencil className="h-4 w-4" />
-                          <span className="sr-only">Edit</span>
+                          <span className="sr-only">{t.common.edit}</span>
                         </Button>
                       </td>
                     </tr>
@@ -166,7 +168,7 @@ export function UsersSettings() {
                         colSpan={4}
                         className="py-4 text-center text-zinc-500 dark:text-zinc-400"
                       >
-                        No users found
+                        {t.settings.noUsers}
                       </td>
                     </tr>
                   )}
@@ -178,7 +180,7 @@ export function UsersSettings() {
           {hasMore && (
             <div className="mt-4 flex justify-center">
               <Button variant="ghost" onClick={loadMore} disabled={loading}>
-                {loading ? 'Loading...' : 'Load More'}
+                {loading ? t.common.loading : t.settings.loadMore}
               </Button>
             </div>
           )}
@@ -188,12 +190,12 @@ export function UsersSettings() {
       <Card className="h-fit sticky top-4">
         <CardHeader>
           <div className="text-sm font-semibold">
-            {mode === 'create' ? 'Create User' : 'Edit User'}
+            {mode === 'create' ? t.settings.createUser : t.settings.editUser}
           </div>
           <div className="text-xs text-zinc-500 dark:text-zinc-400">
             {mode === 'create'
-              ? 'Add a new cashier or admin'
-              : 'Update user details'}
+              ? t.settings.createUserDesc
+              : t.settings.editUserDesc}
           </div>
         </CardHeader>
         <CardContent>

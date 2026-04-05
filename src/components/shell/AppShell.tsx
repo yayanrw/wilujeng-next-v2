@@ -19,6 +19,7 @@ import {
 import { authClient } from '@/lib/auth-client';
 import { cn } from '@/lib/cn';
 import { useUiStore } from '@/stores/uiStore';
+import { useTranslation } from '@/i18n/useTranslation';
 
 type NavItem = {
   href: string;
@@ -27,33 +28,7 @@ type NavItem = {
   adminOnly?: boolean;
 };
 
-const navItems: NavItem[] = [
-  {
-    href: '/',
-    label: 'Dashboard',
-    icon: <LayoutDashboard className="h-4 w-4" />,
-  },
-  { href: '/pos', label: 'POS', icon: <ShoppingCart className="h-4 w-4" /> },
-  { href: '/products', label: 'Products', icon: <Box className="h-4 w-4" /> },
-  { href: '/stock', label: 'Stock', icon: <Package className="h-4 w-4" /> },
-  {
-    href: '/customers',
-    label: 'Customers',
-    icon: <Users className="h-4 w-4" />,
-  },
-  {
-    href: '/reports',
-    label: 'Reports',
-    icon: <BarChart3 className="h-4 w-4" />,
-    adminOnly: true,
-  },
-  {
-    href: '/settings',
-    label: 'Settings',
-    icon: <Settings className="h-4 w-4" />,
-    adminOnly: true,
-  },
-];
+
 
 export function AppShell({
   children,
@@ -71,6 +46,47 @@ export function AppShell({
   const pathname = usePathname();
   const sidebarCollapsed = useUiStore((s) => s.sidebarCollapsed);
   const toggleSidebar = useUiStore((s) => s.toggleSidebar);
+  const { t } = useTranslation();
+
+  const navItems: NavItem[] = [
+    {
+      href: '/',
+      label: t.nav.dashboard,
+      icon: <LayoutDashboard className="h-4 w-4" />,
+    },
+    {
+      href: '/pos',
+      label: t.nav.pos,
+      icon: <ShoppingCart className="h-4 w-4" />,
+    },
+    {
+      href: '/products',
+      label: t.nav.products,
+      icon: <Box className="h-4 w-4" />,
+    },
+    {
+      href: '/stock',
+      label: t.nav.stock,
+      icon: <Package className="h-4 w-4" />,
+    },
+    {
+      href: '/customers',
+      label: t.nav.customers,
+      icon: <Users className="h-4 w-4" />,
+    },
+    {
+      href: '/reports',
+      label: t.nav.reports,
+      icon: <BarChart3 className="h-4 w-4" />,
+      adminOnly: true,
+    },
+    {
+      href: '/settings',
+      label: t.nav.settings,
+      icon: <Settings className="h-4 w-4" />,
+      adminOnly: true,
+    },
+  ];
 
   const IconComponent =
     (
@@ -191,7 +207,7 @@ export function AppShell({
               <div className="hidden sm:block min-w-0">
                 <div className="truncate text-sm font-medium">{userName}</div>
                 <div className="truncate text-xs text-zinc-500 dark:text-zinc-400">
-                  Signed in
+                  {t.nav.signedIn}
                 </div>
               </div>
             </div>
@@ -208,7 +224,7 @@ export function AppShell({
               }
             >
               <LogOut className="h-4 w-4" />
-              <span className="hidden sm:inline">Sign out</span>
+              <span className="hidden sm:inline">{t.nav.signOut}</span>
             </button>
           </header>
           <main className="flex-1 p-4 md:p-6 overflow-x-hidden">

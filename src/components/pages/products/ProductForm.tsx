@@ -8,6 +8,7 @@ import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
 
 import { AutocompleteInput } from './AutocompleteInput';
+import { useTranslation } from '@/i18n/useTranslation';
 
 export type ProductDto = {
   id: string;
@@ -49,6 +50,7 @@ export function ProductForm({
     initial?.tiers ?? [],
   );
   const [pending, setPending] = useState(false);
+  const { t } = useTranslation();
 
   // Sync state when initial product changes (e.g. user clicks another product to edit)
   useEffect(() => {
@@ -90,7 +92,7 @@ export function ProductForm({
   if (missingEdit) {
     return (
       <div className="rounded-lg border border-dashed border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-950 p-4 text-sm text-zinc-500 dark:text-zinc-400">
-        Select a product to edit.
+        {t.products.selectToEdit}
       </div>
     );
   }
@@ -160,7 +162,7 @@ export function ProductForm({
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div>
           <label className="text-xs font-semibold uppercase tracking-wider text-zinc-500 dark:text-zinc-400">
-            SKU
+            {t.products.sku}
           </label>
           <div className="flex gap-2 mt-1.5">
             <Input
@@ -173,9 +175,9 @@ export function ProductForm({
               type="button"
               variant="secondary"
               onClick={generateSku}
-              title="Generate Random SKU"
+              title={t.products.generateSku}
               className="px-3"
-              aria-label="Generate Random SKU"
+              aria-label={t.products.generateSku}
             >
               <Dices className="h-4 w-4 text-zinc-500 dark:text-zinc-400" />
             </Button>
@@ -183,13 +185,13 @@ export function ProductForm({
         </div>
         <div>
           <label className="text-xs font-semibold uppercase tracking-wider text-zinc-500 dark:text-zinc-400">
-            Name
+            {t.products.name}
           </label>
           <Input
             value={name}
             onChange={(e) => setName(e.target.value)}
             className="mt-1.5 font-medium"
-            placeholder="Product Name"
+            placeholder={t.products.productName}
           />
         </div>
       </div>
@@ -197,20 +199,20 @@ export function ProductForm({
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div className="space-y-1.5">
           <AutocompleteInput
-            label="Category"
+            label={t.products.category}
             value={categoryName}
             onChange={setCategoryName}
             fetchEndpoint="/api/categories"
-            placeholder="Type to create"
+            placeholder={t.products.typeToCreate}
           />
         </div>
         <div className="space-y-1.5">
           <AutocompleteInput
-            label="Brand"
+            label={t.products.brand}
             value={brandName}
             onChange={setBrandName}
             fetchEndpoint="/api/brands"
-            placeholder="Type to create"
+            placeholder={t.products.typeToCreate}
           />
         </div>
       </div>
@@ -220,7 +222,7 @@ export function ProductForm({
       <div className="grid grid-cols-2 gap-4">
         <div>
           <label className="text-xs font-semibold uppercase tracking-wider text-zinc-500 dark:text-zinc-400">
-            Base price
+            {t.products.basePrice}
           </label>
           <div className="relative mt-1.5">
             <span className="absolute left-3 top-1/2 -translate-y-1/2 text-zinc-500 text-sm font-medium">
@@ -239,7 +241,7 @@ export function ProductForm({
         </div>
         <div>
           <label className="text-xs font-semibold uppercase tracking-wider text-zinc-500 dark:text-zinc-400">
-            Buy price
+            {t.products.buyPrice}
           </label>
           <div className="relative mt-1.5">
             <span className="absolute left-3 top-1/2 -translate-y-1/2 text-zinc-500 text-sm font-medium">
@@ -261,7 +263,7 @@ export function ProductForm({
       <div className="grid grid-cols-2 gap-4">
         <div>
           <label className="text-xs font-semibold uppercase tracking-wider text-zinc-500 dark:text-zinc-400">
-            Current Stock
+            {t.products.stock}
           </label>
           <Input
             className="mt-1.5 font-medium tabular-nums"
@@ -274,7 +276,7 @@ export function ProductForm({
         </div>
         <div>
           <label className="text-xs font-semibold uppercase tracking-wider text-zinc-500 dark:text-zinc-400">
-            Low Stock Alert At
+            {t.products.minStock}
           </label>
           <Input
             className="mt-1.5 font-medium tabular-nums"
@@ -295,10 +297,10 @@ export function ProductForm({
         <div className="flex items-center justify-between">
           <div>
             <div className="text-sm font-semibold text-zinc-900 dark:text-zinc-100">
-              Tier Pricing
+              {t.products.tierPricing}
             </div>
             <div className="text-xs text-zinc-500 dark:text-zinc-400">
-              Discounted price for bulk purchases
+              {t.products.tierDesc}
             </div>
           </div>
           <Button
@@ -311,24 +313,24 @@ export function ProductForm({
             }
           >
             <Plus className="h-4 w-4 mr-1" />
-            Add tier
+            {t.products.addTier}
           </Button>
         </div>
 
         <div className="flex flex-col gap-3">
-          {tiers.map((t, idx) => (
+          {tiers.map((tItem, idx) => (
             <div
               key={idx}
               className="flex items-center gap-3 bg-white dark:bg-zinc-950 p-3 rounded-lg border border-zinc-200 dark:border-zinc-800 shadow-sm"
             >
               <div className="flex-1">
                 <label className="text-[10px] font-semibold uppercase tracking-wider text-zinc-500 dark:text-zinc-400">
-                  Min Qty
+                  {t.products.minQty}
                 </label>
                 <Input
                   className="mt-1 h-8 text-sm tabular-nums"
                   inputMode="numeric"
-                  value={String(t.minQty)}
+                  value={String(tItem.minQty)}
                   onChange={(e) =>
                     setTiers((prev) =>
                       prev.map((x, i) =>
@@ -347,7 +349,7 @@ export function ProductForm({
               </div>
               <div className="flex-1">
                 <label className="text-[10px] font-semibold uppercase tracking-wider text-zinc-500 dark:text-zinc-400">
-                  Tier Price
+                  {t.products.tierPrice}
                 </label>
                 <div className="relative mt-1">
                   <span className="absolute left-2.5 top-1/2 -translate-y-1/2 text-zinc-500 text-xs font-medium">
@@ -356,7 +358,7 @@ export function ProductForm({
                   <Input
                     className="h-8 pl-8 text-sm tabular-nums"
                     inputMode="numeric"
-                    value={t.price ? String(t.price) : ''}
+                    value={tItem.price ? String(tItem.price) : ''}
                     onChange={(e) =>
                       setTiers((prev) =>
                         prev.map((x, i) =>
@@ -388,7 +390,7 @@ export function ProductForm({
           ))}
           {tiers.length === 0 && (
             <div className="text-center py-4 text-sm text-zinc-500 dark:text-zinc-400 border border-dashed border-zinc-200 dark:border-zinc-800 rounded-lg">
-              No tier pricing added.
+              {t.products.noTier}
             </div>
           )}
         </div>
@@ -399,7 +401,7 @@ export function ProductForm({
         disabled={pending || !canSave}
         className="mt-4 h-12 text-base font-semibold shadow-sm w-full"
       >
-        {pending ? 'Saving...' : 'Save Product'}
+        {pending ? t.common.saving : t.products.saveProduct}
       </Button>
     </form>
   );

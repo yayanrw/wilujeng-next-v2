@@ -5,6 +5,7 @@ import { Plus, Pencil } from 'lucide-react';
 
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
+import { useTranslation } from '@/i18n/useTranslation';
 
 export type UserDto = {
   id: string;
@@ -34,6 +35,7 @@ export function UserForm({
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [role, setRole] = useState<'admin' | 'cashier'>('cashier');
+  const { t } = useTranslation();
 
   useEffect(() => {
     if (mode === 'edit' && initial) {
@@ -75,12 +77,12 @@ export function UserForm({
           showToast(
             body && 'error' in body
               ? body.error.message
-              : 'Failed to create user',
+              : t.settings.saveFailed,
           );
           return;
         }
 
-        showToast('User created successfully');
+        showToast(t.settings.createdSuccess);
         setName('');
         setEmail('');
         setPassword('');
@@ -98,11 +100,11 @@ export function UserForm({
         });
 
         if (!res.ok) {
-          showToast('Failed to update user');
+          showToast(t.settings.saveFailed);
           return;
         }
 
-        showToast('User updated successfully');
+        showToast(t.settings.updatedSuccess);
         onSuccess();
       }
     } finally {
@@ -113,7 +115,7 @@ export function UserForm({
   return (
     <form className="flex flex-col gap-3" onSubmit={handleSubmit}>
       <div>
-        <label className="text-sm font-medium">Name</label>
+        <label className="text-sm font-medium">{t.settings.name}</label>
         <Input
           value={name}
           onChange={(e) => setName(e.target.value)}
@@ -121,7 +123,7 @@ export function UserForm({
         />
       </div>
       <div>
-        <label className="text-sm font-medium">Email</label>
+        <label className="text-sm font-medium">{t.settings.email}</label>
         <Input
           value={email}
           onChange={(e) => setEmail(e.target.value)}
@@ -130,7 +132,7 @@ export function UserForm({
       </div>
       {mode === 'create' && (
         <div>
-          <label className="text-sm font-medium">Password</label>
+          <label className="text-sm font-medium">{t.settings.password}</label>
           <Input
             type="password"
             value={password}
@@ -140,7 +142,7 @@ export function UserForm({
         </div>
       )}
       <div>
-        <label className="text-sm font-medium">Role</label>
+        <label className="text-sm font-medium">{t.settings.role}</label>
         <select
           className="h-10 w-full rounded-md border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-950 px-2 text-sm"
           value={role}
@@ -165,12 +167,12 @@ export function UserForm({
           {mode === 'create' ? (
             <>
               <Plus className="mr-2 h-4 w-4" />
-              {pending ? 'Creating...' : 'Create User'}
+              {pending ? t.common.saving : t.settings.createUser}
             </>
           ) : (
             <>
               <Pencil className="mr-2 h-4 w-4" />
-              {pending ? 'Saving...' : 'Save Changes'}
+              {pending ? t.common.saving : t.common.saveChanges}
             </>
           )}
         </Button>
@@ -181,7 +183,7 @@ export function UserForm({
             onClick={onCancelEdit}
             disabled={pending}
           >
-            Cancel
+            {t.common.cancel}
           </Button>
         )}
       </div>

@@ -11,6 +11,7 @@ import { SupplierPicker } from '@/components/shared/SupplierPicker';
 import { AutocompleteInput } from './products/AutocompleteInput';
 import { formatIdr } from '@/utils/money';
 import { StockLogDetailModal } from './stock/StockLogDetailModal';
+import { useTranslation } from '@/i18n/useTranslation';
 
 type Tab = 'in' | 'out' | 'opname' | 'logs';
 
@@ -52,6 +53,7 @@ export function StockClient() {
   const [filterProductId, setFilterProductId] = useState<string | null>(null);
   const [loadingLogs, setLoadingLogs] = useState(false);
   const [selectedLogId, setSelectedLogId] = useState<string | null>(null);
+  const { t } = useTranslation();
 
   async function loadLogs(p: number, append = false) {
     setLoadingLogs(true);
@@ -132,25 +134,25 @@ export function StockClient() {
   return (
     <div className="flex flex-col gap-4">
       <div className="space-y-1.5">
-        <div className="text-xl font-bold tracking-tight">Stock</div>
+        <div className="text-xl font-bold tracking-tight">{t.stock.title}</div>
         <div className="text-sm text-zinc-500 dark:text-zinc-400">
-          Manage inventory, log incoming/outgoing stock, and perform opname
+          {t.stock.subtitle}
         </div>
       </div>
 
       <div className="flex flex-wrap gap-2">
-        {(['in', 'out', 'opname', 'logs'] as Tab[]).map((t) => (
+        {(['in', 'out', 'opname', 'logs'] as Tab[]).map((tTab) => (
           <button
-            key={t}
+            key={tTab}
             type="button"
             className={
-              t === tab
+              tTab === tab
                 ? 'rounded-full bg-zinc-900 px-4 py-2 text-sm text-white dark:bg-zinc-100 dark:text-zinc-900 shadow-sm'
                 : 'rounded-full border border-zinc-200 bg-white px-4 py-2 text-sm hover:bg-zinc-50 dark:border-zinc-800 dark:bg-zinc-950 dark:text-zinc-400 dark:hover:bg-zinc-900 transition-colors'
             }
-            onClick={() => setTab(t)}
+            onClick={() => setTab(tTab)}
           >
-            {t.toUpperCase()}
+            {t.stock[tTab as keyof typeof t.stock].toUpperCase()}
           </button>
         ))}
       </div>
@@ -165,22 +167,19 @@ export function StockClient() {
         <Card className="max-w-3xl overflow-visible">
           <CardHeader className="rounded-t-xl border-b border-zinc-100 dark:border-zinc-800 bg-zinc-50/50 dark:bg-zinc-900/50 pb-4">
             <div className="text-base font-semibold text-zinc-900 dark:text-zinc-100">
-              Stock {tab.toUpperCase()}
+              {t.stock[tab as keyof typeof t.stock].toUpperCase()}
             </div>
             <div className="text-sm text-zinc-500 dark:text-zinc-400">
-              {tab === 'in' &&
-                'Record incoming items from suppliers to increase stock.'}
-              {tab === 'out' &&
-                'Record outgoing items manually (e.g. damage, return) to decrease stock.'}
-              {tab === 'opname' &&
-                'Perform a physical count to explicitly override the system stock.'}
+              {tab === 'in' && t.stock.inDesc}
+              {tab === 'out' && t.stock.outDesc}
+              {tab === 'opname' && t.stock.opnameDesc}
             </div>
           </CardHeader>
           <CardContent className="pt-6">
             <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
               <div className="md:col-span-2">
                 <label className="text-xs font-semibold uppercase tracking-wider text-zinc-500 dark:text-zinc-400">
-                  Target Product
+                  {t.stock.targetProduct}
                 </label>
                 <div className="mt-1.5">
                   <ProductPicker value={productId} onChange={setProductId} />
@@ -189,7 +188,7 @@ export function StockClient() {
 
               <div>
                 <label className="text-xs font-semibold uppercase tracking-wider text-zinc-500 dark:text-zinc-400">
-                  Quantity
+                  {t.stock.qty}
                 </label>
                 <Input
                   className="mt-1.5 font-medium tabular-nums"
@@ -204,7 +203,7 @@ export function StockClient() {
               {tab === 'in' ? (
                 <div>
                   <label className="text-xs font-semibold uppercase tracking-wider text-zinc-500 dark:text-zinc-400">
-                    Unit buy price
+                    {t.products.buyPrice}
                   </label>
                   <div className="relative mt-1.5">
                     <span className="absolute left-3 top-1/2 -translate-y-1/2 text-zinc-500 text-sm font-medium">
@@ -227,7 +226,7 @@ export function StockClient() {
               {tab === 'in' ? (
                 <div>
                   <label className="text-xs font-semibold uppercase tracking-wider text-zinc-500 dark:text-zinc-400">
-                    Supplier
+                    {t.dashboard.supplier}
                   </label>
                   <div className="mt-1.5">
                     <SupplierPicker
@@ -241,11 +240,11 @@ export function StockClient() {
               <div className={tab === 'in' ? '' : 'md:col-span-2'}>
                 <div className="mt-1.5">
                   <AutocompleteInput
-                    label="Brand"
+                    label={t.products.brand}
                     value={brandName}
                     onChange={setBrandName}
                     fetchEndpoint="/api/brands"
-                    placeholder="Type to search or create"
+                    placeholder={t.products.typeToCreate}
                   />
                 </div>
               </div>
@@ -253,7 +252,7 @@ export function StockClient() {
               {tab === 'in' ? (
                 <div>
                   <label className="text-xs font-semibold uppercase tracking-wider text-zinc-500 dark:text-zinc-400">
-                    Expiry date
+                    {t.stock.expiryDate}
                   </label>
                   <Input
                     className="mt-1.5"
@@ -266,13 +265,13 @@ export function StockClient() {
 
               <div className="md:col-span-2">
                 <label className="text-xs font-semibold uppercase tracking-wider text-zinc-500 dark:text-zinc-400">
-                  Note
+                  {t.stock.notes}
                 </label>
                 <Input
                   className="mt-1.5"
                   value={note}
                   onChange={(e) => setNote(e.target.value)}
-                  placeholder="Optional remarks..."
+                  placeholder={t.stock.optionalRemarks}
                 />
               </div>
             </div>
@@ -313,7 +312,7 @@ export function StockClient() {
                 }
               }}
             >
-              {pending ? 'Submitting...' : 'Submit'}
+              {pending ? t.stock.submitting : t.stock.submit}
             </Button>
           </CardContent>
         </Card>
@@ -321,15 +320,17 @@ export function StockClient() {
         <Card>
           <CardHeader className="flex flex-col gap-4 md:flex-row md:items-end md:justify-between pb-6">
             <div className="space-y-1.5">
-              <div className="text-lg font-bold tracking-tight">Stock Logs</div>
+              <div className="text-lg font-bold tracking-tight">
+                {t.stock.logsTitle}
+              </div>
               <div className="text-sm text-zinc-500 dark:text-zinc-400">
-                Recent inventory changes and audit trail
+                {t.stock.logsSubtitle}
               </div>
             </div>
             <div className="flex flex-wrap items-end gap-3">
               <div>
                 <label className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-zinc-500 dark:text-zinc-400">
-                  From
+                  {t.reports.from}
                 </label>
                 <Input
                   className="h-9 w-40 text-sm"
@@ -340,7 +341,7 @@ export function StockClient() {
               </div>
               <div>
                 <label className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-zinc-500 dark:text-zinc-400">
-                  To
+                  {t.reports.to}
                 </label>
                 <Input
                   className="h-9 w-40 text-sm"
@@ -351,7 +352,7 @@ export function StockClient() {
               </div>
               <div className="w-[200px]">
                 <label className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-zinc-500 dark:text-zinc-400">
-                  Filter Product
+                  {t.stock.filterProduct}
                 </label>
                 <ProductPicker
                   value={filterProductId}
@@ -368,7 +369,7 @@ export function StockClient() {
                 }}
                 disabled={loadingLogs}
               >
-                {loadingLogs ? 'Filtering...' : 'Apply Filter'}
+                {loadingLogs ? t.stock.filtering : t.stock.applyFilter}
               </Button>
             </div>
           </CardHeader>
@@ -377,15 +378,21 @@ export function StockClient() {
               <table className="w-full text-sm">
                 <thead>
                   <tr className="border-y border-zinc-200 dark:border-zinc-800 bg-zinc-50/50 dark:bg-zinc-900/50 text-left text-zinc-500 dark:text-zinc-400">
-                    <th className="py-3 px-4 font-medium">Product</th>
-                    <th className="py-3 px-4 font-medium">Type</th>
-                    <th className="py-3 px-4 font-medium text-right">Change</th>
-                    <th className="py-3 px-4 font-medium text-right">
-                      Balance
+                    <th className="py-3 px-4 font-medium">
+                      {t.dashboard.product}
                     </th>
-                    <th className="py-3 px-4 font-medium">Note</th>
-                    <th className="py-3 px-4 font-medium">Date</th>
-                    <th className="py-3 px-4 font-medium text-right">Action</th>
+                    <th className="py-3 px-4 font-medium">{t.stock.type}</th>
+                    <th className="py-3 px-4 font-medium text-right">
+                      {t.stock.change}
+                    </th>
+                    <th className="py-3 px-4 font-medium text-right">
+                      {t.stock.balance}
+                    </th>
+                    <th className="py-3 px-4 font-medium">{t.stock.notes}</th>
+                    <th className="py-3 px-4 font-medium">{t.reports.date}</th>
+                    <th className="py-3 px-4 font-medium text-right">
+                      {t.common.action}
+                    </th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-zinc-100 dark:divide-zinc-800">
@@ -412,7 +419,7 @@ export function StockClient() {
                                 : 'bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400'
                           }`}
                         >
-                          {l.type}
+                          {t.stock[l.type as keyof typeof t.stock]}
                         </span>
                       </td>
                       <td className="py-3 px-4 align-middle text-right">
@@ -466,10 +473,10 @@ export function StockClient() {
                           size="sm"
                           className="h-8 w-8 p-0 text-zinc-400 opacity-0 group-hover:opacity-100 hover:text-zinc-900 dark:hover:text-zinc-100 transition-all focus-visible:opacity-100"
                           onClick={() => setSelectedLogId(l.id)}
-                          title="View detail"
+                          title={t.stock.viewDetail}
                         >
                           <Eye className="h-4 w-4" />
-                          <span className="sr-only">View Detail</span>
+                          <span className="sr-only">{t.stock.viewDetail}</span>
                         </Button>
                       </td>
                     </tr>
@@ -480,7 +487,7 @@ export function StockClient() {
                         <div className="flex flex-col items-center justify-center gap-3">
                           <div className="h-6 w-6 animate-spin rounded-full border-2 border-zinc-200 border-t-zinc-900 dark:border-zinc-800 dark:border-t-zinc-100" />
                           <div className="text-sm font-medium text-zinc-500 dark:text-zinc-400">
-                            Loading stock logs...
+                            {t.stock.loadingLogs}
                           </div>
                         </div>
                       </td>
@@ -492,7 +499,7 @@ export function StockClient() {
                         colSpan={7}
                         className="py-8 text-center text-zinc-500 dark:text-zinc-400"
                       >
-                        No logs found in this period.
+                        {t.stock.noLogs}
                       </td>
                     </tr>
                   )}
@@ -507,7 +514,7 @@ export function StockClient() {
                   onClick={loadMoreLogs}
                   className="w-full max-w-xs"
                 >
-                  Load More Logs
+                  {t.stock.loadMore}
                 </Button>
               </div>
             )}
