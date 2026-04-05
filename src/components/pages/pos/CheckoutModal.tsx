@@ -1,20 +1,14 @@
-"use client";
+'use client';
 
-import { useEffect, useState } from "react";
+import { useEffect, useState } from 'react';
+import { User, Wallet, AlertCircle, RefreshCw } from 'lucide-react';
 
-import { Button } from "@/components/ui/Button";
-import { Input } from "@/components/ui/Input";
-import { usePosStore } from "@/stores/posStore";
-import type { PaymentMethod } from "@/utils/checkout";
-import { formatIdr } from "@/utils/money";
-
-type CustomerLite = {
-  id: string;
-  name: string;
-  phone?: string | null;
-  totalDebt: number;
-  points: number;
-};
+import { Button } from '@/components/ui/Button';
+import { Input } from '@/components/ui/Input';
+import { CustomerPicker } from '@/components/shared/CustomerPicker';
+import { usePosStore } from '@/stores/posStore';
+import type { PaymentMethod } from '@/utils/checkout';
+import { formatIdr } from '@/utils/money';
 
 export function CheckoutModal({
   open,
@@ -34,7 +28,7 @@ export function CheckoutModal({
   total: number;
   paymentMethod: PaymentMethod;
   amountReceived: number;
-  paymentStatus: "paid" | "debt";
+  paymentStatus: 'paid' | 'debt';
   outstandingOrChange: number;
   pending: boolean;
   onClose: () => void;
@@ -46,40 +40,21 @@ export function CheckoutModal({
   const customerId = usePosStore((s) => s.customerId);
   const setCustomerId = usePosStore((s) => s.setCustomerId);
 
-  const [customerQuery, setCustomerQuery] = useState("");
-  const [customers, setCustomers] = useState<CustomerLite[]>([]);
-  const [newCustomerName, setNewCustomerName] = useState("");
-  const [newCustomerPhone, setNewCustomerPhone] = useState("");
+  const [newCustomerName, setNewCustomerName] = useState('');
+  const [newCustomerPhone, setNewCustomerPhone] = useState('');
+  const [isCreatingCustomer, setIsCreatingCustomer] = useState(false);
 
   useEffect(() => {
     if (!open) return;
-    setCustomerQuery("");
-    setCustomers([]);
+    setNewCustomerName('');
+    setNewCustomerPhone('');
+    setIsCreatingCustomer(false);
   }, [open]);
 
-  useEffect(() => {
-    const q = customerQuery.trim();
-    if (!q) {
-      setCustomers([]);
-      return;
-    }
-
-    let cancelled = false;
-    void fetch(`/api/customers?search=${encodeURIComponent(q)}`)
-      .then((r) => r.json())
-      .then((d: CustomerLite[]) => {
-        if (!cancelled) setCustomers(d);
-      });
-
-    return () => {
-      cancelled = true;
-    };
-  }, [customerQuery]);
-
   async function createCustomerQuick() {
-    const res = await fetch("/api/customers", {
-      method: "POST",
-      headers: { "content-type": "application/json" },
+    const res = await fetch('/api/customers', {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
       body: JSON.stringify({ name: newCustomerName, phone: newCustomerPhone }),
     });
     const body = (await res.json().catch(() => null)) as
@@ -87,148 +62,271 @@ export function CheckoutModal({
       | { error: { message: string } }
       | null;
     if (!res.ok) {
-      throw new Error(body && "error" in body ? body.error.message : "Failed to create customer");
+      throw new Error(
+        body && 'error' in body
+          ? body.error.message
+          : 'Failed to create customer',
+      );
     }
-    if (!body || !("id" in body)) throw new Error("Failed to create customer");
+    if (!body || !('id' in body)) throw new Error('Failed to create customer');
     setCustomerId(body.id);
-    setCustomerQuery("");
-    setCustomers([]);
-    setNewCustomerName("");
-    setNewCustomerPhone("");
+    setNewCustomerName('');
+    setNewCustomerPhone('');
   }
 
   if (!open) return null;
 
   return (
-    <div className="fixed inset-0 z-50 grid place-items-center bg-black/40 p-4">
-      <div className="w-full max-w-lg rounded-xl bg-white p-4">
-        <div className="flex items-center justify-between">
-          <div className="text-sm font-semibold">Checkout</div>
+    <div className="fixed inset-0 z-[100] grid place-items-center bg-black/60 p-4 backdrop-blur-sm">
+      <div className="w-full max-w-lg overflow-hidden rounded-2xl bg-white shadow-2xl animate-in fade-in zoom-in-95 duration-200">
+        <div className="flex items-center justify-between border-b border-zinc-100 bg-zinc-50/80 px-6 py-4">
+          <div className="flex items-center gap-2">
+            <Wallet className="h-5 w-5 text-zinc-600" />
+            <h2 className="text-lg font-semibold text-zinc-900">Checkout</h2>
+          </div>
           <button
             type="button"
-            className="rounded-md px-2 py-1 text-sm text-zinc-600 hover:bg-zinc-100"
+            className="rounded-full p-2 text-zinc-400 transition-colors hover:bg-zinc-200 hover:text-zinc-600"
             onClick={onClose}
           >
-            Close
+            <span className="sr-only">Close</span>
+            <svg
+              className="h-4 w-4"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M6 18L18 6M6 6l12 12"
+              />
+            </svg>
           </button>
         </div>
 
-        <div className="mt-3 grid grid-cols-2 gap-2">
-          {(["cash", "qris", "transfer", "debt"] as PaymentMethod[]).map((m) => (
-            <button
-              key={m}
-              type="button"
-              className={
-                m === paymentMethod
-                  ? "rounded-lg bg-zinc-900 px-3 py-2 text-sm text-white"
-                  : "rounded-lg border border-zinc-200 bg-white px-3 py-2 text-sm hover:bg-zinc-50"
-              }
-              onClick={() => onPaymentMethodChange(m)}
-            >
-              {m.toUpperCase()}
-            </button>
-          ))}
-        </div>
+        <div className="p-6 space-y-6 max-h-[80vh] overflow-y-auto custom-scrollbar">
+          {/* Customer Selection Section */}
+          <div className="space-y-3">
+            <div className="flex items-center justify-between">
+              <label className="flex items-center gap-2 text-sm font-semibold text-zinc-900">
+                <User className="h-4 w-4 text-zinc-500" />
+                Customer
+              </label>
+              {!customerId && !isCreatingCustomer && (
+                <button
+                  type="button"
+                  className="text-xs font-medium text-blue-600 hover:text-blue-700"
+                  onClick={() => setIsCreatingCustomer(true)}
+                >
+                  + New Customer
+                </button>
+              )}
+              {isCreatingCustomer && (
+                <button
+                  type="button"
+                  className="text-xs font-medium text-zinc-500 hover:text-zinc-700"
+                  onClick={() => setIsCreatingCustomer(false)}
+                >
+                  Cancel
+                </button>
+              )}
+            </div>
 
-        <div className="mt-3">
-          <label className="text-sm font-medium">Amount received</label>
-          <Input
-            inputMode="numeric"
-            value={amountReceived ? String(amountReceived) : ""}
-            onChange={(e) => onAmountReceivedChange(Number(e.target.value.replace(/[^0-9]/g, "")) || 0)}
-            placeholder="0"
-          />
-          <div className="mt-2 grid grid-cols-4 gap-2">
-            {[2000, 5000, 10000, 20000, 50000, 100000].map((v) => (
-              <Button key={v} variant="secondary" size="sm" onClick={() => onAmountReceivedChange(amountReceived + v)}>
-                {formatIdr(v)}
-              </Button>
-            ))}
-            <Button variant="secondary" size="sm" onClick={() => onAmountReceivedChange(total)}>
-              Exact
-            </Button>
-          </div>
-        </div>
-
-        <div className="mt-3 grid grid-cols-2 gap-3">
-          <div className="rounded-lg border border-zinc-200 bg-zinc-50 p-3">
-            <div className="text-xs text-zinc-500">Total</div>
-            <div className="mt-1 text-sm font-semibold tabular-nums">{formatIdr(total)}</div>
-          </div>
-          <div className="rounded-lg border border-zinc-200 bg-zinc-50 p-3">
-            <div className="text-xs text-zinc-500">{paymentStatus === "debt" ? "Outstanding" : "Change"}</div>
-            <div className="mt-1 text-sm font-semibold tabular-nums">{formatIdr(outstandingOrChange)}</div>
-          </div>
-        </div>
-
-        {paymentStatus === "debt" ? (
-          <div className="mt-3 rounded-lg border border-amber-200 bg-amber-50 p-3">
-            <div className="text-sm font-semibold text-amber-900">Customer required</div>
-            <div className="mt-1 text-sm text-amber-800">Select an existing customer or create a new one.</div>
-
-            <div className="mt-3">
-              <label className="text-sm font-medium">Search customers</label>
-              <Input
-                value={customerQuery}
-                onChange={(e) => setCustomerQuery(e.target.value)}
-                placeholder="Name or phone"
-              />
-              <div className="mt-2 max-h-32 overflow-auto rounded-lg border border-amber-200 bg-white">
-                {customers.map((c) => (
-                  <button
-                    key={c.id}
-                    type="button"
-                    className={
-                      c.id === customerId
-                        ? "flex w-full items-center justify-between gap-2 border-b border-amber-100 bg-amber-100 px-3 py-2 text-left text-sm"
-                        : "flex w-full items-center justify-between gap-2 border-b border-amber-100 px-3 py-2 text-left text-sm hover:bg-amber-50"
+            {isCreatingCustomer ? (
+              <div className="rounded-xl border border-blue-100 bg-blue-50/50 p-4 space-y-3 animate-in slide-in-from-top-2 duration-200">
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <label className="text-xs font-medium text-blue-900">
+                      Name
+                    </label>
+                    <Input
+                      className="mt-1 bg-white border-blue-200 focus-visible:ring-blue-500"
+                      value={newCustomerName}
+                      onChange={(e) => setNewCustomerName(e.target.value)}
+                      placeholder="John Doe"
+                    />
+                  </div>
+                  <div>
+                    <label className="text-xs font-medium text-blue-900">
+                      Phone
+                    </label>
+                    <Input
+                      className="mt-1 bg-white border-blue-200 focus-visible:ring-blue-500"
+                      value={newCustomerPhone}
+                      onChange={(e) => setNewCustomerPhone(e.target.value)}
+                      placeholder="0812..."
+                    />
+                  </div>
+                </div>
+                <Button
+                  className="w-full bg-blue-600 hover:bg-blue-700 text-white"
+                  disabled={!newCustomerName.trim()}
+                  onClick={async () => {
+                    try {
+                      await createCustomerQuick();
+                      onToast('Customer created & selected');
+                      setIsCreatingCustomer(false);
+                    } catch (e) {
+                      onToast(
+                        e instanceof Error
+                          ? e.message
+                          : 'Failed to create customer',
+                      );
                     }
-                    onClick={() => setCustomerId(c.id)}
-                  >
-                    <span className="truncate">{c.name}</span>
-                    <span className="text-xs text-amber-900 tabular-nums">{formatIdr(c.totalDebt)}</span>
-                  </button>
-                ))}
-                {!customers.length && customerQuery.trim() ? (
-                  <div className="px-3 py-2 text-sm text-amber-800">No customers found</div>
-                ) : null}
+                  }}
+                >
+                  Save Customer
+                </Button>
               </div>
-            </div>
-
-            <div className="mt-3 grid grid-cols-2 gap-2">
-              <div>
-                <label className="text-sm font-medium">New customer name</label>
-                <Input value={newCustomerName} onChange={(e) => setNewCustomerName(e.target.value)} />
-              </div>
-              <div>
-                <label className="text-sm font-medium">Phone</label>
-                <Input value={newCustomerPhone} onChange={(e) => setNewCustomerPhone(e.target.value)} />
-              </div>
-            </div>
-            <Button
-              className="mt-2 w-full"
-              variant="secondary"
-              disabled={!newCustomerName.trim()}
-              onClick={async () => {
-                try {
-                  await createCustomerQuick();
-                  onToast("Customer created");
-                } catch (e) {
-                  onToast(e instanceof Error ? e.message : "Failed to create customer");
-                }
-              }}
-            >
-              Create customer
-            </Button>
+            ) : (
+              <CustomerPicker value={customerId} onChange={setCustomerId} />
+            )}
           </div>
-        ) : null}
 
-        <div className="mt-4 grid grid-cols-2 gap-2">
-          <Button variant="secondary" onClick={onClose} disabled={pending}>
-            Cancel
-          </Button>
-          <Button onClick={onConfirm} disabled={pending}>
-            {pending ? "Processing..." : "Confirm"}
+          <div className="h-px bg-zinc-100" />
+
+          {/* Payment Method Section */}
+          <div className="space-y-3">
+            <label className="text-sm font-semibold text-zinc-900">
+              Payment Method
+            </label>
+            <div className="grid grid-cols-4 gap-2">
+              {(['cash', 'qris', 'transfer', 'debt'] as PaymentMethod[]).map(
+                (m) => (
+                  <button
+                    key={m}
+                    type="button"
+                    className={`relative overflow-hidden rounded-xl border p-3 text-center text-sm transition-all duration-200 ${
+                      m === paymentMethod
+                        ? 'border-zinc-900 bg-zinc-900 text-white shadow-md'
+                        : 'border-zinc-200 bg-white text-zinc-600 hover:border-zinc-300 hover:bg-zinc-50'
+                    }`}
+                    onClick={() => onPaymentMethodChange(m)}
+                  >
+                    <span className="relative z-10 font-medium uppercase tracking-wider text-xs">
+                      {m}
+                    </span>
+                  </button>
+                ),
+              )}
+            </div>
+
+            {paymentMethod === 'debt' && !customerId && (
+              <div className="flex items-center gap-2 rounded-lg bg-red-50 p-3 text-sm text-red-600 border border-red-100 animate-in fade-in duration-300">
+                <AlertCircle className="h-4 w-4 shrink-0" />
+                <p>A customer must be selected for debt transactions.</p>
+              </div>
+            )}
+          </div>
+
+          {/* Amount Received Section */}
+          <div className="space-y-3">
+            <div className="flex items-center justify-between">
+              <label className="text-sm font-semibold text-zinc-900">
+                Amount Received
+              </label>
+              {amountReceived > 0 && (
+                <button
+                  type="button"
+                  onClick={() => onAmountReceivedChange(0)}
+                  className="flex items-center gap-1 text-xs font-medium text-zinc-500 hover:text-zinc-700"
+                >
+                  <RefreshCw className="h-3 w-3" />
+                  Reset
+                </button>
+              )}
+            </div>
+
+            <div className="relative">
+              <span className="absolute left-3 top-1/2 -translate-y-1/2 text-zinc-500 font-medium">
+                Rp
+              </span>
+              <Input
+                className="pl-9 h-12 text-lg font-medium tracking-tight"
+                inputMode="numeric"
+                value={
+                  amountReceived
+                    ? formatIdr(amountReceived).replace('Rp', '').trim()
+                    : ''
+                }
+                onChange={(e) =>
+                  onAmountReceivedChange(
+                    Number(e.target.value.replace(/[^0-9]/g, '')) || 0,
+                  )
+                }
+                placeholder="0"
+              />
+            </div>
+
+            <div className="grid grid-cols-4 gap-2">
+              {[1000, 2000, 5000, 10000, 20000, 50000, 100000].map((v) => (
+                <button
+                  key={v}
+                  type="button"
+                  className="rounded-lg border border-zinc-200 bg-white py-2 text-xs font-medium text-zinc-600 transition-colors hover:border-zinc-300 hover:bg-zinc-50"
+                  onClick={() => onAmountReceivedChange(amountReceived + v)}
+                >
+                  +{formatIdr(v).replace('Rp', '').trim()}
+                </button>
+              ))}
+              <button
+                type="button"
+                className="col-span-4 rounded-lg border border-emerald-200 bg-emerald-50 py-2 text-sm font-semibold text-emerald-700 transition-colors hover:bg-emerald-100"
+                onClick={() => onAmountReceivedChange(total)}
+              >
+                Exact Amount ({formatIdr(total)})
+              </button>
+            </div>
+          </div>
+
+          <div className="h-px bg-zinc-100" />
+
+          {/* Summary Section */}
+          <div className="grid grid-cols-2 gap-4">
+            <div className="rounded-xl bg-zinc-50 p-4">
+              <div className="text-xs font-medium text-zinc-500 uppercase tracking-wider">
+                Total
+              </div>
+              <div className="mt-1 text-2xl font-bold tracking-tight text-zinc-900">
+                {formatIdr(total)}
+              </div>
+            </div>
+            <div
+              className={`rounded-xl p-4 ${
+                paymentStatus === 'debt'
+                  ? 'bg-red-50 text-red-900'
+                  : outstandingOrChange > 0
+                    ? 'bg-green-50 text-green-900'
+                    : 'bg-zinc-50 text-zinc-900'
+              }`}
+            >
+              <div
+                className={`text-xs font-medium uppercase tracking-wider ${
+                  paymentStatus === 'debt'
+                    ? 'text-red-600'
+                    : outstandingOrChange > 0
+                      ? 'text-green-600'
+                      : 'text-zinc-500'
+                }`}
+              >
+                {paymentStatus === 'debt' ? 'Outstanding Debt' : 'Change'}
+              </div>
+              <div className="mt-1 text-2xl font-bold tracking-tight">
+                {formatIdr(outstandingOrChange)}
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div className="border-t border-zinc-100 bg-zinc-50/80 px-6 py-4">
+          <Button
+            className="w-full h-12 text-base font-semibold shadow-sm"
+            onClick={onConfirm}
+            disabled={pending || (paymentMethod === 'debt' && !customerId)}
+          >
+            {pending ? 'Processing Transaction...' : 'Confirm Payment'}
           </Button>
         </div>
       </div>

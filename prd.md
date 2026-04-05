@@ -49,6 +49,7 @@ Berikut adalah dokumen **Product Requirements Document (PRD)** yang komprehensif
 
 ### 3.3 Menu Kasir (Point of Sale)
 
+- **Penjualan Kasir (POS):** Antarmuka utama untuk melakukan transaksi. Terdiri dari panel pencarian produk dan panel keranjang belanja. Menggunakan _full height_ layout agar kedua panel dapat di-scroll secara independen tanpa memotong modal checkout.
 - **Product Discovery:**
   - Search bar untuk Nama Produk atau SKU.
   - **Barcode Support:** Fokus otomatis pada search bar; ketika SKU di-scan (diakhiri karakter `Enter`), produk otomatis masuk ke keranjang.
@@ -58,14 +59,15 @@ Berikut adalah dokumen **Product Requirements Document (PRD)** yang komprehensif
   - Toggle tampilan: **List View** atau **Card View** (dengan gambar/ikon).
 - **Keranjang Belanja (Cart):**
   - List produk, quantity, subtotal.
-  - Pilihan Pelanggan: Default "Walk-in Customer".
   - **Tiering Price Logic:** Harga satuan otomatis berubah berdasarkan total Qty per item (Lihat Bagian 4.1).
   - Tampilkan toast sukses saat produk ditambahkan ke keranjang (menampilkan nama produk dan qty).
 - **Checkout Modal:**
-  - Metode Pembayaran: Tunai, QRIS, Transfer, Hutang.
-  - **Quick Cash Buttons:** Tombol nominal cepat (2rb, 5rb, 10rb, 20rb, 50rb, 100rb) dan tombol "Uang Pas".
-  - **Hutang Logic:** Jika memilih "Hutang", wajib memilih pelanggan terdaftar. Jika belum ada, tersedia tombol "Add Pelanggan Baru".
-  - Perhitungan kembalian secara real-time; dukung skenario “kurang bayar”:
+    - Pilihan pelanggan (Customer) diposisikan di paling atas dengan mode default "Walk-in" dan menggunakan komponen **Customer Picker** (Autocomplete dropdown).
+    - Menampilkan ringkasan total dan input nominal yang diterima (Amount Received).
+    - Metode Pembayaran: Tunai, QRIS, Transfer, Hutang.
+    - **Quick Cash Buttons:** Tombol nominal cepat (Exact, 1.000, 2.000, 5.000, 10.000, 20.000, 50.000, 100.000) dan tombol "Uang Pas".
+    - **Hutang Logic:** Jika memilih "Hutang", wajib memilih pelanggan terdaftar. Jika belum ada, tersedia tombol "Add Pelanggan Baru".
+  - Perhitungan otomatis untuk kembalian (Change) atau sisa hutang (Outstanding Debt) secara real-time; dukung skenario “kurang bayar”:
     - Kurang Bayar (Partial Payment): Jika amount_received < total_amount → wajib pilih pelanggan; status transaksi = 'hutang'; outstanding_debt = total_amount - amount_received; change = 0.
     - Hutang Penuh: Jika memilih metode 'Hutang' dan amount_received 0 → wajib pilih pelanggan; status = 'hutang'; outstanding_debt = total_amount; change = 0.
     - Lunas: Jika amount_received ≥ total_amount → status = 'lunas'; change = amount_received - total_amount.
