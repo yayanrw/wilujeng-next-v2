@@ -72,7 +72,7 @@ export function AppShell({
   const sidebarCollapsed = useUiStore((s) => s.sidebarCollapsed);
   const toggleSidebar = useUiStore((s) => s.toggleSidebar);
 
-  const Icon =
+  const IconComponent =
     (
       Icons as unknown as Record<
         string,
@@ -82,40 +82,49 @@ export function AppShell({
 
   return (
     <div className="min-h-dvh bg-zinc-50 text-zinc-900 dark:bg-zinc-950 dark:text-zinc-50">
+      {/* Mobile sidebar overlay backdrop */}
+      <div 
+        className={cn(
+          "fixed inset-0 z-40 bg-zinc-950/50 backdrop-blur-sm transition-opacity lg:hidden",
+          !sidebarCollapsed ? "opacity-100" : "opacity-0 pointer-events-none"
+        )}
+        onClick={() => toggleSidebar()}
+      />
+
       <div
         className={cn(
-          'grid min-h-dvh',
-          sidebarCollapsed ? 'grid-cols-[72px_1fr]' : 'grid-cols-[260px_1fr]',
+          'flex min-h-dvh transition-[padding] duration-300 ease-in-out',
+          sidebarCollapsed ? 'lg:pl-[72px]' : 'lg:pl-[260px]',
         )}
       >
-        <aside className="border-r border-zinc-200 bg-white dark:border-zinc-800 dark:bg-zinc-900">
-          <div className="flex h-16 items-center gap-2 px-4">
-            <div className="grid h-9 w-9 place-items-center rounded-lg bg-zinc-900 text-white dark:bg-zinc-100 dark:text-zinc-900">
-              <Icon className="h-5 w-5" />
-            </div>
-            {!sidebarCollapsed ? (
-              <div className="flex min-w-0 flex-col">
+        <aside 
+          className={cn(
+            "fixed inset-y-0 left-0 z-50 flex flex-col border-r border-zinc-200 bg-white dark:border-zinc-800 dark:bg-zinc-900 transition-all duration-300 ease-in-out",
+            sidebarCollapsed ? "-translate-x-full lg:translate-x-0 lg:w-[72px]" : "translate-x-0 w-[260px]"
+          )}
+        >
+          <div className="flex h-16 shrink-0 items-center justify-between px-4">
+            <div className="flex items-center gap-3 overflow-hidden">
+              <div className="grid h-9 w-9 shrink-0 place-items-center rounded-lg bg-zinc-900 text-white dark:bg-zinc-100 dark:text-zinc-900">
+                <IconComponent className="h-5 w-5" />
+              </div>
+              <div 
+                className={cn(
+                  "flex min-w-0 flex-col transition-opacity duration-200",
+                  sidebarCollapsed ? "lg:opacity-0 lg:hidden" : "opacity-100"
+                )}
+              >
                 <div className="truncate text-sm font-semibold">
                   {storeName}
                 </div>
-                <div className="truncate text-xs text-zinc-500 dark:text-zinc-400">
+                <div className="truncate text-xs text-zinc-500 dark:text-zinc-400 capitalize">
                   {role}
                 </div>
               </div>
-            ) : null}
-            <button
-              type="button"
-              onClick={toggleSidebar}
-              className={cn(
-                'ml-auto rounded-md border border-zinc-200 bg-white p-2 text-zinc-700 hover:bg-zinc-50 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-300 dark:hover:bg-zinc-700',
-                sidebarCollapsed ? 'mx-auto' : '',
-              )}
-              aria-label="Toggle sidebar"
-            >
-              <Package className="h-4 w-4" />
-            </button>
+            </div>
           </div>
-          <nav className="px-2 pb-4">
+          
+          <nav className="flex-1 overflow-y-auto p-3 space-y-1 custom-scrollbar">
             {navItems
               .filter((i) => (i.adminOnly ? role === 'admin' : true))
               .map((i) => {
@@ -125,30 +134,60 @@ export function AppShell({
                     key={i.href}
                     href={i.href}
                     className={cn(
-                      'mt-1 flex items-center gap-2 rounded-lg px-3 py-2 text-sm transition-colors',
+                      'flex items-center rounded-lg transition-colors relative group',
+                      sidebarCollapsed ? 'lg:justify-center lg:px-0 lg:py-3 px-3 py-2' : 'px-3 py-2 gap-3',
                       active
                         ? 'bg-zinc-900 text-white dark:bg-zinc-100 dark:text-zinc-900'
-                        : 'text-zinc-700 hover:bg-zinc-100 dark:text-zinc-300 dark:hover:bg-zinc-800',
+                        : 'text-zinc-600 hover:bg-zinc-100 hover:text-zinc-900 dark:text-zinc-400 dark:hover:bg-zinc-800/50 dark:hover:text-zinc-50',
                     )}
+                    title={sidebarCollapsed ? i.label : undefined}
+                    onClick={() => {
+                      // Auto-close sidebar on mobile after clicking a link
+                      if (window.innerWidth < 1024 && !sidebarCollapsed) {
+                        toggleSidebar();
+                      }
+                    }}
                   >
-                    {i.icon}
-                    {!sidebarCollapsed ? <span>{i.label}</span> : null}
+                    <div className={cn("shrink-0", active ? "" : "text-zinc-500 dark:text-zinc-400 group-hover:text-zinc-900 dark:group-hover:text-zinc-50")}>
+                      {i.icon}
+                    </div>
+                    <span 
+                      className={cn(
+                        "text-sm font-medium whitespace-nowrap transition-all duration-200",
+                        sidebarCollapsed ? "lg:hidden block" : "block"
+                      )}
+                    >
+                      {i.label}
+                    </span>
                   </Link>
                 );
               })}
           </nav>
         </aside>
-        <div className="flex min-w-0 flex-col">
-          <header className="sticky top-0 z-10 flex h-16 items-center justify-between border-b border-zinc-200 bg-white px-4 dark:border-zinc-800 dark:bg-zinc-900">
-            <div className="min-w-0">
-              <div className="truncate text-sm font-medium">{userName}</div>
-              <div className="truncate text-xs text-zinc-500 dark:text-zinc-400">
-                Signed in
+
+        <div className="flex min-w-0 flex-1 flex-col">
+          <header className="sticky top-0 z-30 flex h-16 shrink-0 items-center justify-between border-b border-zinc-200 bg-white/80 backdrop-blur-md px-4 dark:border-zinc-800 dark:bg-zinc-900/80">
+            <div className="flex items-center gap-3">
+              <button
+                type="button"
+                onClick={toggleSidebar}
+                className="flex h-9 w-9 items-center justify-center rounded-md border border-zinc-200 bg-white text-zinc-700 transition-colors hover:bg-zinc-50 dark:border-zinc-800 dark:bg-zinc-950 dark:text-zinc-300 dark:hover:bg-zinc-900"
+                aria-label="Toggle sidebar"
+              >
+                <Icons.Menu className="h-4 w-4" />
+              </button>
+              
+              <div className="hidden sm:block min-w-0">
+                <div className="truncate text-sm font-medium">{userName}</div>
+                <div className="truncate text-xs text-zinc-500 dark:text-zinc-400">
+                  Signed in
+                </div>
               </div>
             </div>
+
             <button
               type="button"
-              className="inline-flex items-center gap-2 rounded-md border border-zinc-200 bg-white px-3 py-2 text-sm text-zinc-700 hover:bg-zinc-50 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-300 dark:hover:bg-zinc-700"
+              className="inline-flex h-9 items-center gap-2 rounded-md border border-zinc-200 bg-white px-3 text-sm font-medium text-zinc-700 transition-colors hover:bg-zinc-50 hover:text-red-600 dark:border-zinc-800 dark:bg-zinc-950 dark:text-zinc-300 dark:hover:bg-zinc-900 dark:hover:text-red-400"
               onClick={() =>
                 authClient.signOut({
                   fetchOptions: {
@@ -158,10 +197,10 @@ export function AppShell({
               }
             >
               <LogOut className="h-4 w-4" />
-              Sign out
+              <span className="hidden sm:inline">Sign out</span>
             </button>
           </header>
-          <main className="flex min-w-0 flex-1 flex-col p-4">{children}</main>
+          <main className="flex-1 p-4 md:p-6 overflow-x-hidden">{children}</main>
         </div>
       </div>
     </div>
