@@ -212,6 +212,9 @@ export async function POST(req: Request) {
 
   // Invalidate product catalog cache
   await invalidateCachePattern('products:catalog:*');
+  // Invalidate categories and brands caches in case new ones were created
+  await invalidateCachePattern('categories:list:*');
+  await invalidateCachePattern('brands:list:*');
 
   return json({ id: result.id }, { status: 201 });
 }

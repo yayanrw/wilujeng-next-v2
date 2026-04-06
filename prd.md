@@ -201,7 +201,7 @@ Sistem menggunakan metode **Best Match Match** pada `min_qty` terbesar.
   - Transaksi kasir harus tetap responsif dengan >1000 SKU menggunakan _client-side searching_ atau _SWR indexing_.
   - **Caching Architecture (Upstash Redis):** Untuk menghindari bottleneck database, data yang sering dibaca namun jarang berubah di-cache secara persisten di Redis. Ini mencakup:
     - **Setup Admin Status:** (`system:setup_complete`) untuk melewati query pengecekan user di setiap request.
-    - **Master Data (Categories, Brands, Suppliers):** Data list di-cache berdasarkan parameter pencarian dan paginasi (contoh: `categories:list:*`). Cache ini otomatis di-invalidasikan (Pattern Deletion) setiap kali ada penambahan data baru melalui metode POST.
+    - **Master Data (Categories, Brands, Suppliers):** Data list di-cache berdasarkan parameter pencarian dan paginasi (contoh: `categories:list:*`). Cache ini otomatis di-invalidasikan (Pattern Deletion) setiap kali ada penambahan data baru (melalui POST master data terkait, serta saat pembuatan produk baru atau penambahan stok masuk yang memicu pembuatan kategori/merk/pemasok secara dinamis).
     - **Katalog Produk:** (`products:catalog`) di-cache dan di-invalidasikan ketika ada perubahan stok atau penambahan produk.
     - **Store Settings:** (`store:settings`) di-cache untuk mempercepat pemuatan identitas toko di seluruh halaman.
 - **Offline Resilience:** Opsional, namun disarankan menggunakan _Optimistic Updates_ pada UI keranjang.

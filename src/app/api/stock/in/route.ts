@@ -91,6 +91,8 @@ export async function POST(req: Request) {
   });
 
   await invalidateCachePattern('products:catalog:*');
+  // Invalidate suppliers cache in case a new one was created
+  await invalidateCachePattern('suppliers:list:*');
 
   return json(result);
 }
