@@ -42,7 +42,7 @@ Currently, all API requests directly query the PostgreSQL database via Drizzle O
 - **Why**: Categories are read frequently for filters/typeahead and rarely change. Caching improves list/search response times.
 - **Strategy**: Cache with explicit invalidation on create. Parameterize by `search`, `limit`, and (if added later) `offset`.
 - **Cache Key**: `categories:list:{search || 'all'}:{limit || 50}:{offset || 0}`
-- **Invalidate On**: `POST /api/categories` using pattern deletion `categories:list:*`
+- **Invalidate On**: `POST /api/categories`, `POST /api/products`, and `PATCH /api/products/[id]` using pattern deletion `categories:list:*`
 - **Files**:
   - GET/POST: [src/app/api/categories/route.ts](file:///Users/yayanrahmatwijaya/Herd/wilujeng-next-v2/src/app/api/categories/route.ts)
 
@@ -50,7 +50,7 @@ Currently, all API requests directly query the PostgreSQL database via Drizzle O
 - **Why**: Brands are used broadly in filters and typeahead with pagination; benefit from cached pages of results.
 - **Strategy**: Cache with explicit invalidation on create. Parameterize by `search`, `limit`, `offset`.
 - **Cache Key**: `brands:list:{search || 'all'}:{limit || 50}:{offset || 0}`
-- **Invalidate On**: `POST /api/brands` using pattern deletion `brands:list:*`
+- **Invalidate On**: `POST /api/brands`, `POST /api/products`, and `PATCH /api/products/[id]` using pattern deletion `brands:list:*`
 - **Files**:
   - GET/POST: [src/app/api/brands/route.ts](file:///Users/yayanrahmatwijaya/Herd/wilujeng-next-v2/src/app/api/brands/route.ts)
 
@@ -58,7 +58,7 @@ Currently, all API requests directly query the PostgreSQL database via Drizzle O
 - **Why**: Supplier lists are consulted in Stock In workflows with type-to-create; cached reads reduce load while still reflecting new entries via invalidation.
 - **Strategy**: Cache with explicit invalidation on create. Parameterize by `search`, `limit`, and (if added later) `offset`.
 - **Cache Key**: `suppliers:list:{search || 'all'}:{limit || 50}:{offset || 0}`
-- **Invalidate On**: `POST /api/suppliers` using pattern deletion `suppliers:list:*`
+- **Invalidate On**: `POST /api/suppliers` and `POST /api/stock/in` using pattern deletion `suppliers:list:*`
 - **Files**:
   - GET/POST: [src/app/api/suppliers/route.ts](file:///Users/yayanrahmatwijaya/Herd/wilujeng-next-v2/src/app/api/suppliers/route.ts)
 
