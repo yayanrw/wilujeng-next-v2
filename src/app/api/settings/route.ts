@@ -4,19 +4,30 @@ import { z } from "zod";
 import { db } from "@/db";
 import { settings } from "@/db/schema";
 import { badRequest, json, readJson, requireApiRole } from "@/server/api-helpers";
+import { getCachedData, setCachedData, invalidateCache } from "@/lib/redis";
+
+const CACHE_KEY = "store:settings";
 
 export async function GET() {
+  const cachedSettings = await getCachedData(CACHE_KEY);
+  if (cachedSettings) {
+    return json(cachedSettings);
+  }
+
   const row = await db.query.settings.findFirst({
     orderBy: (t) => [desc(t.updatedAt)],
   });
 
-  return json({
+  const responseData = {
     storeName: row?.storeName ?? "SimplePOS Pro",
     storeIconName: row?.storeIconName ?? "Store",
     storeAddress: row?.storeAddress ?? "",
     storePhone: row?.storePhone ?? "",
     receiptFooter: row?.receiptFooter ?? "Terima kasih telah berbelanja",
-  });
+  };
+
+  await setCachedData(CACHE_KEY, responseData);
+  return json(responseData);
 }
 
 const SettingsSchema = z.object({
@@ -51,6 +62,8 @@ export async function POST(req: Request) {
         receiptFooter: parsed.data.receiptFooter,
       })
       .returning();
+    
+    await invalidateCache(CACHE_KEY);
     return json({ updated: true, id: row?.id ?? null });
   }
 
@@ -66,6 +79,7 @@ export async function POST(req: Request) {
     })
     .where(eq(settings.id, existing.id));
 
+  await invalidateCache(CACHE_KEY);
   return json({ updated: true, id: existing.id });
 }
 

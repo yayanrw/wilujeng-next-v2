@@ -132,6 +132,7 @@ Menu ini digunakan untuk menentukan identitas visual toko tanpa perlu mengunggah
   - **Ikon Toko (Icon Picker)**: Menampilkan visual ikon yang dapat dipilih secara langsung (bukan teks). Pilihan ikon dikurasi dari library **Lucide React** (misal: `Store`, `ShoppingBag`, `Coffee`, `Utensils`, `Package`, `Printer`). Database menyimpan string nama ikon.
   - **Info Kontak**: Alamat dan nomor telepon untuk header struk.
   - **Konfigurasi Struk**: Pesan footer (Contoh: "Terima kasih telah berbelanja").
+  - **Performa & Caching**: Konfigurasi toko di-cache menggunakan **Upstash Redis** (`@upstash/redis`) dengan strategi Cache Invalidation saat update. Ini memastikan identitas toko dimuat seketika tanpa query ke database utama di setiap render halaman.
 - **Manajemen Pengguna (User Management)**:
   - **List Pengguna**: Tabel dengan fitur pencarian (debounce 500ms), paginasi (menggunakan tombol Load More), dan menampilkan email, nama, serta role pengguna. Terdapat kolom "Action" dengan ikon pensil untuk mengedit detail pengguna.
   - **Tambah/Edit Pengguna**: Form untuk menambah pengguna baru (membutuhkan email dan password) atau mengedit pengguna yang sudah ada (mengubah role atau nama). Dilengkapi dengan notifikasi Toast untuk setiap aksi sukses atau gagal, serta otomatis me-reset form setelah penambahan berhasil.
