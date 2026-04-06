@@ -28,7 +28,12 @@ Currently, all API requests directly query the PostgreSQL database via Drizzle O
 - **Strategy**: **Cache with Explicit Invalidation**. Cache the product list and invalidate it whenever a product is added, updated, or when stock changes (Stock In, Stock Out, Checkout).
 - **Cache Key**: `products:catalog`
 
-### 5. Other Reports (`GET /api/reports/*`)
+### 5. Setup Admin Status (`GET /setup` & `POST /api/setup-admin`)
+- **Why**: The system frequently checks if the admin setup is complete (e.g., in middleware or initial page loads) by running a `COUNT(*)` query on the users table. Once setup is complete, this status never changes back to false.
+- **Strategy**: **Cache with Explicit Invalidation/Set**. Cache the setup status (`true` or `false`). Update the cache to `true` permanently once the `POST /api/setup-admin` successfully creates the first user.
+- **Cache Key**: `system:setup_complete`
+
+### 6. Other Reports (`GET /api/reports/*`)
 - **APIs**: Sales, Low Stock, Receivables, Suppliers.
 - **Why**: Similar to PNL, these involve joins and aggregations.
 - **Strategy**: Parameterized caching with short TTL (e.g., 1-5 minutes) to reduce database load during peak reporting times.
@@ -50,6 +55,10 @@ Currently, all API requests directly query the PostgreSQL database via Drizzle O
      - Wrap the logic in `GET /api/dashboard` to check `dashboard:summary`. If empty, calculate, store in Redis with a 5-minute TTL, and return.
    - **Reports APIs**:
      - Apply similar TTL caching logic based on the request URL parameters.
+   - **Setup Admin API**:
+     - Create a helper function `isSetupComplete()` that checks Redis `system:setup_complete` first, and if missing, queries the DB and caches the result.
+     - Use this helper in `src/app/setup/page.tsx` and `src/app/api/setup-admin/route.ts`.
+     - In `POST /api/setup-admin`, after successful creation, call `setCachedData('system:setup_complete', true)`.
 
 4. **Environment Variables**
    - Add `REDIS_URL` or Upstash credentials to the `.env` file.
@@ -63,3 +72,4 @@ Currently, all API requests directly query the PostgreSQL database via Drizzle O
 1. Call the updated APIs and measure response times. The first call should take normal time, while subsequent calls within the TTL should return in < 50ms.
 2. Verify that updating settings immediately reflects on the next `GET /api/settings` call (cache invalidation works).
 3. Monitor Redis memory usage to ensure keys are expiring correctly.
+4. Verify that hitting `/setup` or `/api/setup-admin` after setup is complete correctly returns cached 400/redirect responses without querying the database for `COUNT(*)`.
