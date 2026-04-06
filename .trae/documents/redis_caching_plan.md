@@ -38,6 +38,30 @@ Currently, all API requests directly query the PostgreSQL database via Drizzle O
 - **Why**: Similar to PNL, these involve joins and aggregations.
 - **Strategy**: Parameterized caching with short TTL (e.g., 1-5 minutes) to reduce database load during peak reporting times.
 
+### 7. Categories (`GET /api/categories`, `POST /api/categories`)
+- **Why**: Categories are read frequently for filters/typeahead and rarely change. Caching improves list/search response times.
+- **Strategy**: Cache with explicit invalidation on create. Parameterize by `search`, `limit`, and (if added later) `offset`.
+- **Cache Key**: `categories:list:{search || 'all'}:{limit || 50}:{offset || 0}`
+- **Invalidate On**: `POST /api/categories` using pattern deletion `categories:list:*`
+- **Files**:
+  - GET/POST: [src/app/api/categories/route.ts](file:///Users/yayanrahmatwijaya/Herd/wilujeng-next-v2/src/app/api/categories/route.ts)
+
+### 8. Brands (`GET /api/brands`, `POST /api/brands`)
+- **Why**: Brands are used broadly in filters and typeahead with pagination; benefit from cached pages of results.
+- **Strategy**: Cache with explicit invalidation on create. Parameterize by `search`, `limit`, `offset`.
+- **Cache Key**: `brands:list:{search || 'all'}:{limit || 50}:{offset || 0}`
+- **Invalidate On**: `POST /api/brands` using pattern deletion `brands:list:*`
+- **Files**:
+  - GET/POST: [src/app/api/brands/route.ts](file:///Users/yayanrahmatwijaya/Herd/wilujeng-next-v2/src/app/api/brands/route.ts)
+
+### 9. Suppliers (`GET /api/suppliers`, `POST /api/suppliers`)
+- **Why**: Supplier lists are consulted in Stock In workflows with type-to-create; cached reads reduce load while still reflecting new entries via invalidation.
+- **Strategy**: Cache with explicit invalidation on create. Parameterize by `search`, `limit`, and (if added later) `offset`.
+- **Cache Key**: `suppliers:list:{search || 'all'}:{limit || 50}:{offset || 0}`
+- **Invalidate On**: `POST /api/suppliers` using pattern deletion `suppliers:list:*`
+- **Files**:
+  - GET/POST: [src/app/api/suppliers/route.ts](file:///Users/yayanrahmatwijaya/Herd/wilujeng-next-v2/src/app/api/suppliers/route.ts)
+
 ## Implementation Steps
 
 1. **Install Redis Client**
@@ -59,6 +83,15 @@ Currently, all API requests directly query the PostgreSQL database via Drizzle O
      - Create a helper function `isSetupComplete()` that checks Redis `system:setup_complete` first, and if missing, queries the DB and caches the result.
      - Use this helper in `src/app/setup/page.tsx` and `src/app/api/setup-admin/route.ts`.
      - In `POST /api/setup-admin`, after successful creation, call `setCachedData('system:setup_complete', true)`.
+   - **Categories API**:
+     - In `GET /api/categories`, build a cache key using `search`, `limit`, `offset` and return cached results when present. On DB fetch, store into Redis.
+     - In `POST /api/categories`, call `invalidateCachePattern('categories:list:*')` after successful insert.
+   - **Brands API**:
+     - In `GET /api/brands`, build a cache key using `search`, `limit`, `offset` and return cached results when present. On DB fetch, store into Redis.
+     - In `POST /api/brands`, call `invalidateCachePattern('brands:list:*')` after successful insert.
+   - **Suppliers API**:
+     - In `GET /api/suppliers`, build a cache key using `search`, `limit`, `offset` and return cached results when present. On DB fetch, store into Redis.
+     - In `POST /api/suppliers`, call `invalidateCachePattern('suppliers:list:*')` after successful insert.
 
 4. **Environment Variables**
    - Add `REDIS_URL` or Upstash credentials to the `.env` file.
@@ -73,3 +106,4 @@ Currently, all API requests directly query the PostgreSQL database via Drizzle O
 2. Verify that updating settings immediately reflects on the next `GET /api/settings` call (cache invalidation works).
 3. Monitor Redis memory usage to ensure keys are expiring correctly.
 4. Verify that hitting `/setup` or `/api/setup-admin` after setup is complete correctly returns cached 400/redirect responses without querying the database for `COUNT(*)`.
+5. Verify that creating a category/brand/supplier immediately reflects in subsequent GETs by observing that `categories:list:*`, `brands:list:*`, or `suppliers:list:*` keys are cleared and refetched.

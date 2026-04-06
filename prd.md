@@ -36,6 +36,7 @@ Berikut adalah dokumen **Product Requirements Document (PRD)** yang komprehensif
 
 - **Login Page:** Form email/username dan password.
 - **No Registration:** User tidak dapat mendaftar sendiri. Data user dimasukkan melalui database seeding atau menu User Management oleh Admin.
+- **Setup Admin Status:** Pengecekan status instalasi awal aplikasi (Setup) di-cache menggunakan **Upstash Redis** (`@upstash/redis`). Status ini secara permanen disimpan di memori setelah admin pertama berhasil dibuat, untuk menghindari query `COUNT(*)` berulang ke database pada setiap halaman atau middleware.
 - **Session Management:** Menggunakan Better Auth untuk proteksi route.
 
 ### 3.2 Dashboard (Ringkasan Eksekutif)
@@ -90,7 +91,7 @@ Berikut adalah dokumen **Product Requirements Document (PRD)** yang komprehensif
 - **Tambah/Edit Produk:**
   - Field: Nama, SKU/Barcode, Harga Beli, Harga Jual Dasar, Stok Awal.
   - **SKU Generator:** Tersedia tombol dengan ikon (dadu/Dices) di sebelah field SKU untuk membuat kode SKU acak secara otomatis (format `SKU-XXXXXXXX`).
-  - **Dynamic Input (Typeahead/Autocomplete):** Input Merk dan Kategori menampilkan dropdown list berdasarkan teks yang diketik. Mendukung "Type to Create" (jika nama baru diketik dan dipilih dengan menekan Enter, otomatis tersimpan ke master data).
+  - **Dynamic Input (Typeahead/Autocomplete):** Input Merk dan Kategori menampilkan dropdown list berdasarkan teks yang diketik. Mendukung "Type to Create" (jika nama baru diketik dan dipilih dengan menekan Enter, otomatis tersimpan ke master data). Pengambilan data master Merk dan Kategori dioptimasi menggunakan **Upstash Redis** caching dengan _pattern invalidation_ otomatis saat ada data baru yang tersimpan, guna mempercepat render dropdown form.
   - **Auto Reset Form & Toast:** Setelah berhasil menambah/mengedit produk, form akan otomatis di-reset, dan pesan keberhasilan (atau kegagalan) ditampilkan melalui Toast notification yang lebih bersih.
   - **Multi-Tier Pricing:** Form dinamis untuk menambah tier (Contoh: Beli ≥10 harga Rp9.500).
 
@@ -98,7 +99,7 @@ Berikut adalah dokumen **Product Requirements Document (PRD)** yang komprehensif
 
 - **Stock Log:** Histori perubahan stok (Opname, In, Out). Dilengkapi dengan paginasi (Load More), filter berdasarkan rentang tanggal dan filter spesifik berdasarkan Produk (menggunakan komponen Product Picker autocomplete), penambahan kolom nama produk, serta kolom aksi untuk melihat detail histori (Modal Detail).
 - **Stock Opname:** Fitur untuk menyesuaikan stok sistem dengan stok fisik (Replace quantity). Kolom pencarian produk menggunakan Autocomplete/Typeahead dropdown, dan ditambahkan input Brand yang menggunakan fitur serupa.
-- **Stock Masuk (In):** Input stok baru, harga beli (bisa berbeda dari sebelumnya), Supplier (menggunakan fitur Autocomplete/Type to Create), dan Tanggal Kadaluarsa (native date picker). Kolom pencarian produk menggunakan Autocomplete/Typeahead dropdown. Field 'Brand' ditiadakan dari form ini.
+- **Stock Masuk (In):** Input stok baru, harga beli (bisa berbeda dari sebelumnya), Supplier (menggunakan fitur Autocomplete/Type to Create), dan Tanggal Kadaluarsa (native date picker). Kolom pencarian produk menggunakan Autocomplete/Typeahead dropdown. Field 'Brand' ditiadakan dari form ini. Data master Supplier pada dropdown juga di-cache menggunakan **Upstash Redis** untuk responsibilitas pencarian yang instan.
 - **Stock Keluar (Out):** Pengurangan stok manual (misal: barang rusak/retur). Kolom pencarian produk menggunakan Autocomplete/Typeahead dropdown. Field 'Brand' ditiadakan dari form ini.
 - **Notifikasi & UI:** Seluruh form (In, Out, Opname) memunculkan "Toast" notifikasi interaktif sukses/gagal di bagian bawah layar. Setelah aksi tersimpan, form input akan otomatis di-reset.
 
@@ -196,7 +197,13 @@ Sistem menggunakan metode **Best Match Match** pada `min_qty` terbesar.
 
 - **UI/UX Design:** Desain antarmuka (UI) harus modern dan minimalis, dengan memanfaatkan komponen shadcn/ui dan utility class Tailwind CSS. Fokus pada scannability, hierarchy visual yang jelas, serta micro-interactions (animasi transisi halus) untuk meningkatkan pengalaman pengguna (UX).
 - **Responsive Design:** Dioptimalkan untuk Desktop (Kasir) dan Tablet. Aplikasi harus memiliki **Sidebar yang dapat di-collapse (hide/show)** untuk memberikan ruang kerja yang lebih luas pada layar kasir. Halaman POS dikonfigurasi menggunakan _full height_ viewport agar keranjang belanja dan hasil pencarian dapat di-scroll secara independen tanpa perlu melakukan scroll pada halaman keseluruhan.
-- **Performance:** Transaksi kasir harus tetap responsif dengan >1000 SKU menggunakan _client-side searching_ atau _SWR indexing_.
+- **Performance:**
+  - Transaksi kasir harus tetap responsif dengan >1000 SKU menggunakan _client-side searching_ atau _SWR indexing_.
+  - **Caching Architecture (Upstash Redis):** Untuk menghindari bottleneck database, data yang sering dibaca namun jarang berubah di-cache secara persisten di Redis. Ini mencakup:
+    - **Setup Admin Status:** (`system:setup_complete`) untuk melewati query pengecekan user di setiap request.
+    - **Master Data (Categories, Brands, Suppliers):** Data list di-cache berdasarkan parameter pencarian dan paginasi (contoh: `categories:list:*`). Cache ini otomatis di-invalidasikan (Pattern Deletion) setiap kali ada penambahan data baru melalui metode POST.
+    - **Katalog Produk:** (`products:catalog`) di-cache dan di-invalidasikan ketika ada perubahan stok atau penambahan produk.
+    - **Store Settings:** (`store:settings`) di-cache untuk mempercepat pemuatan identitas toko di seluruh halaman.
 - **Offline Resilience:** Opsional, namun disarankan menggunakan _Optimistic Updates_ pada UI keranjang.
 - **Security:** Proteksi API Routes sehingga kasir tidak bisa mengakses endpoint laporan laba rugi atau manajemen user.
 
