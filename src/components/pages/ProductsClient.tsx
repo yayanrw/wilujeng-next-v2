@@ -11,6 +11,7 @@ import { Input } from '@/components/ui/Input';
 import { formatIdr } from '@/utils/money';
 
 import { ProductForm, type ProductDto } from './products/ProductForm';
+import { ImportProductModal } from './products/ImportProductModal';
 import { Toast } from './pos/Toast';
 import { useTranslation } from '@/i18n/useTranslation';
 
@@ -22,6 +23,7 @@ export function ProductsClient() {
   const [loading, setLoading] = useState(false);
   const [page, setPage] = useState(0);
   const [hasMore, setHasMore] = useState(true);
+  const [isImportModalOpen, setIsImportModalOpen] = useState(false);
   const [toastMessage, setToastMessage] = useState<string | null>(null);
   const [categoryId, setCategoryId] = useState('all');
   const [brandId, setBrandId] = useState('all');
@@ -168,6 +170,13 @@ export function ProductsClient() {
                   </option>
                 ))}
               </select>
+              <Button
+                variant="secondary"
+                className="h-10 whitespace-nowrap bg-white dark:bg-zinc-950"
+                onClick={() => setIsImportModalOpen(true)}
+              >
+                {t.products.importProducts || 'Import'}
+              </Button>
             </div>
           </div>
         </CardHeader>
@@ -351,6 +360,15 @@ export function ProductsClient() {
           />
         </CardContent>
       </Card>
+      <ImportProductModal
+        open={isImportModalOpen}
+        onClose={() => setIsImportModalOpen(false)}
+        onSuccess={(msg) => {
+          showToast(msg);
+          setIsImportModalOpen(false);
+          refresh();
+        }}
+      />
       <Toast message={toastMessage} />
     </div>
   );

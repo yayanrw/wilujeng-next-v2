@@ -187,7 +187,13 @@
     "tierPrice": "Tier Price",
     "noTier": "No tier pricing added.",
     "pressEnterToCreate": "Press enter to create",
-    "noMatches": "No matches found."
+    "noMatches": "No matches found.",
+    "importProducts": "Import Products",
+    "downloadTemplate": "Download Template",
+    "uploading": "Uploading...",
+    "importSuccess": "Import successful",
+    "importFailed": "Import failed",
+    "selectExcelFile": "Select an Excel (.xlsx) file to import products."
   },
   "stock": {
     "title": "Stock Management",
