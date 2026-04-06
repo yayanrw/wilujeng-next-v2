@@ -1,16 +1,16 @@
-import { eq } from "drizzle-orm";
-import { notFound } from "next/navigation";
+import { eq } from 'drizzle-orm';
+import { notFound } from 'next/navigation';
 
-import { db } from "@/db";
-import { products, transactionItems } from "@/db/schema";
-import { getBranding } from "@/lib/branding";
-import { requireSession } from "@/lib/server-session";
-import { formatIdr } from "@/utils/money";
+import { db } from '@/db';
+import { products, transactionItems } from '@/db/schema';
+import { getBranding } from '@/lib/branding';
+import { requireSession } from '@/lib/server-session';
+import { ReceiptClient } from '../ReceiptClient';
+import { ReceiptContent } from '../ReceiptContent';
 
-import { ReceiptClient } from "../ReceiptClient";
-import { ReceiptContent } from "../ReceiptContent";
-
-export default async function ReceiptPage(ctx: { params: Promise<{ id: string }> }) {
+export default async function ReceiptPage(ctx: {
+  params: Promise<{ id: string }>;
+}) {
   await requireSession();
   const { id } = await ctx.params;
   const tx = await db.query.transactions.findFirst({
@@ -38,7 +38,7 @@ export default async function ReceiptPage(ctx: { params: Promise<{ id: string }>
           .print\:hidden { display: none !important; }
         }
       `}</style>
-      
+
       <ReceiptContent tx={tx} items={items} branding={branding} />
       <ReceiptClient />
     </div>

@@ -1,9 +1,15 @@
-import { eq } from "drizzle-orm";
-import { z } from "zod";
+import { eq } from 'drizzle-orm';
+import { z } from 'zod';
 
-import { db } from "@/db";
-import { products, stockLogs } from "@/db/schema";
-import { badRequest, json, readJson, requireApiSession } from "@/server/api-helpers";
+import { db } from '@/db';
+import { products, stockLogs } from '@/db/schema';
+import {
+  badRequest,
+  json,
+  readJson,
+  requireApiSession,
+} from '@/server/api-helpers';
+import { invalidateCachePattern } from '@/lib/redis';
 
 const Schema = z.object({
   productId: z.string().uuid(),
@@ -16,7 +22,7 @@ export async function POST(req: Request) {
   if (response) return response;
 
   const { data, error } = await readJson<unknown>(req);
-  if (error || !data) return badRequest("Invalid JSON");
+  if (error || !data) return badRequest('Invalid JSON');
   const parsed = Schema.safeParse(data);
   if (!parsed.success) return badRequest(parsed.error.message);
 
@@ -24,7 +30,7 @@ export async function POST(req: Request) {
     const product = await tx.query.products.findFirst({
       where: (t, { eq: eq2 }) => eq2(t.id, parsed.data.productId),
     });
-    if (!product) throw new Error("Product not found");
+    if (!product) throw new Error('Product not found');
 
     const prevStock = product.stock;
     const nextStock = parsed.data.qty;
@@ -38,7 +44,7 @@ export async function POST(req: Request) {
       .insert(stockLogs)
       .values({
         productId: parsed.data.productId,
-        type: "opname",
+        type: 'opname',
         qty: Math.abs(nextStock - prevStock),
         prevStock,
         nextStock,
@@ -49,6 +55,7 @@ export async function POST(req: Request) {
     return { prevStock, nextStock, logId: log?.id ?? null };
   });
 
+  await invalidateCachePattern('products:catalog:*');
+
   return json(result);
 }
-

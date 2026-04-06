@@ -1,12 +1,23 @@
-import { and, asc, eq, ilike, inArray } from "drizzle-orm";
-import { z } from "zod";
+import { and, asc, eq, ilike, inArray } from 'drizzle-orm';
+import { z } from 'zod';
 
-import { db } from "@/db";
-import { brands, categories, productTiers, products } from "@/db/schema";
-import { badRequest, json, readJson, requireApiRole, requireApiSession } from "@/server/api-helpers";
+import { db } from '@/db';
+import { brands, categories, productTiers, products } from '@/db/schema';
+import {
+  badRequest,
+  json,
+  readJson,
+  requireApiRole,
+  requireApiSession,
+} from '@/server/api-helpers';
+import {
+  getCachedData,
+  setCachedData,
+  invalidateCachePattern,
+} from '@/lib/redis';
 
 function nonEmpty(s: string | null | undefined) {
-  const v = (s ?? "").trim();
+  const v = (s ?? '').trim();
   return v.length ? v : null;
 }
 
@@ -15,15 +26,25 @@ export async function GET(req: Request) {
   if (response) return response;
 
   const { searchParams } = new URL(req.url);
-  const search = nonEmpty(searchParams.get("search"));
-  const categoryId = nonEmpty(searchParams.get("categoryId"));
-  const brandId = nonEmpty(searchParams.get("brandId"));
-  
+  const search = nonEmpty(searchParams.get('search'));
+  const categoryId = nonEmpty(searchParams.get('categoryId'));
+  const brandId = nonEmpty(searchParams.get('brandId'));
+
   // Pagination
-  const limitParam = parseInt(searchParams.get("limit") || "50", 10);
-  const offsetParam = parseInt(searchParams.get("offset") || "0", 10);
-  const limit = isNaN(limitParam) || limitParam <= 0 ? 50 : Math.min(limitParam, 200);
+  const limitParam = parseInt(searchParams.get('limit') || '50', 10);
+  const offsetParam = parseInt(searchParams.get('offset') || '0', 10);
+  const limit =
+    isNaN(limitParam) || limitParam <= 0 ? 50 : Math.min(limitParam, 200);
   const offset = isNaN(offsetParam) || offsetParam < 0 ? 0 : offsetParam;
+
+  // Create a unique cache key based on query parameters
+  const cacheKey = `products:catalog:${search || 'all'}:${categoryId || 'all'}:${brandId || 'all'}:${limit}:${offset}`;
+
+  // Try to get data from Redis cache first
+  const cachedProducts = await getCachedData(cacheKey);
+  if (cachedProducts) {
+    return json(cachedProducts);
+  }
 
   const where = and(
     search ? ilike(products.name, `%${search}%`) : undefined,
@@ -75,7 +96,7 @@ export async function GET(req: Request) {
   // Calculate if there are more items to load
   // We can do a quick check by fetching one extra item, or returning a count.
   // For simplicity, we just return the items. The client will know there's more if items.length === limit.
-  
+
   const mappedRows = rows.map((r) => ({
     ...r,
     category: r.category?.id ? r.category : null,
@@ -86,6 +107,10 @@ export async function GET(req: Request) {
   // Return a standardized pagination object or just the array for backwards compatibility
   // We will wrap it in an object if the client asks for it, but to avoid breaking other parts of the app
   // we'll just return the array. The client can use the array length to determine if it should show 'load more'
+
+  // Store the fetched data in Redis cache with explicit invalidation strategy
+  await setCachedData(cacheKey, mappedRows);
+
   return json(mappedRows);
 }
 
@@ -108,11 +133,18 @@ const CreateSchema = z.object({
   tiers: z.array(TierSchema).optional().default([]),
 });
 
-async function ensureCategoryId(input: { categoryId?: string; categoryName?: string }) {
+async function ensureCategoryId(input: {
+  categoryId?: string;
+  categoryName?: string;
+}) {
   if (input.categoryId) return input.categoryId;
   const name = input.categoryName?.trim();
   if (!name) return null;
-  const [created] = await db.insert(categories).values({ name }).onConflictDoNothing().returning();
+  const [created] = await db
+    .insert(categories)
+    .values({ name })
+    .onConflictDoNothing()
+    .returning();
   if (created) return created.id;
   const existing = await db.query.categories.findFirst({
     where: (t, { eq: eq2 }) => eq2(t.name, name),
@@ -124,7 +156,11 @@ async function ensureBrandId(input: { brandId?: string; brandName?: string }) {
   if (input.brandId) return input.brandId;
   const name = input.brandName?.trim();
   if (!name) return null;
-  const [created] = await db.insert(brands).values({ name }).onConflictDoNothing().returning();
+  const [created] = await db
+    .insert(brands)
+    .values({ name })
+    .onConflictDoNothing()
+    .returning();
   if (created) return created.id;
   const existing = await db.query.brands.findFirst({
     where: (t, { eq: eq2 }) => eq2(t.name, name),
@@ -133,11 +169,11 @@ async function ensureBrandId(input: { brandId?: string; brandName?: string }) {
 }
 
 export async function POST(req: Request) {
-  const { response } = await requireApiRole(req, "admin");
+  const { response } = await requireApiRole(req, 'admin');
   if (response) return response;
 
   const { data, error } = await readJson<unknown>(req);
-  if (error || !data) return badRequest("Invalid JSON");
+  if (error || !data) return badRequest('Invalid JSON');
   const parsed = CreateSchema.safeParse(data);
   if (!parsed.success) return badRequest(parsed.error.message);
 
@@ -159,7 +195,7 @@ export async function POST(req: Request) {
       })
       .returning();
 
-    if (!product) throw new Error("Failed to create product");
+    if (!product) throw new Error('Failed to create product');
 
     if (parsed.data.tiers.length) {
       await tx.insert(productTiers).values(
@@ -173,6 +209,9 @@ export async function POST(req: Request) {
 
     return product;
   });
+
+  // Invalidate product catalog cache
+  await invalidateCachePattern('products:catalog:*');
 
   return json({ id: result.id }, { status: 201 });
 }
