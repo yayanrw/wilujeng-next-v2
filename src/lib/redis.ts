@@ -19,7 +19,11 @@ export async function getCachedData<T>(key: string): Promise<T | null> {
 /**
  * Sets data to Redis cache with optional TTL.
  */
-export async function setCachedData<T>(key: string, data: T, ttlSeconds?: number): Promise<void> {
+export async function setCachedData<T>(
+  key: string,
+  data: T,
+  ttlSeconds?: number,
+): Promise<void> {
   try {
     if (ttlSeconds) {
       await redis.set(key, data, { ex: ttlSeconds });
@@ -39,5 +43,26 @@ export async function invalidateCache(key: string): Promise<void> {
     await redis.del(key);
   } catch (error) {
     console.error(`Failed to invalidate cache for key ${key}:`, error);
+  }
+}
+
+/**
+ * Deletes keys matching a pattern using SCAN and DEL.
+ * Note: Upstash REST API doesn't support pattern deletion directly, so we SCAN first.
+ */
+export async function invalidateCachePattern(pattern: string): Promise<void> {
+  try {
+    let cursor = '0';
+    do {
+      const result = await redis.scan(cursor, { match: pattern, count: 100 });
+      cursor = result[0];
+      const keys = result[1];
+
+      if (keys.length > 0) {
+        await redis.del(...keys);
+      }
+    } while (cursor !== '0');
+  } catch (error) {
+    console.error(`Failed to invalidate cache pattern ${pattern}:`, error);
   }
 }

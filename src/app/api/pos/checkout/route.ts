@@ -13,6 +13,7 @@ import {
 import { badRequest, json, requireApiSession } from '@/server/api-helpers';
 import { computePayment, type PaymentMethod } from '@/utils/checkout';
 import { getTierPrice } from '@/utils/tier-pricing';
+import { invalidateCachePattern } from '@/lib/redis';
 
 const ItemSchema = z.object({
   productId: z.string().uuid(),
@@ -203,6 +204,8 @@ export async function POST(req: Request) {
 
     return { id: createdTx.id };
   });
+
+  await invalidateCachePattern('products:catalog:*');
 
   return json({
     transactionId: txResult.id,
