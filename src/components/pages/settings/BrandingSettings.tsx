@@ -6,6 +6,7 @@ import * as LucideIcons from 'lucide-react';
 import { Button } from '@/components/ui/Button';
 import { Card, CardContent, CardHeader } from '@/components/ui/Card';
 import { Input } from '@/components/ui/Input';
+import { Toast } from '@/components/pages/pos/Toast';
 import { useTranslation } from '@/i18n/useTranslation';
 
 type Branding = {
@@ -28,8 +29,13 @@ const iconOptions = [
 export function BrandingSettings() {
   const [branding, setBranding] = useState<Branding | null>(null);
   const [pending, setPending] = useState(false);
-  const [message, setMessage] = useState<string | null>(null);
+  const [toastMessage, setToastMessage] = useState<string | null>(null);
   const { t } = useTranslation();
+
+  const showToast = (msg: string) => {
+    setToastMessage(msg);
+    setTimeout(() => setToastMessage(null), 3000);
+  };
 
   async function loadBranding() {
     const res = await fetch('/api/settings');
@@ -55,19 +61,12 @@ export function BrandingSettings() {
         </div>
       </CardHeader>
       <CardContent>
-        {message ? (
-          <div className="mb-3 rounded-md border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-950 px-3 py-2 text-sm text-zinc-700 dark:text-zinc-300">
-            {message}
-          </div>
-        ) : null}
-
         {branding ? (
           <form
             className="flex flex-col gap-3"
             onSubmit={async (e) => {
               e.preventDefault();
               setPending(true);
-              setMessage(null);
               const res = await fetch('/api/settings', {
                 method: 'POST',
                 headers: { 'content-type': 'application/json' },
@@ -79,14 +78,14 @@ export function BrandingSettings() {
                 | null;
               setPending(false);
               if (!res.ok) {
-                setMessage(
+                showToast(
                   body && 'error' in body
                     ? body.error.message
                     : 'Failed to save settings',
                 );
                 return;
               }
-              setMessage(t.common.saved);
+              showToast(t.common.saved);
               await loadBranding();
             }}
           >
@@ -194,6 +193,7 @@ export function BrandingSettings() {
           </div>
         )}
       </CardContent>
+      <Toast message={toastMessage} />
     </Card>
   );
 }
