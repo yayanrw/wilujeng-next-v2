@@ -10,7 +10,6 @@ import { db } from '@/db';
 import { users, accounts } from '@/db/schema';
 import { eq } from 'drizzle-orm';
 import { auth } from '@/lib/auth';
-import bcrypt from 'bcryptjs';
 
 describe('Login Integration Test', () => {
   const testEmail = 'testlogin@example.com';
@@ -39,7 +38,7 @@ describe('Login Integration Test', () => {
         role: 'admin',
         createdAt: new Date(),
         updatedAt: new Date(),
-        emailVerified: new Date(),
+        emailVerified: true,
       })
       .returning();
 
