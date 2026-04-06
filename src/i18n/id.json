@@ -190,7 +190,13 @@
     "tierPrice": "Harga Grosir",
     "noTier": "Belum ada harga grosir.",
     "pressEnterToCreate": "Tekan enter untuk membuat",
-    "noMatches": "Tidak ada kecocokan."
+    "noMatches": "Tidak ada kecocokan.",
+    "importProducts": "Impor Produk",
+    "downloadTemplate": "Unduh Templat",
+    "uploading": "Mengunggah...",
+    "importSuccess": "Impor berhasil",
+    "importFailed": "Impor gagal",
+    "selectExcelFile": "Pilih file Excel (.xlsx) untuk mengimpor produk."
   },
   "stock": {
     "title": "Manajemen Stok",
