@@ -5,6 +5,7 @@ import { db } from '@/db';
 import { accounts, users } from '@/db/schema';
 import { hashPassword } from 'better-auth/crypto';
 import { badRequest, json, readJson } from '@/server/api-helpers';
+import { getCachedData, setCachedData } from '@/lib/redis';
 
 const Schema = z.object({
   name: z.string().min(1).max(80),
@@ -13,11 +14,17 @@ const Schema = z.object({
 });
 
 export async function POST(req: Request) {
+  const isSetupComplete = await getCachedData<boolean>('system:setup_complete');
+  if (isSetupComplete) {
+    return badRequest('Setup is already complete');
+  }
+
   const [{ count }] = await db
     .select({ count: sql<number>`count(*)` })
     .from(users);
 
   if ((count ?? 0) > 0) {
+    await setCachedData('system:setup_complete', true);
     return badRequest('Setup is already complete');
   }
 
@@ -51,6 +58,8 @@ export async function POST(req: Request) {
       updatedAt: new Date(),
     });
   });
+
+  await setCachedData('system:setup_complete', true);
 
   return json({ created: true });
 }
