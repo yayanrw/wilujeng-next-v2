@@ -184,6 +184,8 @@ export const stockLogs = pgTable('stock_logs', {
   expiryDate: date('expiry_date'),
   supplierId: uuid('supplier_id'),
   unitBuyPrice: integer('unit_buy_price'),
+  transactionId: uuid('transaction_id'),
+  returnReason: text('return_reason'),
   createdAt: timestamp('createdat', { mode: 'date' }).notNull().defaultNow(),
 });
 
@@ -200,3 +202,23 @@ export const settings = pgTable(
   },
   (t) => [uniqueIndex('settings_singleton').on(t.id)],
 );
+
+export const pointsLog = pgTable('points_log', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  customerId: uuid('customer_id').notNull(),
+  transactionId: uuid('transaction_id'),
+  delta: integer('delta').notNull(),
+  reason: text('reason').notNull(),
+  createdAt: timestamp('createdat', { mode: 'date' }).notNull().defaultNow(),
+});
+
+export const debtPayments = pgTable('debt_payments', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  customerId: uuid('customer_id').notNull(),
+  transactionId: uuid('transaction_id'),
+  amount: integer('amount').notNull(),
+  method: text('method').notNull().default('cash'),
+  paidAt: timestamp('paid_at', { mode: 'date' }).notNull().defaultNow(),
+  userId: text('user_id').notNull(),
+  note: text('note'),
+});
