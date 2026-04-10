@@ -2,12 +2,13 @@ import { eq, sql } from 'drizzle-orm';
 import { z } from 'zod';
 
 import { db } from '@/db';
-import { customers, transactions } from '@/db/schema';
+import { customers, debtPayments, pointsLog } from '@/db/schema';
 import { badRequest, json, notFound, readJson, requireApiSession } from '@/server/api-helpers';
 
 const PayDebtSchema = z.object({
   amount: z.number().int().min(1),
   paymentMethod: z.enum(['cash', 'transfer', 'qris', 'card']),
+  note: z.string().optional(),
 });
 
 export async function POST(req: Request, ctx: { params: Promise<{ id: string }> }) {
@@ -30,25 +31,29 @@ export async function POST(req: Request, ctx: { params: Promise<{ id: string }> 
     return badRequest(`Payment amount cannot exceed total debt (${customer.totalDebt})`);
   }
 
-  // Record a payment transaction that reduces debt
   await db.transaction(async (tx) => {
-    // We create a special transaction record for debt payment
-    // totalAmount = 0 because it's not a new sale, it's just a payment
-    // amountReceived = the amount paid towards debt
-    await tx.insert(transactions).values({
+    await tx.insert(debtPayments).values({
       customerId: customer.id,
+      amount: parsed.data.amount,
+      method: parsed.data.paymentMethod,
       userId: session.user.id,
-      totalAmount: 0, 
-      paymentMethod: parsed.data.amount === customer.totalDebt ? parsed.data.paymentMethod : `partial_${parsed.data.paymentMethod}`,
-      amountReceived: parsed.data.amount,
-      change: 0,
-      status: 'paid_debt', // Special status to denote debt payment
-      createdAt: new Date(),
+      note: parsed.data.note,
+      paidAt: new Date(),
     });
+
+    const pointsAdd = Math.floor(parsed.data.amount / 1000);
+    if (pointsAdd > 0) {
+      await tx.insert(pointsLog).values({
+        customerId: customer.id,
+        delta: pointsAdd,
+        reason: 'debt_paid',
+      });
+    }
 
     await tx
       .update(customers)
       .set({
+        points: sql`${customers.points} + ${pointsAdd}`,
         totalDebt: sql`${customers.totalDebt} - ${parsed.data.amount}`,
         updatedAt: new Date(),
       })
@@ -57,3 +62,4 @@ export async function POST(req: Request, ctx: { params: Promise<{ id: string }> 
 
   return json({ success: true });
 }
+
