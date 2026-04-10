@@ -13,6 +13,7 @@ import { formatIdr } from '@/utils/money';
 import { StockLogDetailModal } from './stock/StockLogDetailModal';
 import { useTranslation } from '@/i18n/useTranslation';
 import { Toast } from '@/components/pages/pos/Toast';
+import { TransactionPicker } from '@/components/shared/TransactionPicker';
 
 type Tab = 'in' | 'out' | 'opname' | 'logs';
 
@@ -43,6 +44,9 @@ export function StockClient() {
   const [logs, setLogs] = useState<StockLog[]>([]);
   const [toastMessage, setToastMessage] = useState<string | null>(null);
   const [pending, setPending] = useState(false);
+  const [outType, setOutType] = useState<'out' | 'return'>('out');
+  const [transactionId, setTransactionId] = useState<string | null>(null);
+  const [returnReason, setReturnReason] = useState('');
 
   const showToast = (msg: string) => {
     setToastMessage(msg);
@@ -137,6 +141,8 @@ export function StockClient() {
     setBrandName('');
     setExpiryDate('');
     setNote('');
+    setTransactionId(null);
+    setReturnReason('');
 
     if (tab === 'logs') {
       setPage(0);
@@ -259,6 +265,62 @@ export function StockClient() {
                 </div>
               ) : null}
 
+              {tab === 'out' ? (
+                <div className="md:col-span-2">
+                  <label className="text-xs font-semibold uppercase tracking-wider text-zinc-500 dark:text-zinc-400">
+                    Tipe Keluar
+                  </label>
+                  <div className="mt-2 flex gap-4">
+                    <label className="flex items-center gap-2 cursor-pointer">
+                      <input
+                        type="radio"
+                        name="outType"
+                        value="out"
+                        checked={outType === 'out'}
+                        onChange={() => setOutType('out')}
+                        className="h-4 w-4 accent-zinc-900"
+                      />
+                      <span className="text-sm font-medium">Rusak / Hilang (Out)</span>
+                    </label>
+                    <label className="flex items-center gap-2 cursor-pointer">
+                      <input
+                        type="radio"
+                        name="outType"
+                        value="return"
+                        checked={outType === 'return'}
+                        onChange={() => setOutType('return')}
+                        className="h-4 w-4 accent-zinc-900"
+                      />
+                      <span className="text-sm font-medium">Retur Pelanggan (Return)</span>
+                    </label>
+                  </div>
+                </div>
+              ) : null}
+
+              {tab === 'out' && outType === 'return' ? (
+                <>
+                  <div className="md:col-span-2">
+                    <label className="text-xs font-semibold uppercase tracking-wider text-zinc-500 dark:text-zinc-400">
+                      Transaksi Asal (Wajib untuk Retur)
+                    </label>
+                    <div className="mt-1.5">
+                      <TransactionPicker value={transactionId} onChange={setTransactionId} />
+                    </div>
+                  </div>
+                  <div className="md:col-span-2">
+                    <label className="text-xs font-semibold uppercase tracking-wider text-zinc-500 dark:text-zinc-400">
+                      Alasan Retur
+                    </label>
+                    <Input
+                      className="mt-1.5"
+                      value={returnReason}
+                      onChange={(e) => setReturnReason(e.target.value)}
+                      placeholder="Contoh: Barang cacat, Salah beli..."
+                    />
+                  </div>
+                </>
+              ) : null}
+
               <div className="md:col-span-2">
                 <label className="text-xs font-semibold uppercase tracking-wider text-zinc-500 dark:text-zinc-400">
                   {t.stock.notes}
@@ -294,6 +356,9 @@ export function StockClient() {
                     productId,
                     qty,
                     note: note.trim() || undefined,
+                    type: outType,
+                    transactionId: outType === 'return' ? (transactionId || undefined) : undefined,
+                    returnReason: outType === 'return' ? (returnReason.trim() || undefined) : undefined,
                   });
                 }
                 if (tab === 'opname') {

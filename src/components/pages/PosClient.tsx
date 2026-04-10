@@ -24,6 +24,7 @@ export function PosClient() {
   const [lastTxId, setLastTxId] = useState<string | null>(null);
   const [refreshKey, setRefreshKey] = useState(0);
   const [debtPaymentAmount, setDebtPaymentAmount] = useState<number>(0);
+  const [debtPaymentNote, setDebtPaymentNote] = useState<string>('');
   const { t } = useTranslation();
 
   const items = usePosStore((s) => s.items);
@@ -67,6 +68,7 @@ export function PosClient() {
         customerId: customerId ?? undefined,
         debtPaymentAmount:
           debtPaymentAmount > 0 ? debtPaymentAmount : undefined,
+        debtPaymentNote: debtPaymentNote.trim() || undefined,
       }),
     });
     const body = (await res.json().catch(() => null)) as
@@ -92,6 +94,7 @@ export function PosClient() {
     clear();
     setAmountReceived(0);
     setDebtPaymentAmount(0);
+    setDebtPaymentNote('');
     setPaymentMethod('cash');
     setRefreshKey((k) => k + 1);
     inputRef.current?.focus();
@@ -142,6 +145,7 @@ export function PosClient() {
         onClose={() => {
           setCheckoutOpen(false);
           setDebtPaymentAmount(0);
+          setDebtPaymentNote('');
         }}
         onPaymentMethodChange={setPaymentMethod}
         onAmountReceivedChange={setAmountReceived}
@@ -149,6 +153,8 @@ export function PosClient() {
         onToast={setToast}
         debtPaymentAmount={debtPaymentAmount}
         onDebtPaymentAmountChange={setDebtPaymentAmount}
+        debtPaymentNote={debtPaymentNote}
+        onDebtPaymentNoteChange={setDebtPaymentNote}
       />
     </div>
   );
