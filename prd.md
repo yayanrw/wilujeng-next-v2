@@ -113,7 +113,7 @@ Berikut adalah dokumen **Product Requirements Document (PRD)** yang komprehensif
 - **Manajemen Pelanggan (Edit/Add & Pembayaran Hutang):**
   - Form untuk membuat atau mengedit data pelanggan (Nama, Telepon, Alamat, Poin).
   - Menggunakan layout 2-kolom (grid) dengan label uppercase tracking yang konsisten dengan standar form produk.
-  - **Pembayaran Hutang:** Terdapat tombol aksi "Pay Debt" (bayar hutang) pada tabel utama dan panel edit untuk memproses pembayaran tunggakan pelanggan melalui sebuah Modal khusus. Pembayaran ini akan dicatat ke database sebagai histori pembayaran (`status='paid_debt'`).
+  - **Pembayaran Hutang:** Terdapat tombol aksi "Pay Debt" (bayar hutang) pada tabel utama dan panel edit untuk memproses pembayaran tunggakan pelanggan melalui sebuah Modal khusus. Pembayaran ini akan dicatat ke tabel `debt_payments` untuk histori pelunasan yang transparan.
   - Terdapat Toast notification setelah operasi berhasil atau gagal, dengan auto reset form.
 
 ### 3.7 Laporan
@@ -172,6 +172,7 @@ Sistem menggunakan metode **Best Match Match** pada `min_qty` terbesar.
 - Pelanggan baru wajib terdaftar (Nama & No. HP) sebelum bisa mengambil metode pembayaran Hutang.
 - Transaksi hutang akan menambah `total_debt` pada profil pelanggan.
 - Kurang bayar (partial payment) menambah `total_debt` sebesar `total_amount - amount_received`; change = 0.
+- Setiap pelunasan hutang (baik melalui menu Pelanggan maupun inline saat Checkout) dicatat dalam tabel `debt_payments` dan otomatis mengurangi `total_debt` pelanggan.
 
 ---
 
@@ -313,7 +314,8 @@ Catatan: Implementasi RBAC di level API Route Handlers dan server components; si
 - Loyalti:
   - 1 poin per Rp1.000 (pembulatan ke bawah) dari total_amount; update setelah transaksi tersimpan.
 - Hutang:
-  - Hanya untuk pelanggan terdaftar; menambah total_debt = total_amount; pelunasan parsial/final dicatat sebagai pengembangan lanjutan.
+  - Hanya untuk pelanggan terdaftar; menambah total_debt = total_amount.
+  - Setiap pelunasan parsial atau final dicatat secara permanen di tabel `debt_payments` sebagai riwayat pembayaran hutang.
 - Stok:
   - Tidak boleh negatif; tolak transaksi jika stok kurang; semua mutasi tercatat di stock_logs.
 
