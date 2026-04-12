@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useState } from 'react';
 
-import { Plus, Pencil, Search } from 'lucide-react';
+import { Plus, Pencil, Search, ToggleRight, ToggleLeft } from 'lucide-react';
 
 import { Badge } from '@/components/ui/Badge';
 import { Button } from '@/components/ui/Button';
@@ -28,7 +28,7 @@ export function ProductsClient() {
   const [categoryId, setCategoryId] = useState('all');
   const [brandId, setBrandId] = useState('all');
   const [categories, setCategories] = useState<{ id: string; name: string }[]>(
-    [],
+    []
   );
   const [brands, setBrands] = useState<{ id: string; name: string }[]>([]);
   const { t } = useTranslation();
@@ -42,7 +42,7 @@ export function ProductsClient() {
   const selected = useMemo(
     () =>
       selectedId ? (products.find((p) => p.id === selectedId) ?? null) : null,
-    [products, selectedId],
+    [products, selectedId]
   );
 
   useEffect(() => {
@@ -66,7 +66,7 @@ export function ProductsClient() {
     cat: string,
     brnd: string,
     p: number,
-    append = false,
+    append = false
   ) {
     setLoading(true);
     try {
@@ -113,7 +113,7 @@ export function ProductsClient() {
     setPage(0);
     const t = window.setTimeout(
       () => void fetchProducts(search, categoryId, brandId, 0, false),
-      500, // Increased debounce to 500ms
+      500 // Increased debounce to 500ms
     );
     return () => window.clearTimeout(t);
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -125,6 +125,31 @@ export function ProductsClient() {
     setPage(nextPage);
     fetchProducts(search, categoryId, brandId, nextPage, true);
   };
+
+  async function handleStatusChange(id: string) {
+    try {
+      const res = await fetch(`/api/products/${id}/status`, {
+        method: 'PATCH',
+      });
+      const body = await res.json().catch(() => ({}));
+
+      // Accept either { status: 'success' } or { updated: true } (your route.ts returns { updated: true })
+      const ok = res.ok && (body.status === 'success' || body.updated === true);
+
+      if (ok) {
+        // Optimistically update local state so the toggle changes immediately
+        setProducts((prev) =>
+          prev.map((p) => (p.id === id ? { ...p, isActive: !p.isActive } : p))
+        );
+        showToast(t.products.updatedSuccess);
+      } else {
+        showToast(t.products.saveFailed);
+      }
+    } catch (err) {
+      console.error(err);
+      showToast(t.products.saveFailed);
+    }
+  }
 
   return (
     <div className="grid grid-cols-1 gap-4 lg:grid-cols-[1fr_420px]">
@@ -206,6 +231,9 @@ export function ProductsClient() {
                     <th className="py-3 px-4 font-medium">
                       {t.products.stock}
                     </th>
+                    <th className="py-3 px-4 font-medium">
+                      {t.products.active}
+                    </th>
                     <th className="py-3 px-4 font-medium text-right">
                       {t.products.action}
                     </th>
@@ -271,7 +299,34 @@ export function ProductsClient() {
                           {p.stock}
                         </Badge>
                       </td>
+                      <td className="py-3 px-4 align-middle">
+                        {p.isActive ? (
+                          <Badge tone="success">{t.products.active}</Badge>
+                        ) : (
+                          <Badge tone="danger">{t.products.notActive}</Badge>
+                        )}
+                      </td>
                       <td className="py-3 px-4 align-middle text-right">
+                        <Button
+                          variant="ghost"
+                          className="h-8 w-8 p-0 text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-100 transition-colors"
+                          size="sm"
+                          title={
+                            p.isActive
+                              ? t.products.deactivate
+                              : t.products.activate
+                          }
+                          onClick={() => {
+                            handleStatusChange(p.id);
+                          }}
+                        >
+                          {p.isActive ? (
+                            <ToggleRight className="h-4 w-4" />
+                          ) : (
+                            <ToggleLeft className="h-4 w-4" />
+                          )}
+                        </Button>
+
                         <Button
                           variant="ghost"
                           size="sm"
@@ -354,7 +409,7 @@ export function ProductsClient() {
                 showToast(
                   mode === 'create'
                     ? t.products.createdSuccess
-                    : t.products.updatedSuccess,
+                    : t.products.updatedSuccess
                 );
               } else {
                 showToast(errorMsg || t.products.saveFailed);

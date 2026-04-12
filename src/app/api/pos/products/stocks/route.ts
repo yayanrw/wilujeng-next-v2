@@ -2,6 +2,7 @@ import { db } from '@/db';
 import { products } from '@/db/schema';
 import { json, requireApiSession } from '@/server/api-helpers';
 import { getCachedData, setCachedData } from '@/lib/redis';
+import { and, eq } from 'drizzle-orm';
 
 export const dynamic = 'force-dynamic';
 
@@ -23,7 +24,8 @@ export async function GET(req: Request) {
       id: products.id,
       stock: products.stock,
     })
-    .from(products);
+    .from(products)
+    .where(and(eq(products.isDeleted, false), eq(products.isActive, true)));
 
   // Cache for 10 seconds as per plan
   await setCachedData(cacheKey, stocks, 10);

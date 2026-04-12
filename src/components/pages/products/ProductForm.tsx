@@ -21,6 +21,8 @@ export type ProductDto = {
   category: { id: string; name: string } | null;
   brand: { id: string; name: string } | null;
   tiers: Array<{ minQty: number; price: number }>;
+  isActive: boolean;
+  isDeleted: boolean;
 };
 
 export function ProductForm({
