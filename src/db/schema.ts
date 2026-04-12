@@ -107,6 +107,8 @@ export const products = pgTable(
     buyPrice: integer('buy_price').notNull(),
     stock: integer('stock').notNull().default(0),
     minStockThreshold: integer('min_stock_threshold').notNull().default(0),
+    isActive: boolean('is_active').notNull().default(true),
+    isDeleted: boolean('is_deleted').notNull().default(false),
     createdAt: timestamp('createdat', { mode: 'date' }).notNull().defaultNow(),
     updatedAt: timestamp('updatedat', { mode: 'date' }).notNull().defaultNow(),
   },
