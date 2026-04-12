@@ -300,7 +300,11 @@
     "paid": "Dibayar",
     "initialDebt": "Hutang Awal",
     "initialDebtDesc": "Isi bidang ini jika pelanggan memiliki hutang sebelum menggunakan sistem ini.",
-    "paymentNotePlaceholder": "Catatan pembayaran (opsional)"
+    "paymentNotePlaceholder": "Catatan pembayaran (opsional)",
+    "deleteConfirmTitle": "Hapus pelanggan",
+    "deleteConfirmDesc": "Apakah Anda yakin ingin menghapus pelanggan ini? Tindakan ini akan menonaktifkan dan menyembunyikan pelanggan dari daftar.",
+    "deletedSuccess": "Pelanggan dihapus",
+    "deleteFailed": "Gagal menghapus pelanggan"
   },
   "reports": {
     "title": "Laporan",

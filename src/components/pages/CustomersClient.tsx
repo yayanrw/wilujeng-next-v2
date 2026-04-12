@@ -20,6 +20,7 @@ import { formatIdr } from '@/utils/money';
 import { Toast } from './pos/Toast';
 import { CustomerForm, type CustomerDto } from './customers/CustomerForm';
 import { PayDebtModal } from './customers/PayDebtModal';
+import { ConfirmDialog } from '@/components/ui/ConfirmDialog';
 import { useTranslation } from '@/i18n/useTranslation';
 
 type CustomerDetail = {
@@ -48,6 +49,9 @@ export function CustomersClient() {
   const [loading, setLoading] = useState(false);
   const [page, setPage] = useState(0);
   const [hasMore, setHasMore] = useState(true);
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+  const [deletingId, setDeletingId] = useState<string | null>(null);
+  const [deleting, setDeleting] = useState(false);
   const [toastMessage, setToastMessage] = useState<string | null>(null);
   const [sortBy, setSortBy] = useState<'name' | 'points' | 'totalDebt'>('name');
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('asc');
@@ -61,7 +65,7 @@ export function CustomersClient() {
 
   const selected = useMemo(
     () => customers.find((c) => c.id === selectedId) ?? null,
-    [customers, selectedId],
+    [customers, selectedId]
   );
 
   async function fetchCustomers(
@@ -69,7 +73,7 @@ export function CustomersClient() {
     p: number,
     append = false,
     currentSortBy = sortBy,
-    currentSortOrder = sortOrder,
+    currentSortOrder = sortOrder
   ) {
     setLoading(true);
     try {
@@ -116,7 +120,7 @@ export function CustomersClient() {
     setPage(0);
     const t = window.setTimeout(
       () => void fetchCustomers(search, 0, false, sortBy, sortOrder),
-      500,
+      500
     );
     return () => window.clearTimeout(t);
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -155,6 +159,42 @@ export function CustomersClient() {
     setPage(nextPage);
     void fetchCustomers(search, nextPage, true, sortBy, sortOrder);
   };
+
+  function openDeleteDialog(id: string) {
+    setDeletingId(id);
+    setIsDeleteDialogOpen(true);
+  }
+
+  async function confirmDelete() {
+    if (!deletingId) return;
+    setDeleting(true);
+    try {
+      const res = await fetch(`/api/customers/${deletingId}`, {
+        method: 'DELETE',
+      });
+      const body = await res.json().catch(() => ({}));
+      const ok = res.ok && (body.deleted === true || body.deleted === 'true');
+      if (ok) {
+        setCustomers((prev) => prev.filter((c) => c.id !== deletingId));
+        showToast(t.customers.deletedSuccess || 'Deleted');
+      } else {
+        showToast(
+          t.customers.deleteFailed ||
+            t.customers.saveFailed ||
+            'Failed to delete'
+        );
+      }
+    } catch (err) {
+      console.error(err);
+      showToast(
+        t.customers.deleteFailed || t.customers.saveFailed || 'Failed to delete'
+      );
+    } finally {
+      setDeleting(false);
+      setIsDeleteDialogOpen(false);
+      setDeletingId(null);
+    }
+  }
 
   const SortIcon = ({
     column,
@@ -323,6 +363,28 @@ export function CustomersClient() {
                               <Pencil className="h-4 w-4" />
                               <span className="sr-only">{t.common.edit}</span>
                             </Button>
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              className="h-8 w-8 p-0 text-red-500 hover:text-red-600 transition-colors"
+                              onClick={() => openDeleteDialog(c.id)}
+                              title={t.common.delete}
+                            >
+                              <span className="sr-only">{t.common.delete}</span>
+                              <svg
+                                className="h-4 w-4"
+                                viewBox="0 0 24 24"
+                                fill="none"
+                                stroke="currentColor"
+                              >
+                                <path
+                                  strokeWidth="2"
+                                  strokeLinecap="round"
+                                  strokeLinejoin="round"
+                                  d="M6 18L18 6M6 6l12 12"
+                                />
+                              </svg>
+                            </Button>
                           </div>
                         </td>
                       </tr>
@@ -396,7 +458,7 @@ export function CustomersClient() {
                     showToast(
                       mode === 'create'
                         ? t.customers.createdSuccess
-                        : t.customers.updatedSuccess,
+                        : t.customers.updatedSuccess
                     );
                   } else {
                     showToast(errorMsg || t.customers.saveFailed);
@@ -465,6 +527,20 @@ export function CustomersClient() {
 
       <Toast message={toastMessage} />
 
+      <ConfirmDialog
+        open={isDeleteDialogOpen}
+        title={t.customers.deleteConfirmTitle}
+        description={t.customers.deleteConfirmDesc}
+        confirmText={t.common.delete}
+        cancelText={t.common.cancel}
+        onClose={() => {
+          setIsDeleteDialogOpen(false);
+          setDeletingId(null);
+        }}
+        onConfirm={confirmDelete}
+        loading={deleting}
+      />
+
       {payDebtCustomer && (
         <PayDebtModal
           customerName={payDebtCustomer.name}
@@ -477,7 +553,7 @@ export function CustomersClient() {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ amount, paymentMethod: method, note }),
-              },
+              }
             );
 
             if (res.ok) {

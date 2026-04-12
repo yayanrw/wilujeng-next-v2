@@ -523,3 +523,10 @@ Catatan: Implementasi RBAC di level API Route Handlers dan server components; si
 * - Setelah sukses: hapus baris dari daftar di UI (optimistik setelah respons sukses) dan tampilkan toast sukses.
 * - Jika gagal: tampilkan toast error.
 * - Hanya admin dapat melihat/menjalankan aksi delete (RBAC at API + UI hint).
+
+- Customer management
+  - Soft-delete support:
+    - Database: customers now include is_active (default true) and is_deleted (default false).
+    - API: new endpoint DELETE /api/customers/:id performing soft-delete (sets is_deleted=true and is_active=false). Admin-only.
+    - UI: Customers list includes a Delete action (next to Edit). Clicking Delete opens a confirmation dialog (i18n texts available). After successful deletion the customer row is removed from the list and a success toast is shown. Listing endpoints exclude is_deleted=true by default.
+    - Cache: invalidate customers listing patterns (e.g. customers:list:\*) when a customer is soft-deleted so UI updates quickly.

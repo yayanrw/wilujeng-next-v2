@@ -297,7 +297,11 @@
     "paid": "Paid",
     "initialDebt": "Initial Debt",
     "initialDebtDesc": "Fill this field if the customer has an existing debt before using this system.",
-    "paymentNotePlaceholder": "Payment note (optional)"
+    "paymentNotePlaceholder": "Payment note (optional)",
+    "deleteConfirmTitle": "Delete customer",
+    "deleteConfirmDesc": "Are you sure you want to delete this customer? This action will deactivate and hide the customer from listings.",
+    "deletedSuccess": "Customer deleted",
+    "deleteFailed": "Failed to delete customer"
   },
   "reports": {
     "title": "Reports",
