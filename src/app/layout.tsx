@@ -39,7 +39,7 @@ export default function RootLayout({
             color="#fbbf24" // amber-400
             initialPosition={0.08}
             crawlSpeed={200}
-            height={1}
+            height={2}
             crawl={true}
             showSpinner={false} // Re-enable spinner to help verify it's working
             easing="ease"
