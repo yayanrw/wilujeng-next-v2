@@ -333,7 +333,8 @@ Catatan: Implementasi RBAC di level API Route Handlers dan server components; si
   - id UUID PK, sku TEXT UNIQUE NOT NULL, name TEXT NOT NULL, category_id UUID FK→categories(id), brand_id UUID FK→brands(id),
     base_price INT NOT NULL CHECK(base_price>=0), buy_price INT NOT NULL CHECK(buy_price>=0),
     stock INT NOT NULL CHECK(stock>=0), min_stock_threshold INT NOT NULL DEFAULT 0 CHECK(min_stock_threshold>=0),
-    created_at TIMESTAMPTZ default now(), updated_at TIMESTAMPTZ default now()
+    created_at TIMESTAMPTZ default now(), updated_at TIMESTAMPTZ default now(),
+    is_active BOOLEAN NOT NULL DEFAULT true, is_deleted BOOLEAN NOT NULL DEFAULT false
 - product_tiers
   - id UUID PK, product_id UUID FK→products(id) ON DELETE CASCADE, min_qty INT NOT NULL CHECK(min_qty>0),
     price INT NOT NULL CHECK(price>0), UNIQUE(product_id, min_qty)
@@ -477,3 +478,41 @@ Catatan: Implementasi RBAC di level API Route Handlers dan server components; si
 - Pajak (include/exclude), diskon per item/transaksi, varian produk.
 - Analitik tingkat lanjut & Laporan detail mengenai performa hutang/piutang secara holistik.
 - Multi-cabang, gudang, transfer stok antar cabang.
+
+---
+
+# Perubahan Terkait Status Aktif/Dihapus Produk (BARU)
+
+- Database (produk)
+  - Menambahkan dua kolom baru:
+    - is_active: boolean NOT NULL DEFAULT true — produk dapat diaktifkan/dinonaktifkan tanpa dihapus.
+    - is_deleted: boolean NOT NULL DEFAULT false — tanda hapus lunak untuk produk (tidak menghapus baris secara fisik).
+  - Migrasi: tambahkan kolom is_active dan is_deleted dan isi kembali sesuai kebutuhan (produk yang ada: is_active=true, is_deleted=false).
+
+- Inventaris & Produk (UI/UX)
+  - Daftar produk sekarang menampilkan lencana status "Aktif" per baris dan tombol toggle untuk mengaktifkan/meminimalkan produk.
+  - Produk yang dinonaktifkan tetap ada di database (is_deleted=false) dan dapat diaktifkan kembali melalui toggle.
+  - Produk yang dihapus secara lunak mengatur is_deleted=true dan dikecualikan dari daftar/carian normal secara default.
+  - Mengubah status aktif:
+    - Memerlukan izin admin di API (RBAC ditegakkan di sisi server).
+    - UI melakukan pembaruan optimis: toggle langsung tercermin, menampilkan toast saat sukses/gagal.
+    - Jika API gagal, UI membatalkan dan menampilkan toast kesalahan.
+
+- Perubahan API
+  - Endpoint baru:
+    - PATCH /api/products/:id/status
+      - Tujuan: mengubah is_active produk.
+      - Otorisasi: hanya admin.
+      - Respons: 200 { updated: true, id } saat sukses.
+      - Kesalahan: 404 saat produk tidak ditemukan; 401/403 jika tidak diizinkan.
+  - PATCH produk yang ada tetap ada untuk pembaruan parsial; endpoint status adalah rute kenyamanan untuk mengubah hanya itu.
+
+- Cache / Invalidation
+  - Ketika status aktif produk berubah, server menginvalidasi cache terkait produk (contoh yang digunakan oleh implementasi saat ini):
+    - pos:catalog:all
+    - pos:stocks:all
+  - Pastikan strategi invalidasi atau TTL cache memperlakukan is_active/is_deleted dengan tepat sehingga daftar mencerminkan aktivasi/deaktivasi dengan cepat.
+
+- Perilaku pengambilan & daftar data
+  - Endpoint daftar produk default harus menyaring item is_deleted=true.
+  - Tampilan admin atau khusus dapat menampilkan item yang dihapus secara lunak untuk pemulihan/audit.
