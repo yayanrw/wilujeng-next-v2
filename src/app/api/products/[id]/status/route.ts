@@ -1,6 +1,6 @@
 import { db } from '@/db';
 import { products } from '@/db/schema';
-import { invalidateCache, invalidateCachePattern } from '@/lib/redis';
+import { invalidateCache } from '@/lib/redis';
 import { json, notFound, requireApiRole } from '@/server/api-helpers';
 import { eq } from 'drizzle-orm';
 
