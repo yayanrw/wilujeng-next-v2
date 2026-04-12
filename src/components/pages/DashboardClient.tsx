@@ -264,15 +264,13 @@ export function DashboardClient() {
                       >
                         <stop
                           offset="5%"
-                          stopColor="#18181b"
+                          stopColor="#fbbf24"
                           stopOpacity={0.3}
-                          className="dark:stopColor-zinc-100"
                         />
                         <stop
                           offset="95%"
-                          stopColor="#18181b"
+                          stopColor="#fbbf24"
                           stopOpacity={0}
-                          className="dark:stopColor-zinc-100"
                         />
                       </linearGradient>
                       <linearGradient
@@ -339,7 +337,7 @@ export function DashboardClient() {
                       type="monotone"
                       dataKey="sales"
                       name={t.reports.totalSales}
-                      stroke="#18181b"
+                      stroke="#fbbf24"
                       fillOpacity={1}
                       fill="url(#colorSales)"
                       className="dark:stroke-zinc-100"
