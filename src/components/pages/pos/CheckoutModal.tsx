@@ -16,11 +16,15 @@ function CustomerDebtPayButton({
   onToast,
   debtPaymentAmount,
   onDebtPaymentAmountChange,
+  debtPaymentNote,
+  onDebtPaymentNoteChange,
 }: {
   customerId: string;
   onToast: (m: string) => void;
   debtPaymentAmount?: number;
   onDebtPaymentAmountChange?: (n: number) => void;
+  debtPaymentNote?: string;
+  onDebtPaymentNoteChange?: (s: string) => void;
 }) {
   const [debt, setDebt] = useState<number | null>(null);
   const { t } = useTranslation();
@@ -83,6 +87,16 @@ function CustomerDebtPayButton({
           />
         </div>
       )}
+      {onDebtPaymentNoteChange && (
+        <div className="relative">
+          <Input
+            className="h-9 text-sm font-medium tracking-tight bg-white dark:bg-zinc-950 border-red-200 dark:border-red-800/50 focus-visible:ring-red-500"
+            value={debtPaymentNote ?? ''}
+            onChange={(e) => onDebtPaymentNoteChange(e.target.value)}
+            placeholder={t.customers?.paymentNotePlaceholder ?? 'Catatan (opsional)'}
+          />
+        </div>
+      )}
     </div>
   );
 }
@@ -102,6 +116,8 @@ export function CheckoutModal({
   onToast,
   debtPaymentAmount,
   onDebtPaymentAmountChange,
+  debtPaymentNote,
+  onDebtPaymentNoteChange,
 }: {
   open: boolean;
   total: number;
@@ -117,6 +133,8 @@ export function CheckoutModal({
   onToast: (m: string) => void;
   debtPaymentAmount?: number;
   onDebtPaymentAmountChange?: (n: number) => void;
+  debtPaymentNote?: string;
+  onDebtPaymentNoteChange?: (s: string) => void;
 }) {
   const customerId = usePosStore((s) => s.customerId);
   const setCustomerId = usePosStore((s) => s.setCustomerId);
@@ -273,6 +291,8 @@ export function CheckoutModal({
                     onToast={onToast}
                     debtPaymentAmount={debtPaymentAmount}
                     onDebtPaymentAmountChange={onDebtPaymentAmountChange}
+                    debtPaymentNote={debtPaymentNote}
+                    onDebtPaymentNoteChange={onDebtPaymentNoteChange}
                   />
                 )}
               </div>

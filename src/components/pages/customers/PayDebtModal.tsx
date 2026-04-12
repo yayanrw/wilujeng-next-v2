@@ -14,10 +14,11 @@ export function PayDebtModal({
   customerName: string;
   totalDebt: number;
   onClose: () => void;
-  onSubmit: (amount: number, method: string) => Promise<void>;
+  onSubmit: (amount: number, method: string, note: string) => Promise<void>;
 }) {
   const [amount, setAmount] = useState(totalDebt);
   const [method, setMethod] = useState('cash');
+  const [note, setNote] = useState('');
   const [loading, setLoading] = useState(false);
   const { t } = useTranslation();
 
@@ -111,6 +112,17 @@ export function PayDebtModal({
               <option value="card">Card</option>
             </select>
           </div>
+          <div>
+            <label className="text-xs font-semibold uppercase tracking-wider text-zinc-500 dark:text-zinc-400">
+              {t.stock.notes}
+            </label>
+            <Input
+              className="mt-1.5"
+              value={note}
+              onChange={(e) => setNote(e.target.value)}
+              placeholder={t.stock.optionalRemarks}
+            />
+          </div>
         </div>
 
         <div className="border-t border-zinc-100 bg-zinc-50 px-6 py-4 dark:border-zinc-800 dark:bg-zinc-900 flex justify-end gap-2">
@@ -122,7 +134,7 @@ export function PayDebtModal({
             onClick={async () => {
               setLoading(true);
               try {
-                await onSubmit(amount, method);
+                await onSubmit(amount, method, note);
               } finally {
                 setLoading(false);
               }

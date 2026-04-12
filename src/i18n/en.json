@@ -288,7 +288,8 @@
     "status": "Status",
     "paid": "Paid",
     "initialDebt": "Initial Debt",
-    "initialDebtDesc": "Fill this field if the customer has an existing debt before using this system."
+    "initialDebtDesc": "Fill this field if the customer has an existing debt before using this system.",
+    "paymentNotePlaceholder": "Payment note (optional)"
   },
   "reports": {
     "title": "Reports",

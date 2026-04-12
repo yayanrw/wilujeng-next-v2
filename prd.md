@@ -60,13 +60,15 @@ Berikut adalah dokumen **Product Requirements Document (PRD)** yang komprehensif
 
 ### 3.3 Menu Kasir (Point of Sale)
 
-- **Penjualan Kasir (POS):** Antarmuka utama untuk melakukan transaksi. Terdiri dari panel pencarian produk dan panel keranjang belanja. Menggunakan _full height_ layout agar kedua panel dapat di-scroll secara independen tanpa memotong modal checkout. Pencarian produk menggunakan _debounce_ 500ms untuk performa. Setelah checkout berhasil, daftar produk akan di-_refresh_ secara otomatis untuk memperbarui sisa stok yang ditampilkan. Tampilan list produk dikemas dalam model "Card" grid yang menampilkan nama, SKU, badge indikator sisa stok, kategori, dan harga dengan jelas. Sistem menolak penambahan produk dengan stok `0` ke dalam keranjang dan menampilkan peringatan (Toast).
+- **Penjualan Kasir (POS):** Antarmuka utama untuk melakukan transaksi. Terdiri dari panel pencarian produk dan panel keranjang belanja. Menggunakan _full height_ layout agar kedua panel dapat di-scroll secara independen tanpa memotong modal checkout.
+- **High Performance Search & Filter (Split-Cache Strategy):**
+  - **Catalog Bucket:** Data produk statis (Nama, SKU, Kategori, Harga Dasar, Tiers) diambil sekali saat halaman POS dimuat dan disimpan di local memory (Zustand). Data ini di-cache di Redis dengan TTL panjang.
+  - **Stock Bucket:** Data stok produk yang bersifat dinamis diambil melalui polling setiap 30 detik dari endpoint khusus yang ringan (`/api/pos/products/stocks`). Data ini di-cache di Redis dengan TTL sangat pendek (10 detik).
+  - **Local Computing:** Seluruh proses pencarian dan pemfilteran kategori dilakukan sepenuhnya di sisi klien menggunakan data yang telah digabungkan di memori. Hal ini memberikan latensi nol saat kasir mengetik atau mengganti kategori.
 - **Product Discovery:**
   - Search bar untuk Nama Produk atau SKU.
-  - **Barcode Support:** Fokus otomatis pada search bar; ketika SKU di-scan (diakhiri karakter `Enter`), produk otomatis masuk ke keranjang.
-  - **Kategori & Paginasi (Load More):**
-    - Filter berdasarkan Kategori menggunakan daftar tombol kategori yang dapat digeser (horizontal scroll).
-    - Menampilkan semua produk dengan sistem paginasi (menggunakan pendekatan tombol "Load More Products"). Default menampilkan 20 item per halaman.
+  - **Barcode Support:** Fokus otomatis pada search bar; ketika SKU di-scan (diakhiri karakter `Enter`), produk otomatis masuk ke keranjang jika stok tersedia.
+  - **Kategori:** Filter berdasarkan Kategori menggunakan daftar tombol kategori yang dapat digeser (horizontal scroll).
   - Toggle tampilan: **List View** atau **Card View** (dengan gambar/ikon).
 - **Keranjang Belanja (Cart):**
   - List produk, quantity, subtotal.
@@ -78,7 +80,7 @@ Berikut adalah dokumen **Product Requirements Document (PRD)** yang komprehensif
   - Metode Pembayaran: Tunai, QRIS, Transfer, Hutang.
   - **Quick Cash Buttons:** Tombol nominal cepat (Exact, 1.000, 2.000, 5.000, 10.000, 20.000, 50.000, 100.000) dan tombol "Uang Pas".
   - **Hutang Logic:** Jika memilih "Hutang" atau terdapat kurang bayar, wajib memilih pelanggan terdaftar. Jika belum ada, tersedia tombol "Add Pelanggan Baru".
-  - **Pembayaran Hutang (Pay Debt) Inline:** Kasir dapat memproses pelunasan hutang (sebagian atau penuh) pelanggan langsung dari modal Checkout bersamaan dengan transaksi baru.
+  - **Pembayaran Hutang (Pay Debt) Inline:** Kasir dapat memproses pelunasan hutang (sebagian atau penuh) pelanggan langsung dari modal Checkout bersamaan dengan transaksi baru. Terdapat field catatan (note) untuk mencatat detail pelunasan.
   - Perhitungan otomatis untuk kembalian (Change) atau sisa hutang (Outstanding Debt) secara real-time; dukung skenario “kurang bayar”:
     - Kurang Bayar (Partial Payment): Jika amount_received < total_amount → wajib pilih pelanggan; status transaksi = 'hutang'; outstanding_debt = total_amount - amount_received; change = 0.
     - Hutang Penuh: Jika memilih metode 'Hutang' dan amount_received 0 → wajib pilih pelanggan; status = 'hutang'; outstanding_debt = total_amount; change = 0.
@@ -113,7 +115,7 @@ Berikut adalah dokumen **Product Requirements Document (PRD)** yang komprehensif
 - **Manajemen Pelanggan (Edit/Add & Pembayaran Hutang):**
   - Form untuk membuat atau mengedit data pelanggan (Nama, Telepon, Alamat, Poin).
   - Menggunakan layout 2-kolom (grid) dengan label uppercase tracking yang konsisten dengan standar form produk.
-  - **Pembayaran Hutang:** Terdapat tombol aksi "Pay Debt" (bayar hutang) pada tabel utama dan panel edit untuk memproses pembayaran tunggakan pelanggan melalui sebuah Modal khusus. Pembayaran ini akan dicatat ke database sebagai histori pembayaran (`status='paid_debt'`).
+  - **Pembayaran Hutang:** Terdapat tombol aksi "Pay Debt" (bayar hutang) pada tabel utama dan panel edit untuk memproses pembayaran tunggakan pelanggan melalui sebuah Modal khusus. Pembayaran ini akan dicatat ke tabel `debt_payments` untuk histori pelunasan yang transparan.
   - Terdapat Toast notification setelah operasi berhasil atau gagal, dengan auto reset form.
 
 ### 3.7 Laporan
@@ -165,13 +167,14 @@ Sistem menggunakan metode **Best Match Match** pada `min_qty` terbesar.
 ### 4.2 Sistem Loyalitas
 
 - **Konversi:** Setiap transaksi Rp1.000 mendapatkan 1 Poin (Pembulatan ke bawah).
-- **Trigger:** Poin diperbarui sesaat setelah transaksi status "Lunas" atau "Hutang" berhasil disimpan.
+- **Trigger:** Poin diperbarui HANYA untuk transaksi dengan status "Lunas". Jika pelanggan membayar/melunasi hutang, poin tambahan akan diberikan berdasarkan nominal pembayaran hutang. Jika opsi Retur Barang dilakukan pelanggan, poin yang setara dengan nilai beli barang retur akan ditarik kembali (dikurangi) secara otomatis.
 
 ### 4.3 Alur Hutang
 
 - Pelanggan baru wajib terdaftar (Nama & No. HP) sebelum bisa mengambil metode pembayaran Hutang.
 - Transaksi hutang akan menambah `total_debt` pada profil pelanggan.
 - Kurang bayar (partial payment) menambah `total_debt` sebesar `total_amount - amount_received`; change = 0.
+- Setiap pelunasan hutang (baik melalui menu Pelanggan maupun inline saat Checkout) dicatat dalam tabel `debt_payments` dan otomatis mengurangi `total_debt` pelanggan.
 
 ---
 
@@ -187,9 +190,11 @@ Sistem menggunakan metode **Best Match Match** pada `min_qty` terbesar.
 6. **customers**: `id, name, phone, points, total_debt`
 7. **transactions**: `id, customer_id, user_id, total_amount, payment_method, amount_received, change, status (lunas/hutang)`
 8. **transaction_items**: `id, transaction_id, product_id, qty, price_at_transaction, subtotal`
-9. **stock_logs**: `id, product_id, type (in/out/opname), qty, prev_stock, next_stock, note, expiry_date, supplier_id, unit_buy_price`
+9. **stock_logs**: `id, product_id, type (in/out/opname/return), qty, prev_stock, next_stock, note, expiry_date, supplier_id, unit_buy_price, transaction_id, return_reason`
 10. **settings**: `id, store_name, store_icon_name, store_address, store_phone, receipt_footer`
 11. **suppliers**: `id, name, phone, address`
+12. **debt_payments**: `id, customer_id, transaction_id, amount, method, paid_at, user_id, note`
+13. **points_log**: `id, customer_id, transaction_id, delta, reason, created_at`
 
 ---
 
@@ -311,7 +316,8 @@ Catatan: Implementasi RBAC di level API Route Handlers dan server components; si
 - Loyalti:
   - 1 poin per Rp1.000 (pembulatan ke bawah) dari total_amount; update setelah transaksi tersimpan.
 - Hutang:
-  - Hanya untuk pelanggan terdaftar; menambah total_debt = total_amount; pelunasan parsial/final dicatat sebagai pengembangan lanjutan.
+  - Hanya untuk pelanggan terdaftar; menambah total_debt = total_amount.
+  - Setiap pelunasan parsial atau final dicatat secara permanen di tabel `debt_payments` sebagai riwayat pembayaran hutang.
 - Stok:
   - Tidak boleh negatif; tolak transaksi jika stok kurang; semua mutasi tercatat di stock_logs.
 
@@ -347,12 +353,20 @@ Catatan: Implementasi RBAC di level API Route Handlers dan server components; si
     subtotal INT NOT NULL CHECK(subtotal>=0)
 - stock_logs
   - id UUID PK, product_id UUID FK→products(id),
-    type ENUM('in','out','opname') NOT NULL, qty INT NOT NULL CHECK(qty>=0),
+    type ENUM('in','out','opname','return') NOT NULL, qty INT NOT NULL CHECK(qty>=0),
     prev_stock INT NOT NULL CHECK(prev_stock>=0), next_stock INT NOT NULL CHECK(next_stock>=0),
     note TEXT NULL, expiry_date DATE NULL,
     supplier_id UUID NULL FK→suppliers(id),
     unit_buy_price INT NULL CHECK(unit_buy_price>=0),
+    transaction_id UUID NULL, return_reason TEXT NULL,
     created_at TIMESTAMPTZ default now()
+- debt_payments
+  - id UUID PK, customer_id UUID FK→customers(id), transaction_id UUID NULL FK→transactions(id),
+    amount INT NOT NULL CHECK(amount>0), method TEXT NOT NULL DEFAULT 'cash',
+    paid_at TIMESTAMPTZ default now(), user_id TEXT NOT NULL, note TEXT NULL
+- points_log
+  - id UUID PK, customer_id UUID FK→customers(id), transaction_id UUID NULL FK→transactions(id),
+    delta INT NOT NULL, reason TEXT NOT NULL, created_at TIMESTAMPTZ default now()
 - suppliers
   - id UUID PK, name TEXT UNIQUE NOT NULL, phone TEXT NULL, address TEXT NULL, created_at TIMESTAMPTZ default now()
 - settings
@@ -461,5 +475,5 @@ Catatan: Implementasi RBAC di level API Route Handlers dan server components; si
 ### 7.14 Ruang Lingkup Lanjutan (Di Luar MVP)
 
 - Pajak (include/exclude), diskon per item/transaksi, varian produk.
-- Pelunasan hutang parsial & laporan detailnya.
+- Analitik tingkat lanjut & Laporan detail mengenai performa hutang/piutang secara holistik.
 - Multi-cabang, gudang, transfer stok antar cabang.

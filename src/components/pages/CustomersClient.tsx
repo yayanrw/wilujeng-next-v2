@@ -2,14 +2,7 @@
 
 import { useEffect, useMemo, useState } from 'react';
 
-import {
-  Plus,
-  Pencil,
-  ArrowUp,
-  ArrowDown,
-  ArrowUpDown,
-  Search,
-} from 'lucide-react';
+import { Plus, Pencil, ArrowUp, ArrowDown, ArrowUpDown, Search } from 'lucide-react';
 
 import { Badge } from '@/components/ui/Badge';
 import { Button } from '@/components/ui/Button';
@@ -465,13 +458,13 @@ export function CustomersClient() {
           customerName={payDebtCustomer.name}
           totalDebt={payDebtCustomer.totalDebt}
           onClose={() => setPayDebtCustomer(null)}
-          onSubmit={async (amount, method) => {
+          onSubmit={async (amount, method, note) => {
             const res = await fetch(
               `/api/customers/${payDebtCustomer.id}/pay-debt`,
               {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ amount, paymentMethod: method }),
+                body: JSON.stringify({ amount, paymentMethod: method, note }),
               },
             );
 

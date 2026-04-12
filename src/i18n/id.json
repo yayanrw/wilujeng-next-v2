@@ -291,7 +291,8 @@
     "status": "Status",
     "paid": "Dibayar",
     "initialDebt": "Hutang Awal",
-    "initialDebtDesc": "Isi bidang ini jika pelanggan memiliki hutang sebelum menggunakan sistem ini."
+    "initialDebtDesc": "Isi bidang ini jika pelanggan memiliki hutang sebelum menggunakan sistem ini.",
+    "paymentNotePlaceholder": "Catatan pembayaran (opsional)"
   },
   "reports": {
     "title": "Laporan",
