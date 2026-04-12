@@ -200,7 +200,7 @@ Sistem menggunakan metode **Best Match Match** pada `min_qty` terbesar.
 
 ## 6. Non-Functional Requirements
 
-- **UI/UX Design:** Desain antarmuka (UI) harus modern dan minimalis, dengan memanfaatkan komponen shadcn/ui dan utility class Tailwind CSS. Fokus pada scannability, hierarchy visual yang jelas, serta micro-interactions (animasi transisi halus) untuk meningkatkan pengalaman pengguna (UX).
+- **UI/UX Design:** Desain antarmuka (UI) harus modern dan minimalis, dengan memanfaatkan komponen shadcn/ui dan utility class Tailwind CSS. Fokus pada scannability, hierarchy visual yang jelas, serta micro-interactions (animasi transisi halus) untuk meningkatkan pengalaman pengguna (UX). **Navigation Progress Bar:** Menampilkan indikator pemuatan (Progress Bar) di bagian atas layar saat berpindah antar halaman untuk memberikan umpan balik visual instan kepada pengguna.
 - **Responsive Design:** Dioptimalkan untuk Desktop (Kasir) dan Tablet. Aplikasi harus memiliki **Sidebar yang dapat di-collapse (hide/show)** untuk memberikan ruang kerja yang lebih luas pada layar kasir. Halaman POS dikonfigurasi menggunakan _full height_ viewport agar keranjang belanja dan hasil pencarian dapat di-scroll secara independen tanpa perlu melakukan scroll pada halaman keseluruhan.
 - **Performance:**
   - Transaksi kasir harus tetap responsif dengan >1000 SKU menggunakan _client-side searching_ atau _SWR indexing_.
