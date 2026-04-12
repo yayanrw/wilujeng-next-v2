@@ -6,6 +6,7 @@ import { Printer } from 'lucide-react';
 
 import { Button } from '@/components/ui/Button';
 import { usePosStore } from '@/stores/posStore';
+import { useCatalogStore } from '@/stores/catalogStore';
 import { computePayment, type PaymentMethod } from '@/utils/checkout';
 import { useTranslation } from '@/i18n/useTranslation';
 
@@ -31,6 +32,10 @@ export function PosClient() {
   const customerId = usePosStore((s) => s.customerId);
   const clear = usePosStore((s) => s.clear);
 
+  const setProducts = useCatalogStore((s) => s.setProducts);
+  const updateStocks = useCatalogStore((s) => s.updateStocks);
+  const setLoading = useCatalogStore((s) => s.setLoading);
+
   const total = useMemo(
     () => items.reduce((acc, i) => acc + i.subtotal, 0),
     [items],
@@ -39,6 +44,46 @@ export function PosClient() {
     () => computePayment({ totalAmount: total, paymentMethod, amountReceived }),
     [total, paymentMethod, amountReceived],
   );
+
+  // Initial catalog fetch
+  useEffect(() => {
+    async function fetchCatalog() {
+      setLoading(true);
+      try {
+        const res = await fetch('/api/pos/products');
+        if (!res.ok) throw new Error('Failed to fetch catalog');
+        const data = await res.json();
+        setProducts(data);
+      } catch (err) {
+        console.error('Catalog fetch error:', err);
+        setToast('Failed to load product catalog');
+      } finally {
+        setLoading(false);
+      }
+    }
+    void fetchCatalog();
+  }, [setProducts, setLoading]);
+
+  // Stock polling every 30 seconds
+  useEffect(() => {
+    async function fetchStocks() {
+      try {
+        const res = await fetch('/api/pos/products/stocks');
+        if (!res.ok) throw new Error('Failed to fetch stocks');
+        const data = await res.json();
+        updateStocks(data);
+      } catch (err) {
+        console.error('Stock polling error:', err);
+      }
+    }
+
+    void fetchStocks(); // Initial stock fetch
+    const interval = setInterval(() => {
+      void fetchStocks();
+    }, 30000);
+
+    return () => clearInterval(interval);
+  }, [updateStocks]);
 
   useEffect(() => {
     inputRef.current?.focus();

@@ -1,20 +1,17 @@
 'use client';
 
-import { useEffect, useState, useCallback } from 'react';
+import { useEffect, useState, useMemo } from 'react';
 
-import { Search, ChevronDown, LayoutGrid, List, X } from 'lucide-react';
+import { Search, LayoutGrid, List, X } from 'lucide-react';
 
 import { Badge } from '@/components/ui/Badge';
 import { Button } from '@/components/ui/Button';
 import { Card, CardContent, CardHeader } from '@/components/ui/Card';
 import { Input } from '@/components/ui/Input';
-import { usePosStore, type PosProduct } from '@/stores/posStore';
+import { usePosStore } from '@/stores/posStore';
+import { useCatalogStore } from '@/stores/catalogStore';
 import { formatIdr } from '@/utils/money';
 import { useTranslation } from '@/i18n/useTranslation';
-
-type SearchResult = PosProduct & {
-  category: { id: string; name: string } | null;
-};
 
 export function SearchPanel({
   inputRef,
@@ -30,15 +27,12 @@ export function SearchPanel({
   const [categories, setCategories] = useState<{ id: string; name: string }[]>(
     [],
   );
-  const [results, setResults] = useState<SearchResult[]>([]);
-  const [loading, setLoading] = useState(false);
-  const [page, setPage] = useState(0);
-  const [hasMore, setHasMore] = useState(true);
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
   const { t } = useTranslation();
 
-  const LIMIT = 20;
-
+  const products = useCatalogStore((s) => s.products);
+  const stocks = useCatalogStore((s) => s.stocks);
+  const loading = useCatalogStore((s) => s.loading);
   const addProduct = usePosStore((s) => s.addProduct);
 
   // Fetch categories on mount
@@ -51,63 +45,25 @@ export function SearchPanel({
       .catch(console.error);
   }, []);
 
-  const fetchProducts = useCallback(
-    async (q: string, cat: string, p: number, append = false) => {
-      setLoading(true);
-      try {
-        const params = new URLSearchParams();
-        if (q) params.append('query', q);
-        if (cat && cat !== 'all') params.append('categoryId', cat);
-        params.append('limit', LIMIT.toString());
-        params.append('offset', (p * LIMIT).toString());
-
-        const res = await fetch(`/api/pos/search?${params.toString()}`);
-        if (!res.ok) throw new Error('Failed to fetch');
-        const data: SearchResult[] = await res.json();
-
-        setHasMore(data.length === LIMIT);
-
-        if (append) {
-          setResults((prev) => [...prev, ...data]);
-        } else {
-          setResults(data);
-        }
-      } catch (error) {
-        console.error(error);
-        if (!append) setResults([]);
-      } finally {
-        setLoading(false);
-      }
-    },
-    [],
-  );
-
-  // Effect to handle search/filter changes (resets to page 0)
-  useEffect(() => {
-    const q = query.trim();
-
-    const timeoutId = setTimeout(() => {
-      // If we're clearing the query AND we are on 'all' category,
-      // ONLY skip the fetch if we have some results and we're not explicitly trying to reset a previous search
-      if (!q && categoryId === 'all' && results.length > 0 && !loading) {
-        // If the results we have currently are from a search query, we NEED to refetch
-        // We can't easily tell here without adding more state, so it's safer to always fetch
-        // when the query becomes empty to ensure we get the full un-filtered list.
-      }
-
-      setPage(0);
-      fetchProducts(q, categoryId, 0, false);
-    }, 500);
-
-    return () => clearTimeout(timeoutId);
-  }, [query, categoryId, fetchProducts, refreshKey]);
-
-  const loadMore = () => {
-    if (loading || !hasMore) return;
-    const nextPage = page + 1;
-    setPage(nextPage);
-    fetchProducts(query.trim(), categoryId, nextPage, true);
-  };
+  // Local filtering logic
+  const results = useMemo(() => {
+    const q = query.trim().toLowerCase();
+    return products
+      .filter((p) => {
+        const matchesQuery =
+          !q ||
+          p.name.toLowerCase().includes(q) ||
+          p.sku.toLowerCase().includes(q);
+        const matchesCategory =
+          categoryId === 'all' || p.categoryId === categoryId;
+        return matchesQuery && matchesCategory;
+      })
+      .map((p) => ({
+        ...p,
+        stock: stocks[p.id] ?? 0,
+        category: categories.find((c) => c.id === p.categoryId) || null,
+      }));
+  }, [products, stocks, query, categoryId, categories]);
 
   return (
     <Card className="flex flex-col h-full overflow-hidden">
@@ -124,9 +80,10 @@ export function SearchPanel({
               onKeyDown={(e) => {
                 if (e.key !== 'Enter') return;
                 e.preventDefault();
-                const q = query.trim();
+                const q = query.trim().toLowerCase();
                 if (!q) return;
-                const exact = results.find((r) => r.sku === q);
+                // For barcode scanner, we want an exact SKU match first
+                const exact = results.find((r) => r.sku.toLowerCase() === q);
                 if (exact) {
                   if (exact.stock <= 0) {
                     onToast(
@@ -136,8 +93,6 @@ export function SearchPanel({
                   }
                   addProduct(exact, 1);
                   onToast(`${exact.name} ${t.pos.added}`);
-
-                  // Reset query which clears the input without triggering the debounce API call for empty string immediately
                   setQuery('');
                 }
               }}
@@ -212,7 +167,7 @@ export function SearchPanel({
       </CardHeader>
 
       <CardContent className="flex-1 overflow-y-auto min-h-0 custom-scrollbar">
-        {loading && (results.length === 0 || page === 0) ? (
+        {loading && results.length === 0 ? (
           <div className="flex h-full items-center justify-center p-12">
             <div className="flex flex-col items-center gap-3">
               <div className="h-6 w-6 animate-spin rounded-full border-2 border-zinc-200 border-t-zinc-900 dark:border-zinc-800 dark:border-t-zinc-100" />
@@ -355,19 +310,6 @@ export function SearchPanel({
             <p>{t.pos.noProducts}</p>
           </div>
         ) : null}
-
-        {!loading && hasMore && results.length > 0 && (
-          <div className="mt-4 flex justify-center pb-4">
-            <Button
-              variant="secondary"
-              onClick={loadMore}
-              className="w-full md:w-auto"
-            >
-              <ChevronDown className="mr-2 h-4 w-4" />
-              {t.products.loadMore}
-            </Button>
-          </div>
-        )}
       </CardContent>
     </Card>
   );

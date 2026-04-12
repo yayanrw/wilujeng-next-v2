@@ -60,13 +60,15 @@ Berikut adalah dokumen **Product Requirements Document (PRD)** yang komprehensif
 
 ### 3.3 Menu Kasir (Point of Sale)
 
-- **Penjualan Kasir (POS):** Antarmuka utama untuk melakukan transaksi. Terdiri dari panel pencarian produk dan panel keranjang belanja. Menggunakan _full height_ layout agar kedua panel dapat di-scroll secara independen tanpa memotong modal checkout. Pencarian produk menggunakan _debounce_ 500ms untuk performa. Setelah checkout berhasil, daftar produk akan di-_refresh_ secara otomatis untuk memperbarui sisa stok yang ditampilkan. Tampilan list produk dikemas dalam model "Card" grid yang menampilkan nama, SKU, badge indikator sisa stok, kategori, dan harga dengan jelas. Sistem menolak penambahan produk dengan stok `0` ke dalam keranjang dan menampilkan peringatan (Toast).
+- **Penjualan Kasir (POS):** Antarmuka utama untuk melakukan transaksi. Terdiri dari panel pencarian produk dan panel keranjang belanja. Menggunakan _full height_ layout agar kedua panel dapat di-scroll secara independen tanpa memotong modal checkout.
+- **High Performance Search & Filter (Split-Cache Strategy):**
+  - **Catalog Bucket:** Data produk statis (Nama, SKU, Kategori, Harga Dasar, Tiers) diambil sekali saat halaman POS dimuat dan disimpan di local memory (Zustand). Data ini di-cache di Redis dengan TTL panjang.
+  - **Stock Bucket:** Data stok produk yang bersifat dinamis diambil melalui polling setiap 30 detik dari endpoint khusus yang ringan (`/api/pos/products/stocks`). Data ini di-cache di Redis dengan TTL sangat pendek (10 detik).
+  - **Local Computing:** Seluruh proses pencarian dan pemfilteran kategori dilakukan sepenuhnya di sisi klien menggunakan data yang telah digabungkan di memori. Hal ini memberikan latensi nol saat kasir mengetik atau mengganti kategori.
 - **Product Discovery:**
   - Search bar untuk Nama Produk atau SKU.
-  - **Barcode Support:** Fokus otomatis pada search bar; ketika SKU di-scan (diakhiri karakter `Enter`), produk otomatis masuk ke keranjang.
-  - **Kategori & Paginasi (Load More):**
-    - Filter berdasarkan Kategori menggunakan daftar tombol kategori yang dapat digeser (horizontal scroll).
-    - Menampilkan semua produk dengan sistem paginasi (menggunakan pendekatan tombol "Load More Products"). Default menampilkan 20 item per halaman.
+  - **Barcode Support:** Fokus otomatis pada search bar; ketika SKU di-scan (diakhiri karakter `Enter`), produk otomatis masuk ke keranjang jika stok tersedia.
+  - **Kategori:** Filter berdasarkan Kategori menggunakan daftar tombol kategori yang dapat digeser (horizontal scroll).
   - Toggle tampilan: **List View** atau **Card View** (dengan gambar/ikon).
 - **Keranjang Belanja (Cart):**
   - List produk, quantity, subtotal.

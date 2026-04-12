@@ -10,7 +10,7 @@ import {
   readJson,
   requireApiRole,
 } from '@/server/api-helpers';
-import { invalidateCachePattern } from '@/lib/redis';
+import { invalidateCache, invalidateCachePattern } from '@/lib/redis';
 
 const TierSchema = z.object({
   minQty: z.number().int().min(1),
@@ -135,6 +135,9 @@ export async function PATCH(
 
   // Invalidate product catalog cache
   await invalidateCachePattern('products:catalog:*');
+  // Invalidate POS specific caches
+  await invalidateCache('pos:catalog:all');
+  await invalidateCache('pos:stocks:all');
   // Invalidate categories and brands caches in case new ones were created
   await invalidateCachePattern('categories:list:*');
   await invalidateCachePattern('brands:list:*');

@@ -15,7 +15,7 @@ import {
 import { badRequest, json, requireApiSession } from '@/server/api-helpers';
 import { computePayment, type PaymentMethod } from '@/utils/checkout';
 import { getTierPrice } from '@/utils/tier-pricing';
-import { invalidateCachePattern } from '@/lib/redis';
+import { invalidateCache, invalidateCachePattern } from '@/lib/redis';
 
 const ItemSchema = z.object({
   productId: z.string().uuid(),
@@ -70,7 +70,10 @@ export async function POST(req: Request) {
         .where(inArray(productTiers.productId, productIds))
         .orderBy(asc(productTiers.minQty));
 
-      const tiersByProduct = new Map<string, { minQty: number; price: number }[]>();
+      const tiersByProduct = new Map<
+        string,
+        { minQty: number; price: number }[]
+      >();
       for (const tier of tiers) {
         const list = tiersByProduct.get(tier.productId) ?? [];
         list.push({ minQty: tier.minQty, price: tier.price });
@@ -125,7 +128,10 @@ export async function POST(req: Request) {
         });
         if (!customer) throw new Error('customer_not_found');
 
-        if (parsed.data.debtPaymentAmount && parsed.data.debtPaymentAmount > 0) {
+        if (
+          parsed.data.debtPaymentAmount &&
+          parsed.data.debtPaymentAmount > 0
+        ) {
           if (parsed.data.debtPaymentAmount > customer.totalDebt) {
             throw new Error('debt_exceeds_total');
           }
@@ -134,7 +140,10 @@ export async function POST(req: Request) {
           await tx.insert(debtPayments).values({
             customerId: customer.id,
             amount: debtPay,
-            method: parsed.data.paymentMethod !== 'debt' ? parsed.data.paymentMethod : 'cash',
+            method:
+              parsed.data.paymentMethod !== 'debt'
+                ? parsed.data.paymentMethod
+                : 'cash',
             userId: session.user.id,
             note: parsed.data.debtPaymentNote,
           });
@@ -198,7 +207,7 @@ export async function POST(req: Request) {
         if (payment.status === 'paid') {
           pointsAdd = Math.floor(totalAmount / 1000);
         }
-        let debtPointsAdd = Math.floor(debtPay / 1000);
+        const debtPointsAdd = Math.floor(debtPay / 1000);
 
         if (pointsAdd > 0) {
           await tx.insert(pointsLog).values({
@@ -230,6 +239,9 @@ export async function POST(req: Request) {
     });
 
     await invalidateCachePattern('products:catalog:*');
+    // Invalidate POS specific caches
+    await invalidateCache('pos:catalog:all');
+    await invalidateCache('pos:stocks:all');
 
     return json({
       transactionId: txResult.id,
@@ -243,7 +255,8 @@ export async function POST(req: Request) {
         storeIconName: branding?.storeIconName ?? 'Store',
         storeAddress: branding?.storeAddress ?? '',
         storePhone: branding?.storePhone ?? '',
-        receiptFooter: branding?.receiptFooter ?? 'Terima kasih telah berbelanja',
+        receiptFooter:
+          branding?.receiptFooter ?? 'Terima kasih telah berbelanja',
         items: txResult.lineItems.map((i) => ({
           sku: i.sku,
           name: i.name,
@@ -263,15 +276,21 @@ export async function POST(req: Request) {
     if (msg.startsWith('stock_insufficient')) {
       const parts = msg.split(':');
       return json(
-        { error: 'stock_insufficient', message: `Stok tidak mencukupi untuk ${parts[1]}. Tersedia: ${parts[2]}` },
-        { status: 409 }
+        {
+          error: 'stock_insufficient',
+          message: `Stok tidak mencukupi untuk ${parts[1]}. Tersedia: ${parts[2]}`,
+        },
+        { status: 409 },
       );
     }
-    if (msg === 'missing_products') return badRequest('One or more products are missing');
-    if (msg === 'customer_required') return badRequest('Customer is required for debt or partial payment');
+    if (msg === 'missing_products')
+      return badRequest('One or more products are missing');
+    if (msg === 'customer_required')
+      return badRequest('Customer is required for debt or partial payment');
     if (msg === 'customer_not_found') return badRequest('Customer not found');
-    if (msg === 'debt_exceeds_total') return badRequest('Debt payment amount exceeds total debt');
-    
+    if (msg === 'debt_exceeds_total')
+      return badRequest('Debt payment amount exceeds total debt');
+
     return json({ error: msg }, { status: 500 });
   }
 }
