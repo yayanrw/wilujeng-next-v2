@@ -188,8 +188,8 @@ export function UsersSettings() {
 
           {hasMore && (
             <div className="mt-4 flex justify-center">
-              <Button variant="ghost" onClick={loadMore} disabled={loading}>
-                {loading ? t.common.loading : t.settings.loadMore}
+              <Button variant="ghost" onClick={loadMore} disabled={false}>
+                {t.settings.loadMore}
               </Button>
             </div>
           )}
