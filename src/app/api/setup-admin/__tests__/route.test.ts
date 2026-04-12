@@ -16,7 +16,7 @@ describe('POST /api/setup-admin', () => {
   it('should successfully create an admin user and be able to sign in', async () => {
     const selectSpy = vi.spyOn(db, 'select').mockReturnValue({
       from: vi.fn().mockResolvedValue([{ count: 0 }]),
-    } as any);
+    } as unknown as ReturnType<typeof db.select>);
 
     const req = new Request('http://localhost/api/setup-admin', {
       method: 'POST',
@@ -42,7 +42,7 @@ describe('POST /api/setup-admin', () => {
         body: {
           email: 'testadmin@example.com',
           password: 'password123',
-        } as any,
+        },
         headers: new Headers(),
       });
       console.log('Sign in successful!', signInResponse);

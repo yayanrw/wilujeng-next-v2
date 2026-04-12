@@ -2,7 +2,15 @@
 
 import { useEffect, useMemo, useState } from 'react';
 
-import { Plus, Pencil, ArrowUp, ArrowDown, ArrowUpDown, Search } from 'lucide-react';
+import {
+  Plus,
+  Pencil,
+  ArrowUp,
+  ArrowDown,
+  ArrowUpDown,
+  Search,
+  HandCoins,
+} from 'lucide-react';
 
 import { Badge } from '@/components/ui/Badge';
 import { Button } from '@/components/ui/Button';
@@ -284,9 +292,9 @@ export function CustomersClient() {
                           <div className="flex items-center justify-end gap-2">
                             {c.totalDebt > 0 && (
                               <Button
-                                variant="secondary"
+                                variant="ghost"
                                 size="sm"
-                                className="h-8 text-xs bg-red-50 text-red-700 border border-red-200 hover:bg-red-100 hover:text-red-800 dark:bg-red-900/20 dark:text-red-300 dark:border-red-900/50 dark:hover:bg-red-900/40"
+                                className="h-8 w-8 p-0 text-red-600 hover:text-red-700 dark:text-red-300 dark:hover:text-red-200 transition-colors"
                                 onClick={() => {
                                   setPayDebtCustomer({
                                     id: c.id,
@@ -294,14 +302,18 @@ export function CustomersClient() {
                                     totalDebt: c.totalDebt,
                                   });
                                 }}
+                                title={t.customers.payDebt}
                               >
-                                {t.customers.payDebt}
+                                <HandCoins className="h-4 w-4" />
+                                <span className="sr-only">
+                                  {t.customers.payDebt}
+                                </span>
                               </Button>
                             )}
                             <Button
                               variant="ghost"
                               size="sm"
-                              className="h-8 w-8 p-0 text-zinc-400 opacity-0 group-hover:opacity-100 hover:text-zinc-900 dark:hover:text-zinc-100 transition-all focus-visible:opacity-100"
+                              className="h-8 w-8 p-0 text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-100 transition-colors"
                               onClick={() => {
                                 setSelectedId(c.id);
                                 setMode('edit');

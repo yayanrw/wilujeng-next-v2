@@ -271,8 +271,8 @@ export async function POST(req: Request) {
         },
       },
     });
-  } catch (error: any) {
-    const msg = error?.message || 'Transaction failed';
+  } catch (error: unknown) {
+    const msg = error instanceof Error ? error.message : 'Transaction failed';
     if (msg.startsWith('stock_insufficient')) {
       const parts = msg.split(':');
       return json(

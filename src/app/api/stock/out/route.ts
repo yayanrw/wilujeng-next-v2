@@ -109,11 +109,14 @@ export async function POST(req: Request) {
     await invalidateCachePattern('products:catalog:*');
 
     return json(result);
-  } catch (err: any) {
-    if (err.message === 'stock_insufficient') {
-      return json({ error: 'stock_insufficient', message: 'Insufficient stock' }, { status: 409 });
+  } catch (err: unknown) {
+    const message = err instanceof Error ? err.message : 'Request failed';
+    if (message === 'stock_insufficient') {
+      return json(
+        { error: 'stock_insufficient', message: 'Insufficient stock' },
+        { status: 409 },
+      );
     }
-    return json({ error: err.message }, { status: 500 });
+    return json({ error: message }, { status: 500 });
   }
 }
-

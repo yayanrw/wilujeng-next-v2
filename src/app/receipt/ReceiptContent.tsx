@@ -3,14 +3,37 @@
 import { formatIdr } from '@/utils/money';
 import { useTranslation } from '@/i18n/useTranslation';
 
+type ReceiptBranding = {
+  storeName: string;
+  storeAddress: string;
+  storePhone: string;
+  receiptFooter: string;
+};
+
+type ReceiptTx = {
+  id: string;
+  createdAt: string | Date;
+  status: string;
+  totalAmount: number;
+  amountReceived: number;
+  change: number;
+};
+
+type ReceiptItem = {
+  name: string | null;
+  qty: number;
+  unitPrice: number;
+  subtotal: number;
+};
+
 export function ReceiptContent({
   tx,
   items,
   branding,
 }: {
-  tx: any;
-  items: any[];
-  branding: any;
+  tx: ReceiptTx;
+  items: ReceiptItem[];
+  branding: ReceiptBranding;
 }) {
   const { t } = useTranslation();
 
