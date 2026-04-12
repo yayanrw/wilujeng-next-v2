@@ -280,7 +280,9 @@ export function StockClient() {
                         onChange={() => setOutType('out')}
                         className="h-4 w-4 accent-zinc-900"
                       />
-                      <span className="text-sm font-medium">Rusak / Hilang (Out)</span>
+                      <span className="text-sm font-medium">
+                        Rusak / Hilang (Out)
+                      </span>
                     </label>
                     <label className="flex items-center gap-2 cursor-pointer">
                       <input
@@ -291,7 +293,9 @@ export function StockClient() {
                         onChange={() => setOutType('return')}
                         className="h-4 w-4 accent-zinc-900"
                       />
-                      <span className="text-sm font-medium">Retur Pelanggan (Return)</span>
+                      <span className="text-sm font-medium">
+                        Retur Pelanggan (Return)
+                      </span>
                     </label>
                   </div>
                 </div>
@@ -304,7 +308,10 @@ export function StockClient() {
                       Transaksi Asal (Wajib untuk Retur)
                     </label>
                     <div className="mt-1.5">
-                      <TransactionPicker value={transactionId} onChange={setTransactionId} />
+                      <TransactionPicker
+                        value={transactionId}
+                        onChange={setTransactionId}
+                      />
                     </div>
                   </div>
                   <div className="md:col-span-2">
@@ -357,8 +364,14 @@ export function StockClient() {
                     qty,
                     note: note.trim() || undefined,
                     type: outType,
-                    transactionId: outType === 'return' ? (transactionId || undefined) : undefined,
-                    returnReason: outType === 'return' ? (returnReason.trim() || undefined) : undefined,
+                    transactionId:
+                      outType === 'return'
+                        ? transactionId || undefined
+                        : undefined,
+                    returnReason:
+                      outType === 'return'
+                        ? returnReason.trim() || undefined
+                        : undefined,
                   });
                 }
                 if (tab === 'opname') {
@@ -529,7 +542,7 @@ export function StockClient() {
                         <Button
                           variant="ghost"
                           size="sm"
-                          className="h-8 w-8 p-0 text-zinc-400 opacity-0 group-hover:opacity-100 hover:text-zinc-900 dark:hover:text-zinc-100 transition-all focus-visible:opacity-100"
+                          className="h-8 w-8 p-0 text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-100 transition-colors"
                           onClick={() => setSelectedLogId(l.id)}
                           title={t.stock.viewDetail}
                         >

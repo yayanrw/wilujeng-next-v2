@@ -1,6 +1,4 @@
-import { z } from 'zod';
 import * as xlsx from 'xlsx';
-import { sql } from 'drizzle-orm';
 
 import { db } from '@/db';
 import { brands, categories, products } from '@/db/schema';
@@ -44,14 +42,14 @@ export async function POST(req: Request) {
   try {
     const formData = await req.formData();
     const file = formData.get('file') as File | null;
-    
+
     if (!file) {
       return badRequest('No file uploaded');
     }
 
     const arrayBuffer = await file.arrayBuffer();
     const buffer = Buffer.from(arrayBuffer);
-    
+
     const workbook = xlsx.read(buffer, { type: 'buffer' });
     if (!workbook.SheetNames.length) {
       return badRequest('Excel file is empty');
@@ -59,9 +57,10 @@ export async function POST(req: Request) {
 
     const sheetName = workbook.SheetNames[0];
     const worksheet = workbook.Sheets[sheetName];
-    
-    const rawData = xlsx.utils.sheet_to_json(worksheet) as any[];
-    
+
+    const rawData =
+      xlsx.utils.sheet_to_json<Record<string, unknown>>(worksheet);
+
     if (!rawData.length) {
       return badRequest('No data found in the Excel file');
     }
@@ -79,14 +78,14 @@ export async function POST(req: Request) {
       const rowNum = i + 2; // Assuming row 1 is header
 
       try {
-        const sku = String(row['SKU'] || '').trim();
-        const name = String(row['Name'] || '').trim();
-        const categoryName = String(row['Category'] || '').trim();
-        const brandName = String(row['Brand'] || '').trim();
-        const basePrice = parseInt(String(row['Base Price'] || '0'), 10);
-        const buyPrice = parseInt(String(row['Buy Price'] || '0'), 10);
-        const stock = parseInt(String(row['Stock'] || '0'), 10);
-        const minStockThreshold = parseInt(String(row['Min Stock'] || '0'), 10);
+        const sku = String(row['SKU'] ?? '').trim();
+        const name = String(row['Name'] ?? '').trim();
+        const categoryName = String(row['Category'] ?? '').trim();
+        const brandName = String(row['Brand'] ?? '').trim();
+        const basePrice = parseInt(String(row['Base Price'] ?? '0'), 10);
+        const buyPrice = parseInt(String(row['Buy Price'] ?? '0'), 10);
+        const stock = parseInt(String(row['Stock'] ?? '0'), 10);
+        const minStockThreshold = parseInt(String(row['Min Stock'] ?? '0'), 10);
 
         if (!sku || !name) {
           errors.push(`Row ${rowNum}: Missing SKU or Name`);
@@ -94,8 +93,15 @@ export async function POST(req: Request) {
           continue;
         }
 
-        if (isNaN(basePrice) || isNaN(buyPrice) || isNaN(stock) || isNaN(minStockThreshold)) {
-          errors.push(`Row ${rowNum}: Invalid numeric value for prices or stock`);
+        if (
+          isNaN(basePrice) ||
+          isNaN(buyPrice) ||
+          isNaN(stock) ||
+          isNaN(minStockThreshold)
+        ) {
+          errors.push(
+            `Row ${rowNum}: Invalid numeric value for prices or stock`,
+          );
           errorCount++;
           continue;
         }
@@ -120,18 +126,10 @@ export async function POST(req: Request) {
           }
         }
 
-        await db.insert(products).values({
-          sku,
-          name,
-          categoryId,
-          brandId,
-          basePrice,
-          buyPrice,
-          stock,
-          minStockThreshold,
-        }).onConflictDoUpdate({
-          target: products.sku,
-          set: {
+        await db
+          .insert(products)
+          .values({
+            sku,
             name,
             categoryId,
             brandId,
@@ -139,13 +137,25 @@ export async function POST(req: Request) {
             buyPrice,
             stock,
             minStockThreshold,
-            updatedAt: new Date(),
-          }
-        });
+          })
+          .onConflictDoUpdate({
+            target: products.sku,
+            set: {
+              name,
+              categoryId,
+              brandId,
+              basePrice,
+              buyPrice,
+              stock,
+              minStockThreshold,
+              updatedAt: new Date(),
+            },
+          });
 
         successCount++;
-      } catch (err: any) {
-        errors.push(`Row ${rowNum}: ${err.message || 'Unknown error'}`);
+      } catch (err: unknown) {
+        const message = err instanceof Error ? err.message : 'Unknown error';
+        errors.push(`Row ${rowNum}: ${message}`);
         errorCount++;
       }
     }
@@ -164,7 +174,6 @@ export async function POST(req: Request) {
       errorCount,
       errors: errors.slice(0, 10), // Return top 10 errors max
     });
-
   } catch (error) {
     console.error('Import error:', error);
     return badRequest('Failed to process the import file');

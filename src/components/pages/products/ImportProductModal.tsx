@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useRef } from 'react';
-import { Upload, Download, FileSpreadsheet, AlertCircle, X, CheckCircle2 } from 'lucide-react';
+import { Upload, Download, FileSpreadsheet, AlertCircle, X } from 'lucide-react';
 import * as xlsx from 'xlsx';
 
 import { Button } from '@/components/ui/Button';
@@ -80,8 +80,9 @@ export function ImportProductModal({
           onClose();
         }
       }
-    } catch (err: any) {
-      setErrors([err.message || 'An error occurred during import']);
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : 'An error occurred during import';
+      setErrors([message]);
     } finally {
       setLoading(false);
       if (fileInputRef.current) {
