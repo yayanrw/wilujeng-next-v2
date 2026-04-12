@@ -50,6 +50,7 @@ export async function GET(req: Request) {
     search ? ilike(products.name, `%${search}%`) : undefined,
     categoryId ? eq(products.categoryId, categoryId) : undefined,
     brandId ? eq(products.brandId, brandId) : undefined,
+    eq(products.isDeleted, false),
   );
 
   const rows = await db
@@ -63,10 +64,12 @@ export async function GET(req: Request) {
       minStockThreshold: products.minStockThreshold,
       category: { id: categories.id, name: categories.name },
       brand: { id: brands.id, name: brands.name },
+      isActive: products.isActive,
+      isDeleted: products.isDeleted,
     })
     .from(products)
-    .leftJoin(categories, eq(products.categoryId, categories.id))
-    .leftJoin(brands, eq(products.brandId, brands.id))
+    .innerJoin(categories, eq(products.categoryId, categories.id))
+    .innerJoin(brands, eq(products.brandId, brands.id))
     .where(where)
     .orderBy(asc(products.name))
     .limit(limit)
@@ -215,6 +218,7 @@ export async function POST(req: Request) {
   // Invalidate categories and brands caches in case new ones were created
   await invalidateCachePattern('categories:list:*');
   await invalidateCachePattern('brands:list:*');
+  await invalidateCachePattern('pos:catalog:all');
 
   return json({ id: result.id }, { status: 201 });
 }
