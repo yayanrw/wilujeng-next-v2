@@ -197,7 +197,11 @@
     "uploading": "Uploading...",
     "importSuccess": "Import successful",
     "importFailed": "Import failed",
-    "selectExcelFile": "Select an Excel (.xlsx) file to import products."
+    "selectExcelFile": "Select an Excel (.xlsx) file to import products.",
+    "deleteConfirmTitle": "Delete product",
+    "deleteConfirmDesc": "Are you sure you want to delete this product? This action cannot be undone.",
+    "deletedSuccess": "Product deleted",
+    "deleteFailed": "Failed to delete product"
   },
   "stock": {
     "title": "Stock Management",

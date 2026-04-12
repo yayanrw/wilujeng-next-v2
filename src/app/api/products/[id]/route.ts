@@ -72,7 +72,7 @@ async function ensureBrandId(input: {
 
 export async function PATCH(
   req: Request,
-  ctx: { params: Promise<{ id: string }> },
+  ctx: { params: Promise<{ id: string }> }
 ) {
   const { response } = await requireApiRole(req, 'admin');
   if (response) return response;
@@ -131,7 +131,7 @@ export async function PATCH(
             productId: id,
             minQty: t.minQty,
             price: t.price,
-          })),
+          }))
         );
       }
     }
@@ -151,15 +151,27 @@ export async function PATCH(
 
 export async function DELETE(
   req: Request,
-  ctx: { params: Promise<{ id: string }> },
+  ctx: { params: Promise<{ id: string }> }
 ) {
   const { response } = await requireApiRole(req, 'admin');
   if (response) return response;
   const { id } = await ctx.params;
+
   const existing = await db.query.products.findFirst({
-    where: (t, { eq: eq2 }) => eq2(t.id, id),
+    where: eq(products.id, id),
   });
   if (!existing) return notFound('Product not found');
-  await db.delete(products).where(eq(products.id, id));
-  return json({ deleted: true });
+
+  // Soft-delete: mark isDeleted = true and also deactivate the product
+  await db
+    .update(products)
+    .set({ isDeleted: true, isActive: false })
+    .where(eq(products.id, id));
+
+  // Invalidate product catalog cache patterns and POS caches so listings update quickly
+  await invalidateCachePattern('products:catalog:*');
+  await invalidateCache('pos:catalog:all');
+  await invalidateCache('pos:stocks:all');
+
+  return json({ deleted: true, id });
 }

@@ -14,6 +14,7 @@ import { ProductForm, type ProductDto } from './products/ProductForm';
 import { ImportProductModal } from './products/ImportProductModal';
 import { Toast } from './pos/Toast';
 import { useTranslation } from '@/i18n/useTranslation';
+import { ConfirmDialog } from '@/components/ui/ConfirmDialog';
 
 export function ProductsClient() {
   const [search, setSearch] = useState('');
@@ -31,6 +32,9 @@ export function ProductsClient() {
     []
   );
   const [brands, setBrands] = useState<{ id: string; name: string }[]>([]);
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+  const [deletingId, setDeletingId] = useState<string | null>(null);
+  const [deleting, setDeleting] = useState(false);
   const { t } = useTranslation();
   const LIMIT = 50;
 
@@ -148,6 +152,36 @@ export function ProductsClient() {
     } catch (err) {
       console.error(err);
       showToast(t.products.saveFailed);
+    }
+  }
+
+  function openDeleteDialog(id: string) {
+    setDeletingId(id);
+    setIsDeleteDialogOpen(true);
+  }
+
+  async function confirmDelete() {
+    if (!deletingId) return;
+    setDeleting(true);
+    try {
+      const res = await fetch(`/api/products/${deletingId}`, {
+        method: 'DELETE',
+      });
+      const body = await res.json().catch(() => ({}));
+      const ok = res.ok && (body.deleted === true || body.deleted === 'true');
+      if (ok) {
+        setProducts((prev) => prev.filter((p) => p.id !== deletingId));
+        showToast(t.products.deletedSuccess || 'Deleted');
+      } else {
+        showToast(t.products.deleteFailed || t.products.saveFailed);
+      }
+    } catch (err) {
+      console.error(err);
+      showToast(t.products.deleteFailed || t.products.saveFailed);
+    } finally {
+      setDeleting(false);
+      setIsDeleteDialogOpen(false);
+      setDeletingId(null);
     }
   }
 
@@ -340,6 +374,29 @@ export function ProductsClient() {
                           <Pencil className="h-4 w-4" />
                           <span className="sr-only">{t.common.edit}</span>
                         </Button>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className="h-8 w-8 p-0 text-red-500 hover:text-red-600 transition-colors"
+                          onClick={() => openDeleteDialog(p.id)}
+                          title={t.common.delete}
+                        >
+                          <span className="sr-only">{t.common.delete}</span>
+                          {/* simple X icon */}
+                          <svg
+                            className="h-4 w-4"
+                            viewBox="0 0 24 24"
+                            fill="none"
+                            stroke="currentColor"
+                          >
+                            <path
+                              strokeWidth="2"
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              d="M6 18L18 6M6 6l12 12"
+                            />
+                          </svg>
+                        </Button>
                       </td>
                     </tr>
                   ))}
@@ -426,6 +483,19 @@ export function ProductsClient() {
           setIsImportModalOpen(false);
           refresh();
         }}
+      />
+      <ConfirmDialog
+        open={isDeleteDialogOpen}
+        title={t.products.deleteConfirmTitle}
+        description={t.products.deleteConfirmDesc}
+        confirmText={t.common.delete}
+        cancelText={t.common.cancel}
+        onClose={() => {
+          setIsDeleteDialogOpen(false);
+          setDeletingId(null);
+        }}
+        onConfirm={confirmDelete}
+        loading={deleting}
       />
       <Toast message={toastMessage} />
     </div>

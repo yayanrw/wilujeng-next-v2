@@ -505,14 +505,21 @@ Catatan: Implementasi RBAC di level API Route Handlers dan server components; si
       - Otorisasi: hanya admin.
       - Respons: 200 { updated: true, id } saat sukses.
       - Kesalahan: 404 saat produk tidak ditemukan; 401/403 jika tidak diizinkan.
-  - PATCH produk yang ada tetap ada untuk pembaruan parsial; endpoint status adalah rute kenyamanan untuk mengubah hanya itu.
+    - PATCH produk yang ada tetap ada untuk pembaruan parsial; endpoint status adalah rute kenyamanan untuk mengubah hanya itu.
+  - Endpoint baru:
+    - DELETE /api/products/:id
+      - Tujuan: menghapus produk.
+      - Otorisasi: hanya admin.
+      - Respons: 200 { deleted: true } saat sukses.
+      - Kesalahan: 404 saat produk tidak ditemukan; 401/403 jika tidak diizinkan.
+      - Catatan: implementasi saat ini melakukan penghapusan fisik baris. Jika dibutuhkan pemulihan/audit, pertimbangkan mengubah endpoint menjadi soft-delete (set is_deleted=true) atau menambah endpoint restore.
+  - Invalidasi cache: sama seperti endpoint update/status — invalidate katalog produk dan cache stok (mis. pos:catalog:all, pos:stocks:all).
 
-- Cache / Invalidation
-  - Ketika status aktif produk berubah, server menginvalidasi cache terkait produk (contoh yang digunakan oleh implementasi saat ini):
-    - pos:catalog:all
-    - pos:stocks:all
-  - Pastikan strategi invalidasi atau TTL cache memperlakukan is_active/is_deleted dengan tepat sehingga daftar mencerminkan aktivasi/deaktivasi dengan cepat.
-
-- Perilaku pengambilan & daftar data
-  - Endpoint daftar produk default harus menyaring item is_deleted=true.
-  - Tampilan admin atau khusus dapat menampilkan item yang dihapus secara lunak untuk pemulihan/audit.
+* UI: Penghapusan Produk
+* - Di daftar produk, tambahkan tombol hapus (di samping tombol edit).
+* - Ketika pengguna mengklik hapus:
+* - Tampilkan dialog konfirmasi (judul + deskripsi) — teks i18n tersedia di en.json/id.json.
+* - Tombol konfirmasi memanggil DELETE /api/products/:id (admin-only).
+* - Setelah sukses: hapus baris dari daftar di UI (optimistik setelah respons sukses) dan tampilkan toast sukses.
+* - Jika gagal: tampilkan toast error.
+* - Hanya admin dapat melihat/menjalankan aksi delete (RBAC at API + UI hint).
