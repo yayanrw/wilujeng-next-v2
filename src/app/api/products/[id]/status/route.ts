@@ -1,5 +1,6 @@
 import { db } from '@/db';
 import { products } from '@/db/schema';
+import { invalidateCache, invalidateCachePattern } from '@/lib/redis';
 import { json, notFound, requireApiRole } from '@/server/api-helpers';
 import { eq } from 'drizzle-orm';
 
@@ -30,6 +31,9 @@ export async function PATCH(
       .set({ isActive: true })
       .where(eq(products.id, id));
   }
+
+  await invalidateCache('pos:catalog:all');
+  await invalidateCache('pos:stocks:all');
 
   return json({ updated: true, id: product.id });
 }
