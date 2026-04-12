@@ -15,6 +15,20 @@
       "when": 1775966907891,
       "tag": "0002_vengeful_miek",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1776006009251,
+      "tag": "0002_green_pixie",
+      "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1776006656386,
+      "tag": "0003_petite_wasp",
+      "breakpoints": true
     }
   ]
 }

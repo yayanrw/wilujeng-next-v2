@@ -21,7 +21,7 @@ export const users = pgTable(
     createdAt: timestamp('createdAt', { mode: 'date' }),
     updatedAt: timestamp('updatedAt', { mode: 'date' }),
   },
-  (t) => [uniqueIndex('users_email_unique').on(t.email)],
+  (t) => [uniqueIndex('users_email_unique').on(t.email)]
 );
 
 export const sessions = pgTable(
@@ -36,7 +36,7 @@ export const sessions = pgTable(
     createdAt: timestamp('createdAt', { mode: 'date' }),
     updatedAt: timestamp('updatedAt', { mode: 'date' }),
   },
-  (t) => [uniqueIndex('sessions_token_unique').on(t.token)],
+  (t) => [uniqueIndex('sessions_token_unique').on(t.token)]
 );
 
 export const accounts = pgTable(
@@ -61,9 +61,9 @@ export const accounts = pgTable(
   (t) => [
     uniqueIndex('accounts_providerId_accountId_unique').on(
       t.providerId,
-      t.accountId,
+      t.accountId
     ),
-  ],
+  ]
 );
 
 export const verificationTokens = pgTable('verificationTokens', {
@@ -82,7 +82,7 @@ export const categories = pgTable(
     name: text('name').notNull(),
     createdAt: timestamp('createdat', { mode: 'date' }).notNull().defaultNow(),
   },
-  (t) => [uniqueIndex('categories_name_unique').on(t.name)],
+  (t) => [uniqueIndex('categories_name_unique').on(t.name)]
 );
 
 export const brands = pgTable(
@@ -92,7 +92,7 @@ export const brands = pgTable(
     name: text('name').notNull(),
     createdAt: timestamp('createdat', { mode: 'date' }).notNull().defaultNow(),
   },
-  (t) => [uniqueIndex('brands_name_unique').on(t.name)],
+  (t) => [uniqueIndex('brands_name_unique').on(t.name)]
 );
 
 export const products = pgTable(
@@ -112,7 +112,7 @@ export const products = pgTable(
     createdAt: timestamp('createdat', { mode: 'date' }).notNull().defaultNow(),
     updatedAt: timestamp('updatedat', { mode: 'date' }).notNull().defaultNow(),
   },
-  (t) => [uniqueIndex('products_sku_unique').on(t.sku)],
+  (t) => [uniqueIndex('products_sku_unique').on(t.sku)]
 );
 
 export const productTiers = pgTable(
@@ -126,9 +126,9 @@ export const productTiers = pgTable(
   (t) => [
     uniqueIndex('product_tiers_product_minQty_unique').on(
       t.productId,
-      t.minQty,
+      t.minQty
     ),
-  ],
+  ]
 );
 
 export const customers = pgTable('customers', {
@@ -138,6 +138,8 @@ export const customers = pgTable('customers', {
   address: text('address'),
   points: integer('points').notNull().default(0),
   totalDebt: integer('total_debt').notNull().default(0),
+  isActive: boolean('is_active').notNull().default(true),
+  isDeleted: boolean('is_deleted').notNull().default(false),
   createdAt: timestamp('createdat', { mode: 'date' }).notNull().defaultNow(),
   updatedAt: timestamp('updatedat', { mode: 'date' }).notNull().defaultNow(),
 });
@@ -151,7 +153,7 @@ export const suppliers = pgTable(
     address: text('address'),
     createdAt: timestamp('createdat', { mode: 'date' }).notNull().defaultNow(),
   },
-  (t) => [uniqueIndex('suppliers_name_unique').on(t.name)],
+  (t) => [uniqueIndex('suppliers_name_unique').on(t.name)]
 );
 
 export const transactions = pgTable('transactions', {
@@ -202,7 +204,7 @@ export const settings = pgTable(
     receiptFooter: text('receipt_footer'),
     updatedAt: timestamp('updatedat', { mode: 'date' }).notNull().defaultNow(),
   },
-  (t) => [uniqueIndex('settings_singleton').on(t.id)],
+  (t) => [uniqueIndex('settings_singleton').on(t.id)]
 );
 
 export const pointsLog = pgTable('points_log', {
