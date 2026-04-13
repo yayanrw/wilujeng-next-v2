@@ -1,4 +1,4 @@
-import { asc, desc, eq, inArray, sql } from 'drizzle-orm';
+import { and, asc, desc, eq, gt, gte, inArray, isNull, lte, or, sql } from 'drizzle-orm';
 import { z } from 'zod';
 
 import { db } from '@/db';
@@ -6,6 +6,7 @@ import {
   customers,
   debtPayments,
   pointsLog,
+  productBxgyPromos,
   productTiers,
   products,
   stockLogs,
@@ -80,35 +81,100 @@ export async function POST(req: Request) {
         tiersByProduct.set(tier.productId, list);
       }
 
+      const now = new Date();
+      const promoRows = await tx
+        .select({
+          productId: productBxgyPromos.productId,
+          buyQty: productBxgyPromos.buyQty,
+          freeQty: productBxgyPromos.freeQty,
+          maxMultiplierPerTx: productBxgyPromos.maxMultiplierPerTx,
+        })
+        .from(productBxgyPromos)
+        .where(
+          and(
+            inArray(productBxgyPromos.productId, productIds),
+            eq(productBxgyPromos.active, true),
+            gt(productBxgyPromos.freeQty, 0),
+            or(isNull(productBxgyPromos.validFrom), lte(productBxgyPromos.validFrom, now)),
+            or(isNull(productBxgyPromos.validTo), gte(productBxgyPromos.validTo, now)),
+          ),
+        );
+
+      const promoByProduct = new Map(promoRows.map((p) => [p.productId, p]));
+
       const qtyById = new Map(
         parsed.data.items.map((i) => [i.productId, i.qty] as const),
       );
+
+      // Compute free qty per item
+      const freeQtyById = new Map<string, number>();
+      for (const p of productRows) {
+        const qtyPaid = qtyById.get(p.id) ?? 0;
+        const promo = promoByProduct.get(p.id);
+        if (promo && qtyPaid >= promo.buyQty) {
+          let multiplier = Math.floor(qtyPaid / promo.buyQty);
+          if (promo.maxMultiplierPerTx != null) {
+            multiplier = Math.min(multiplier, promo.maxMultiplierPerTx);
+          }
+          freeQtyById.set(p.id, multiplier * promo.freeQty);
+        }
+      }
+
       for (const p of productRows) {
         const qty = qtyById.get(p.id) ?? 0;
-        if (p.stock < qty) {
+        const freeQty = freeQtyById.get(p.id) ?? 0;
+        const qtyDelivered = qty + freeQty;
+        if (p.stock < qtyDelivered) {
           throw new Error(`stock_insufficient:${p.name}:${p.stock}`);
         }
       }
 
-      const lineItems = productRows.map((p) => {
+      const lineItems: {
+        productId: string;
+        sku: string;
+        name: string;
+        qty: number;
+        unitPrice: number;
+        subtotal: number;
+        buyPrice: number;
+        stock: number;
+        isFree: boolean;
+      }[] = [];
+
+      for (const p of productRows) {
         const qty = qtyById.get(p.id) ?? 0;
         const unitPrice = getTierPrice({
           basePrice: p.basePrice,
           qty,
           tiers: tiersByProduct.get(p.id) ?? [],
         });
-        const subtotal = unitPrice * qty;
-        return {
+        lineItems.push({
           productId: p.id,
           sku: p.sku,
           name: p.name,
           qty,
           unitPrice,
-          subtotal,
+          subtotal: unitPrice * qty,
           buyPrice: p.buyPrice,
           stock: p.stock,
-        };
-      });
+          isFree: false,
+        });
+
+        const freeQty = freeQtyById.get(p.id) ?? 0;
+        if (freeQty > 0) {
+          lineItems.push({
+            productId: p.id,
+            sku: p.sku,
+            name: p.name,
+            qty: freeQty,
+            unitPrice: 0,
+            subtotal: 0,
+            buyPrice: p.buyPrice,
+            stock: p.stock,
+            isFree: true,
+          });
+        }
+      }
 
       const totalAmount = lineItems.reduce((acc, i) => acc + i.subtotal, 0);
       const payment = computePayment({
@@ -184,18 +250,29 @@ export async function POST(req: Request) {
         })),
       );
 
+      // Group by productId and reduce stock by total delivered (paid + free)
+      const deliveredByProduct = new Map<string, { stock: number; total: number }>();
       for (const i of lineItems) {
-        const nextStock = i.stock - i.qty;
+        const entry = deliveredByProduct.get(i.productId);
+        if (entry) {
+          entry.total += i.qty;
+        } else {
+          deliveredByProduct.set(i.productId, { stock: i.stock, total: i.qty });
+        }
+      }
+
+      for (const [productId, { stock, total }] of deliveredByProduct) {
+        const nextStock = stock - total;
         await tx
           .update(products)
           .set({ stock: nextStock, updatedAt: new Date() })
-          .where(eq(products.id, i.productId));
+          .where(eq(products.id, productId));
 
         await tx.insert(stockLogs).values({
-          productId: i.productId,
+          productId,
           type: 'out',
-          qty: i.qty,
-          prevStock: i.stock,
+          qty: total,
+          prevStock: stock,
           nextStock,
           note: `sale:${createdTx.id}`,
           transactionId: createdTx.id,
@@ -263,6 +340,7 @@ export async function POST(req: Request) {
           qty: i.qty,
           unitPrice: i.unitPrice,
           subtotal: i.subtotal,
+          isFree: i.isFree,
         })),
         totals: {
           totalAmount: txResult.totalAmount,
