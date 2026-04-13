@@ -52,7 +52,7 @@ export function CustomersClient() {
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const [deleting, setDeleting] = useState(false);
-  const { showToast, Toast } = useToast();
+  const { showToast } = useToast();
   const [sortBy, setSortBy] = useState<'name' | 'points' | 'totalDebt'>('name');
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('asc');
   const { t } = useTranslation();
@@ -511,7 +511,7 @@ export function CustomersClient() {
                       </table>
                     </div>
                   ) : (
-                    <div className="text-sm text-zinc-500 dark:text-zinc-400 bg-zinc-50 dark:bg-zinc-900 dark:bg-zinc-100 rounded-lg p-4 text-center border border-zinc-100 dark:border-zinc-800">
+                    <div className="text-sm text-zinc-500 dark:text-zinc-400 bg-zinc-50 dark:bg-zinc-900  rounded-lg p-4 text-center border border-zinc-100 dark:border-zinc-800">
                       {t.customers.noRecentTransactions}
                     </div>
                   )}
