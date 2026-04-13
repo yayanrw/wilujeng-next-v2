@@ -1,7 +1,7 @@
 'use client';
 
-import { useCallback, useEffect, useMemo, useState } from 'react';
-import { Trash, Pencil } from 'lucide-react';
+import { useEffect, useMemo, useState } from 'react';
+import { Trash } from 'lucide-react';
 import { useTranslation } from '@/i18n/useTranslation';
 import { ConfirmDialog } from '@/components/ui/ConfirmDialog';
 import { useToast } from '@/hooks/useToast';
@@ -94,20 +94,10 @@ export function BrandProducts() {
     }
   }
 
-  const loadMore = useCallback(() => {
+  const loadMore = () => {
     if (!hasMore) return;
     setPage((p) => p + 1);
-  }, [hasMore]);
-
-  const onEdit = useCallback(
-    (id: string) => {
-      // Edit not implemented yet; show a consistent toast and log id to avoid unused var
-      // Use existing i18n key for 'edit' to keep messages localized where possible
-      console.debug('edit brand', id);
-      showToast(`${t.common.edit} not implemented`);
-    },
-    [showToast, t.common.edit],
-  );
+  };
 
   return (
     <Card>
@@ -124,47 +114,48 @@ export function BrandProducts() {
         </div>
       </CardHeader>
       <CardContent>
-        {loading ? (
-          <div className="text-sm text-zinc-500">{t.common.loading}</div>
-        ) : display.length === 0 ? (
-          <div className="text-sm text-zinc-500">{t.common.noData}</div>
+        {loading && brands.length === 0 ? (
+          <div className="flex items-center justify-center p-12">
+            <div className="flex flex-col items-center gap-3">
+              <div className="h-6 w-6 animate-spin rounded-full border-2 border-zinc-200 border-t-zinc-900 dark:border-zinc-800 dark:border-t-zinc-100" />
+              <div className="text-sm font-medium text-zinc-500 dark:text-zinc-400">
+                {t.common.loading}
+              </div>
+            </div>
+          </div>
         ) : (
           <div className="overflow-x-auto">
-            <table className="w-full text-sm">
-              <thead>
-                <tr className="border-b border-zinc-200 dark:border-zinc-800 text-left text-zinc-500 dark:text-zinc-400">
-                  <th className="py-2">{tp.brandName ?? t.common.name}</th>
-                  <th className="py-2 text-right">{t.common.action}</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-zinc-100 dark:divide-zinc-800">
-                {display.map((b) => (
-                  <tr key={b.id}>
-                    <td className="py-3 px-4 align-middle">{b.name}</td>
-                    <td className="py-3 px-4 text-right">
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        className="h-8 w-8 p-0 text-red-500 hover:text-red-600"
-                        onClick={() => openDelete(b.id)}
-                        title={t.common.delete}
-                      >
-                        <Trash className="h-4 w-4" />
-                        <span className="sr-only">{t.common.delete}</span>
-                      </Button>
-                    </td>
+            {display.length === 0 ? (
+              <div className="text-sm text-zinc-500">{t.common.noData}</div>
+            ) : (
+              <table className="w-full text-sm">
+                <thead>
+                  <tr className="border-b border-zinc-200 dark:border-zinc-800 text-left text-zinc-500 dark:text-zinc-400">
+                    <th className="py-2">{tp.brandName ?? t.common.name}</th>
+                    <th className="py-2 text-right">{t.common.action}</th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        )}
-
-        {hasMore && (
-          <div className="mt-4 flex justify-center">
-            <Button variant="ghost" onClick={loadMore} disabled={false}>
-              {t.settings?.loadMore ?? 'Load more'}
-            </Button>
+                </thead>
+                <tbody className="divide-y divide-zinc-100 dark:divide-zinc-800">
+                  {display.map((b) => (
+                    <tr key={b.id}>
+                      <td className="py-3 px-4 align-middle">{b.name}</td>
+                      <td className="py-3 px-4 text-right">
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className="h-8 w-8 p-0 text-red-500 hover:text-red-600"
+                          onClick={() => openDelete(b.id)}
+                          title={t.common.delete}
+                        >
+                          <Trash className="h-4 w-4" />
+                          <span className="sr-only">{t.common.delete}</span>
+                        </Button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            )}
           </div>
         )}
       </CardContent>
