@@ -226,3 +226,26 @@ export const debtPayments = pgTable('debt_payments', {
   userId: text('user_id').notNull(),
   note: text('note'),
 });
+
+export const productBxgyPromos = pgTable(
+  'product_bxgy_promos',
+  {
+    id: uuid('id').primaryKey().defaultRandom(),
+    productId: uuid('product_id').notNull(),
+    buyQty: integer('buy_qty').notNull(),
+    freeQty: integer('free_qty').notNull().default(0),
+    active: boolean('active').notNull().default(true),
+    validFrom: timestamp('valid_from', { mode: 'date' }),
+    validTo: timestamp('valid_to', { mode: 'date' }),
+    maxMultiplierPerTx: integer('max_multiplier_per_tx'),
+    createdAt: timestamp('createdat', { mode: 'date' }).notNull().defaultNow(),
+    updatedAt: timestamp('updatedat', { mode: 'date' }).notNull().defaultNow(),
+  },
+  (t) => [
+    uniqueIndex('product_bxgy_promos_product_buy_free_unique').on(
+      t.productId,
+      t.buyQty,
+      t.freeQty
+    ),
+  ]
+);

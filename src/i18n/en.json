@@ -149,7 +149,9 @@
     "transaction": "Transaction",
     "date": "Date",
     "status": "Status",
-    "paid": "Paid"
+    "paid": "Paid",
+    "freeItem": "FREE",
+    "freeItemLabel": "{{name}} (FREE)"
   },
   "products": {
     "title": "Products",
@@ -214,7 +216,22 @@
     "deleteSupplierConfirmDesc": "Delete this supplier? It cannot be deleted if stock logs reference it.",
     "brandInUse": "Brand is in use and cannot be deleted.",
     "categoryInUse": "Category is in use and cannot be deleted.",
-    "supplierInUse": "Supplier is in use and cannot be deleted."
+    "supplierInUse": "Supplier is in use and cannot be deleted.",
+    "bxgyPromo": "Buy X Get Y Free",
+    "bxgyDesc": "Buyer gets free items when purchasing a set quantity",
+    "bxgyBuyQty": "Buy (X)",
+    "bxgyFreeQty": "Free (Y)",
+    "bxgyMaxMultiplier": "Max Multiplier per Transaction",
+    "bxgyValidFrom": "Valid From",
+    "bxgyValidTo": "Valid To",
+    "bxgyActive": "Promo Active",
+    "bxgySave": "Save Promo",
+    "bxgyDelete": "Delete Promo",
+    "bxgySavedSuccess": "Promo saved successfully",
+    "bxgyDeletedSuccess": "Promo deleted successfully",
+    "bxgySaveFailed": "Failed to save promo",
+    "bxgyDeleteFailed": "Failed to delete promo",
+    "bxgyExample": "Example: Buy 2 get 1 free"
   },
   "stock": {
     "title": "Stock Management",

@@ -16,7 +16,7 @@ export function ProductsClient() {
   return (
     <div className="flex flex-col gap-4">
       <div className="text-lg font-semibold text-zinc-900 dark:text-zinc-50">
-        {t.nav.settings}
+        {t.nav.products}
       </div>
 
       <div className="flex gap-2">
