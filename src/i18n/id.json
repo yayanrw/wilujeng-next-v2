@@ -204,7 +204,20 @@
     "deleteConfirmTitle": "Hapus produk",
     "deleteConfirmDesc": "Anda yakin ingin menghapus produk ini? Aksi ini tidak dapat dibatalkan.",
     "deletedSuccess": "Produk berhasil dihapus",
-    "deleteFailed": "Gagal menghapus produk"
+    "deleteFailed": "Gagal menghapus produk",
+    "products": "Produk",
+    "brands": "Merek",
+    "categories": "Kategori",
+    "suppliers": "Pemasok",
+    "brandsTitle": "Kelola Merek",
+    "categoriesTitle": "Kelola Kategori",
+    "suppliersTitle": "Kelola Pemasok",
+    "deleteBrandConfirmDesc": "Hapus merek ini? Merek tidak dapat dihapus jika ada produk yang merujuknya.",
+    "deleteCategoryConfirmDesc": "Hapus kategori ini? Kategori tidak dapat dihapus jika ada produk yang merujuknya.",
+    "deleteSupplierConfirmDesc": "Hapus pemasok ini? Pemasok tidak dapat dihapus jika ada catatan stok yang merujuknya.",
+    "brandInUse": "Merek sedang digunakan dan tidak dapat dihapus.",
+    "categoryInUse": "Kategori sedang digunakan dan tidak dapat dihapus.",
+    "supplierInUse": "Pemasok sedang digunakan dan tidak dapat dihapus."
   },
   "stock": {
     "title": "Manajemen Stok",

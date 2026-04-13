@@ -1,14 +1,15 @@
-import { asc, ilike } from 'drizzle-orm';
+import { asc, eq, ilike } from 'drizzle-orm';
 import { z } from 'zod';
 
 import { db } from '@/db';
-import { categories } from '@/db/schema';
+import { categories, products } from '@/db/schema';
 import {
   badRequest,
   json,
   readJson,
   requireApiRole,
   requireApiSession,
+  notFound,
 } from '@/server/api-helpers';
 import {
   getCachedData,

@@ -9,15 +9,14 @@ import { usePosStore } from '@/stores/posStore';
 import { useCatalogStore } from '@/stores/catalogStore';
 import { computePayment, type PaymentMethod } from '@/utils/checkout';
 import { useTranslation } from '@/i18n/useTranslation';
+import { useToast } from '@/hooks/useToast';
 
 import { CartPanel } from './pos/CartPanel';
 import { CheckoutModal } from './pos/CheckoutModal';
 import { SearchPanel } from './pos/SearchPanel';
-import { Toast } from './pos/Toast';
 
 export function PosClient() {
   const inputRef = useRef<HTMLInputElement | null>(null);
-  const [toast, setToast] = useState<string | null>(null);
   const [checkoutOpen, setCheckoutOpen] = useState(false);
   const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>('cash');
   const [amountReceived, setAmountReceived] = useState(0);
@@ -27,6 +26,7 @@ export function PosClient() {
   const [debtPaymentAmount, setDebtPaymentAmount] = useState<number>(0);
   const [debtPaymentNote, setDebtPaymentNote] = useState<string>('');
   const { t } = useTranslation();
+  const { showToast, Toast } = useToast();
 
   const items = usePosStore((s) => s.items);
   const customerId = usePosStore((s) => s.customerId);
@@ -56,7 +56,7 @@ export function PosClient() {
         setProducts(data);
       } catch (err) {
         console.error('Catalog fetch error:', err);
-        setToast('Failed to load product catalog');
+        showToast('Failed to load product catalog');
       } finally {
         setLoading(false);
       }
@@ -89,16 +89,10 @@ export function PosClient() {
     inputRef.current?.focus();
   }, []);
 
-  useEffect(() => {
-    if (!toast) return;
-    const t = window.setTimeout(() => setToast(null), 1800);
-    return () => window.clearTimeout(t);
-  }, [toast]);
-
   async function doCheckout() {
     if (!items.length) return;
     if (payment.status === 'debt' && !customerId) {
-      setToast(t.pos.selectCustomerForDebt);
+      showToast(t.pos.selectCustomerForDebt);
       return;
     }
 
@@ -122,20 +116,20 @@ export function PosClient() {
       | null;
     setCheckoutPending(false);
     if (!res.ok) {
-      setToast(
+      showToast(
         body && 'error' in body ? body.error.message : t.pos.checkoutFailed,
       );
       return;
     }
 
     if (!body || !('transactionId' in body)) {
-      setToast(t.pos.checkoutFailed);
+      showToast(t.pos.checkoutFailed);
       return;
     }
 
     setLastTxId(body.transactionId);
     setCheckoutOpen(false);
-    setToast(t.pos.transactionSaved);
+    showToast(t.pos.transactionSaved);
     clear();
     setAmountReceived(0);
     setDebtPaymentAmount(0);
@@ -169,13 +163,13 @@ export function PosClient() {
       <div className="grid flex-1 min-h-0 grid-cols-1 gap-4 lg:grid-cols-[1fr_420px]">
         <SearchPanel
           inputRef={inputRef}
-          onToast={setToast}
+          onToast={showToast}
           refreshKey={refreshKey}
         />
         <CartPanel total={total} onCheckout={() => setCheckoutOpen(true)} />
       </div>
 
-      <Toast message={toast} />
+      <Toast />
 
       <CheckoutModal
         open={checkoutOpen}
@@ -195,7 +189,7 @@ export function PosClient() {
         onPaymentMethodChange={setPaymentMethod}
         onAmountReceivedChange={setAmountReceived}
         onConfirm={doCheckout}
-        onToast={setToast}
+        onToast={showToast}
         debtPaymentAmount={debtPaymentAmount}
         onDebtPaymentAmountChange={setDebtPaymentAmount}
         debtPaymentNote={debtPaymentNote}

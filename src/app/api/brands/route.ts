@@ -1,4 +1,4 @@
-import { asc, ilike } from 'drizzle-orm';
+import { asc, eq, ilike } from 'drizzle-orm';
 import { z } from 'zod';
 
 import { db } from '@/db';
@@ -72,3 +72,5 @@ export async function POST(req: Request) {
   await invalidateCachePattern('brands:list:*');
   return json({ id: row.id, name: row.name }, { status: 201 });
 }
+
+// NOTE: DELETE moved to /api/brands/[id]/route.ts

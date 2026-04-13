@@ -17,7 +17,7 @@ import { Button } from '@/components/ui/Button';
 import { Card, CardContent, CardHeader } from '@/components/ui/Card';
 import { Input } from '@/components/ui/Input';
 import { formatIdr } from '@/utils/money';
-import { Toast } from './pos/Toast';
+import { useToast } from '@/hooks/useToast';
 import { CustomerForm, type CustomerDto } from './customers/CustomerForm';
 import { PayDebtModal } from './customers/PayDebtModal';
 import { ConfirmDialog } from '@/components/ui/ConfirmDialog';
@@ -52,20 +52,15 @@ export function CustomersClient() {
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const [deleting, setDeleting] = useState(false);
-  const [toastMessage, setToastMessage] = useState<string | null>(null);
+  const { showToast } = useToast();
   const [sortBy, setSortBy] = useState<'name' | 'points' | 'totalDebt'>('name');
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('asc');
   const { t } = useTranslation();
   const LIMIT = 50;
 
-  const showToast = (msg: string) => {
-    setToastMessage(msg);
-    setTimeout(() => setToastMessage(null), 3000);
-  };
-
   const selected = useMemo(
     () => customers.find((c) => c.id === selectedId) ?? null,
-    [customers, selectedId]
+    [customers, selectedId],
   );
 
   async function fetchCustomers(
@@ -73,7 +68,7 @@ export function CustomersClient() {
     p: number,
     append = false,
     currentSortBy = sortBy,
-    currentSortOrder = sortOrder
+    currentSortOrder = sortOrder,
   ) {
     setLoading(true);
     try {
@@ -120,7 +115,7 @@ export function CustomersClient() {
     setPage(0);
     const t = window.setTimeout(
       () => void fetchCustomers(search, 0, false, sortBy, sortOrder),
-      500
+      500,
     );
     return () => window.clearTimeout(t);
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -181,13 +176,15 @@ export function CustomersClient() {
         showToast(
           t.customers.deleteFailed ||
             t.customers.saveFailed ||
-            'Failed to delete'
+            'Failed to delete',
         );
       }
     } catch (err) {
       console.error(err);
       showToast(
-        t.customers.deleteFailed || t.customers.saveFailed || 'Failed to delete'
+        t.customers.deleteFailed ||
+          t.customers.saveFailed ||
+          'Failed to delete',
       );
     } finally {
       setDeleting(false);
@@ -458,7 +455,7 @@ export function CustomersClient() {
                     showToast(
                       mode === 'create'
                         ? t.customers.createdSuccess
-                        : t.customers.updatedSuccess
+                        : t.customers.updatedSuccess,
                     );
                   } else {
                     showToast(errorMsg || t.customers.saveFailed);
@@ -514,7 +511,7 @@ export function CustomersClient() {
                       </table>
                     </div>
                   ) : (
-                    <div className="text-sm text-zinc-500 dark:text-zinc-400 bg-zinc-50 dark:bg-zinc-900 dark:bg-zinc-100 rounded-lg p-4 text-center border border-zinc-100 dark:border-zinc-800">
+                    <div className="text-sm text-zinc-500 dark:text-zinc-400 bg-zinc-50 dark:bg-zinc-900  rounded-lg p-4 text-center border border-zinc-100 dark:border-zinc-800">
                       {t.customers.noRecentTransactions}
                     </div>
                   )}
@@ -524,8 +521,6 @@ export function CustomersClient() {
           </CardContent>
         </Card>
       </div>
-
-      <Toast message={toastMessage} />
 
       <ConfirmDialog
         open={isDeleteDialogOpen}
@@ -553,7 +548,7 @@ export function CustomersClient() {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ amount, paymentMethod: method, note }),
-              }
+              },
             );
 
             if (res.ok) {

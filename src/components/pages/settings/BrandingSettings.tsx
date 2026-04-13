@@ -6,7 +6,7 @@ import * as LucideIcons from 'lucide-react';
 import { Button } from '@/components/ui/Button';
 import { Card, CardContent, CardHeader } from '@/components/ui/Card';
 import { Input } from '@/components/ui/Input';
-import { Toast } from '@/components/pages/pos/Toast';
+import { useToast } from '@/hooks/useToast';
 import { useTranslation } from '@/i18n/useTranslation';
 
 type Branding = {
@@ -29,13 +29,8 @@ const iconOptions = [
 export function BrandingSettings() {
   const [branding, setBranding] = useState<Branding | null>(null);
   const [pending, setPending] = useState(false);
-  const [toastMessage, setToastMessage] = useState<string | null>(null);
+  const { showToast, Toast } = useToast();
   const { t } = useTranslation();
-
-  const showToast = (msg: string) => {
-    setToastMessage(msg);
-    setTimeout(() => setToastMessage(null), 3000);
-  };
 
   async function loadBranding() {
     const res = await fetch('/api/settings');
@@ -193,7 +188,7 @@ export function BrandingSettings() {
           </div>
         )}
       </CardContent>
-      <Toast message={toastMessage} />
+      <Toast />
     </Card>
   );
 }
