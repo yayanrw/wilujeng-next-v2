@@ -152,7 +152,9 @@
     "status": "Status",
     "paid": "Dibayar",
     "initialDebt": "Hutang Awal",
-    "initialDebtDesc": "Isi bidang ini jika pelanggan memiliki hutang sebelum menggunakan sistem ini."
+    "initialDebtDesc": "Isi bidang ini jika pelanggan memiliki hutang sebelum menggunakan sistem ini.",
+    "freeItem": "GRATIS",
+    "freeItemLabel": "{{name}} (GRATIS)"
   },
   "products": {
     "title": "Produk",
@@ -217,7 +219,22 @@
     "deleteSupplierConfirmDesc": "Hapus pemasok ini? Pemasok tidak dapat dihapus jika ada catatan stok yang merujuknya.",
     "brandInUse": "Merek sedang digunakan dan tidak dapat dihapus.",
     "categoryInUse": "Kategori sedang digunakan dan tidak dapat dihapus.",
-    "supplierInUse": "Pemasok sedang digunakan dan tidak dapat dihapus."
+    "supplierInUse": "Pemasok sedang digunakan dan tidak dapat dihapus.",
+    "bxgyPromo": "Promo Beli X Gratis Y",
+    "bxgyDesc": "Pembeli mendapat produk gratis saat membeli kuantitas tertentu",
+    "bxgyBuyQty": "Beli (X)",
+    "bxgyFreeQty": "Gratis (Y)",
+    "bxgyMaxMultiplier": "Maks Kelipatan per Transaksi",
+    "bxgyValidFrom": "Berlaku Dari",
+    "bxgyValidTo": "Berlaku Sampai",
+    "bxgyActive": "Promo Aktif",
+    "bxgySave": "Simpan Promo",
+    "bxgyDelete": "Hapus Promo",
+    "bxgySavedSuccess": "Promo berhasil disimpan",
+    "bxgyDeletedSuccess": "Promo berhasil dihapus",
+    "bxgySaveFailed": "Gagal menyimpan promo",
+    "bxgyDeleteFailed": "Gagal menghapus promo",
+    "bxgyExample": "Contoh: Beli 2 gratis 1"
   },
   "stock": {
     "title": "Manajemen Stok",
