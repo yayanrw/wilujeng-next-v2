@@ -106,7 +106,7 @@ export function CategoryProducts() {
         </div>
         <div className="mt-3">
           <Input
-            placeholder={t.products?.searchPlaceholder ?? 'Search'}
+            placeholder={t.common?.search}
             value={search}
             onChange={(e) => setSearch(e.target.value)}
           />
