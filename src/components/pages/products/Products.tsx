@@ -13,7 +13,7 @@ import { formatIdr } from '@/utils/money';
 import { useTranslation } from '@/i18n/useTranslation';
 import { ConfirmDialog } from '@/components/ui/ConfirmDialog';
 import { ProductDto, ProductForm } from './ProductForm';
-import { Toast } from '../pos/Toast';
+import { useToast } from '@/hooks/useToast';
 import { ImportProductModal } from './ImportProductModal';
 
 export function Products() {
@@ -25,7 +25,7 @@ export function Products() {
   const [page, setPage] = useState(0);
   const [hasMore, setHasMore] = useState(true);
   const [isImportModalOpen, setIsImportModalOpen] = useState(false);
-  const [toastMessage, setToastMessage] = useState<string | null>(null);
+  const { showToast, Toast } = useToast();
   const [categoryId, setCategoryId] = useState('all');
   const [brandId, setBrandId] = useState('all');
   const [categories, setCategories] = useState<{ id: string; name: string }[]>(
@@ -37,11 +37,6 @@ export function Products() {
   const [deleting, setDeleting] = useState(false);
   const { t } = useTranslation();
   const LIMIT = 50;
-
-  const showToast = (msg: string) => {
-    setToastMessage(msg);
-    setTimeout(() => setToastMessage(null), 3000);
-  };
 
   const selected = useMemo(
     () =>
@@ -458,46 +453,4 @@ export function Products() {
             mode={mode}
             initial={mode === 'edit' ? (selected ?? undefined) : undefined}
             onSaved={async (success, errorMsg) => {
-              if (success) {
-                await refresh();
-                if (mode === 'create') {
-                  setMode('create');
-                }
-                showToast(
-                  mode === 'create'
-                    ? t.products.createdSuccess
-                    : t.products.updatedSuccess
-                );
-              } else {
-                showToast(errorMsg || t.products.saveFailed);
-              }
-            }}
-          />
-        </CardContent>
-      </Card>
-      <ImportProductModal
-        open={isImportModalOpen}
-        onClose={() => setIsImportModalOpen(false)}
-        onSuccess={(msg) => {
-          showToast(msg);
-          setIsImportModalOpen(false);
-          refresh();
-        }}
-      />
-      <ConfirmDialog
-        open={isDeleteDialogOpen}
-        title={t.products.deleteConfirmTitle}
-        description={t.products.deleteConfirmDesc}
-        confirmText={t.common.delete}
-        cancelText={t.common.cancel}
-        onClose={() => {
-          setIsDeleteDialogOpen(false);
-          setDeletingId(null);
-        }}
-        onConfirm={confirmDelete}
-        loading={deleting}
-      />
-      <Toast message={toastMessage} />
-    </div>
-  );
-}
+              if

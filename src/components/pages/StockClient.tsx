@@ -8,11 +8,10 @@ import { Card, CardContent, CardHeader } from '@/components/ui/Card';
 import { Input } from '@/components/ui/Input';
 import { ProductPicker } from '@/components/shared/ProductPicker';
 import { SupplierPicker } from '@/components/shared/SupplierPicker';
-import { AutocompleteInput } from './products/AutocompleteInput';
 import { formatIdr } from '@/utils/money';
 import { StockLogDetailModal } from './stock/StockLogDetailModal';
 import { useTranslation } from '@/i18n/useTranslation';
-import { Toast } from '@/components/pages/pos/Toast';
+import { useToast } from '@/hooks/useToast';
 import { TransactionPicker } from '@/components/shared/TransactionPicker';
 
 type Tab = 'in' | 'out' | 'opname' | 'logs';
@@ -42,16 +41,11 @@ export function StockClient() {
   const [expiryDate, setExpiryDate] = useState('');
   const [note, setNote] = useState('');
   const [logs, setLogs] = useState<StockLog[]>([]);
-  const [toastMessage, setToastMessage] = useState<string | null>(null);
+  const { showToast, Toast } = useToast();
   const [pending, setPending] = useState(false);
   const [outType, setOutType] = useState<'out' | 'return'>('out');
   const [transactionId, setTransactionId] = useState<string | null>(null);
   const [returnReason, setReturnReason] = useState('');
-
-  const showToast = (msg: string) => {
-    setToastMessage(msg);
-    setTimeout(() => setToastMessage(null), 3000);
-  };
 
   // Pagination and filtering for logs
   const LIMIT = 50;
@@ -112,41 +106,45 @@ export function StockClient() {
 
   async function submit(path: string, payload: unknown) {
     setPending(true);
-    setToastMessage(null);
-    const res = await fetch(path, {
-      method: 'POST',
-      headers: { 'content-type': 'application/json' },
-      body: JSON.stringify(payload),
-    });
-    const body = (await res.json().catch(() => null)) as
-      | { prevStock: number; nextStock: number }
-      | { error: { message: string } }
-      | null;
-    setPending(false);
-    if (!res.ok) {
-      showToast(
-        body && 'error' in body ? body.error.message : 'Request failed',
-      );
-      return;
-    }
-    if (!body || !('prevStock' in body)) {
-      showToast('OK');
-      return;
-    }
-    showToast(`OK: stock ${body.prevStock} → ${body.nextStock}`);
-    setProductId(null);
-    setQty(1);
-    setUnitBuyPrice(0);
-    setSupplierName('');
-    setBrandName('');
-    setExpiryDate('');
-    setNote('');
-    setTransactionId(null);
-    setReturnReason('');
+    try {
+      const res = await fetch(path, {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify(payload),
+      });
+      const body = (await res.json().catch(() => null)) as
+        | { prevStock: number; nextStock: number }
+        | { error: { message: string } }
+        | null;
+      setPending(false);
+      if (!res.ok) {
+        showToast(
+          body && 'error' in body ? body.error.message : 'Request failed',
+        );
+        return;
+      }
+      if (!body || !('prevStock' in body)) {
+        showToast('OK');
+        return;
+      }
+      showToast(`OK: stock ${body.prevStock} → ${body.nextStock}`);
+      setProductId(null);
+      setQty(1);
+      setUnitBuyPrice(0);
+      setSupplierName('');
+      setBrandName('');
+      setExpiryDate('');
+      setNote('');
+      setTransactionId(null);
+      setReturnReason('');
 
-    if (tab === 'logs') {
-      setPage(0);
-      void loadLogs(0, false);
+      if (tab === 'logs') {
+        setPage(0);
+        void loadLogs(0, false);
+      }
+    } catch (error) {
+      setPending(false);
+      showToast('Terjadi kesalahan, silakan coba lagi');
     }
   }
 
@@ -599,7 +597,7 @@ export function StockClient() {
           onClose={() => setSelectedLogId(null)}
         />
       )}
-      {toastMessage && <Toast message={toastMessage} />}
+      <Toast />
     </div>
   );
 }

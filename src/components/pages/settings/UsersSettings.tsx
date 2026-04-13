@@ -6,7 +6,7 @@ import { Pencil } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
 import { Card, CardContent, CardHeader } from '@/components/ui/Card';
 import { Input } from '@/components/ui/Input';
-import { Toast } from '@/components/pages/pos/Toast';
+import { useToast } from '@/hooks/useToast';
 import { UserForm, type UserDto } from './UserForm';
 import { useTranslation } from '@/i18n/useTranslation';
 
@@ -19,14 +19,9 @@ export function UsersSettings() {
   const [loading, setLoading] = useState(false);
   const [page, setPage] = useState(0);
   const [hasMore, setHasMore] = useState(true);
-  const [toastMessage, setToastMessage] = useState<string | null>(null);
+  const { showToast, Toast } = useToast();
   const LIMIT = 50;
   const { t } = useTranslation();
-
-  const showToast = (msg: string) => {
-    setToastMessage(msg);
-    setTimeout(() => setToastMessage(null), 3000);
-  };
 
   const selected = useMemo(
     () =>
@@ -232,7 +227,7 @@ export function UsersSettings() {
         </CardContent>
       </Card>
 
-      {toastMessage && <Toast message={toastMessage} />}
+      <Toast />
     </div>
   );
 }
