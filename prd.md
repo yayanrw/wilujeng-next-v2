@@ -530,3 +530,21 @@ Catatan: Implementasi RBAC di level API Route Handlers dan server components; si
     - API: new endpoint DELETE /api/customers/:id performing soft-delete (sets is_deleted=true and is_active=false). Admin-only.
     - UI: Customers list includes a Delete action (next to Edit). Clicking Delete opens a confirmation dialog (i18n texts available). After successful deletion the customer row is removed from the list and a success toast is shown. Listing endpoints exclude is_deleted=true by default.
     - Cache: invalidate customers listing patterns (e.g. customers:list:\*) when a customer is soft-deleted so UI updates quickly.
+
+- Master data deletion (Brands / Categories / Suppliers)
+  - UI
+    - Add management tabs under the Products screen for Brands, Categories, and Suppliers (delete-only from admin panel).
+    - Each item shows a Delete action. Clicking Delete shows a confirmation dialog (i18n texts).
+    - If deletion succeeds the row is removed from the list and a success toast is shown.
+    - If deletion fails due to references, show a clear error toast and do not delete.
+  - API
+    - DELETE /api/brands/:id
+      - Admin-only. Validates that no product references this brand. If referenced → 400 with message. On success deletes row and invalidates cache pattern brands:list:*.
+    - DELETE /api/categories/:id
+      - Admin-only. Validates that no product references this category. If referenced → 400. On success deletes row and invalidates categories:list:*.
+    - DELETE /api/suppliers/:id
+      - Admin-only. Validates that no stock_logs reference this supplier. If referenced → 400. On success deletes row and invalidates suppliers:list:*.
+  - Cache
+    - Invalidate patterns brands:list:*, categories:list:*, suppliers:list:* on successful delete.
+  - Validation
+    - Prevent removal of master data that are still referenced (products or stock logs). Surface a helpful i18n error message to the user.
