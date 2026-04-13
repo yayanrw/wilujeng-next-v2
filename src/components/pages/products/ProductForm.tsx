@@ -1,6 +1,6 @@
 'use client';
 
-import { useMemo, useState, useEffect } from 'react';
+import { useMemo, useState, useEffect, useCallback } from 'react';
 
 import { Plus, Trash2, Dices } from 'lucide-react';
 
@@ -9,6 +9,16 @@ import { Input } from '@/components/ui/Input';
 
 import { AutocompleteInput } from './AutocompleteInput';
 import { useTranslation } from '@/i18n/useTranslation';
+
+type BxgyPromo = {
+  id: string;
+  buyQty: number;
+  freeQty: number;
+  active: boolean;
+  validFrom: string | null;
+  validTo: string | null;
+  maxMultiplierPerTx: number | null;
+};
 
 export type ProductDto = {
   id: string;
@@ -54,6 +64,39 @@ export function ProductForm({
   const [pending, setPending] = useState(false);
   const { t } = useTranslation();
 
+  // BxGy promo state
+  const [promo, setPromo] = useState<BxgyPromo | null>(null);
+  const [promoBuyQty, setPromoBuyQty] = useState(2);
+  const [promoFreeQty, setPromoFreeQty] = useState(1);
+  const [promoActive, setPromoActive] = useState(true);
+  const [promoValidFrom, setPromoValidFrom] = useState('');
+  const [promoValidTo, setPromoValidTo] = useState('');
+  const [promoMaxMultiplier, setPromoMaxMultiplier] = useState('');
+  const [promoSaving, setPromoSaving] = useState(false);
+  const [promoMsg, setPromoMsg] = useState<{ ok: boolean; text: string } | null>(null);
+
+  const fetchPromo = useCallback(async (productId: string) => {
+    const res = await fetch(`/api/products/${productId}/promo`);
+    if (!res.ok) return;
+    const data = (await res.json()) as { promo: BxgyPromo | null };
+    setPromo(data.promo);
+    if (data.promo) {
+      setPromoBuyQty(data.promo.buyQty);
+      setPromoFreeQty(data.promo.freeQty);
+      setPromoActive(data.promo.active);
+      setPromoValidFrom(data.promo.validFrom ? data.promo.validFrom.slice(0, 16) : '');
+      setPromoValidTo(data.promo.validTo ? data.promo.validTo.slice(0, 16) : '');
+      setPromoMaxMultiplier(data.promo.maxMultiplierPerTx != null ? String(data.promo.maxMultiplierPerTx) : '');
+    } else {
+      setPromoBuyQty(2);
+      setPromoFreeQty(1);
+      setPromoActive(true);
+      setPromoValidFrom('');
+      setPromoValidTo('');
+      setPromoMaxMultiplier('');
+    }
+  }, []);
+
   // Sync state when initial product changes (e.g. user clicks another product to edit)
   useEffect(() => {
     if (mode === 'edit' && initial) {
@@ -66,6 +109,7 @@ export function ProductForm({
       setCategoryName(initial.category?.name ?? '');
       setBrandName(initial.brand?.name ?? '');
       setTiers(initial.tiers ?? []);
+      fetchPromo(initial.id);
     } else if (mode === 'create') {
       setSku('');
       setName('');
@@ -76,8 +120,9 @@ export function ProductForm({
       setCategoryName('');
       setBrandName('');
       setTiers([]);
+      setPromo(null);
     }
-  }, [initial, mode]);
+  }, [initial, mode, fetchPromo]);
 
   const canSave = useMemo(() => sku.trim() && name.trim(), [sku, name]);
 
@@ -397,6 +442,172 @@ export function ProductForm({
           )}
         </div>
       </div>
+
+      {mode === 'edit' && (
+        <div className="rounded-xl border border-zinc-200 dark:border-zinc-800 bg-zinc-50/50 dark:bg-zinc-900/50 p-4 space-y-4">
+          <div>
+            <div className="text-sm font-semibold text-zinc-900 dark:text-zinc-100">
+              {t.products.bxgyPromo}
+            </div>
+            <div className="text-xs text-zinc-500 dark:text-zinc-400">
+              {t.products.bxgyDesc}
+            </div>
+          </div>
+
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <label className="text-[10px] font-semibold uppercase tracking-wider text-zinc-500 dark:text-zinc-400">
+                {t.products.bxgyBuyQty}
+              </label>
+              <Input
+                className="mt-1 h-8 text-sm tabular-nums"
+                inputMode="numeric"
+                value={String(promoBuyQty)}
+                onChange={(e) =>
+                  setPromoBuyQty(Number(e.target.value.replace(/[^0-9]/g, '')) || 1)
+                }
+              />
+            </div>
+            <div>
+              <label className="text-[10px] font-semibold uppercase tracking-wider text-zinc-500 dark:text-zinc-400">
+                {t.products.bxgyFreeQty}
+              </label>
+              <Input
+                className="mt-1 h-8 text-sm tabular-nums"
+                inputMode="numeric"
+                value={String(promoFreeQty)}
+                onChange={(e) =>
+                  setPromoFreeQty(Number(e.target.value.replace(/[^0-9]/g, '')) || 1)
+                }
+              />
+            </div>
+          </div>
+
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <label className="text-[10px] font-semibold uppercase tracking-wider text-zinc-500 dark:text-zinc-400">
+                {t.products.bxgyValidFrom}
+              </label>
+              <Input
+                type="datetime-local"
+                className="mt-1 h-8 text-sm"
+                value={promoValidFrom}
+                onChange={(e) => setPromoValidFrom(e.target.value)}
+              />
+            </div>
+            <div>
+              <label className="text-[10px] font-semibold uppercase tracking-wider text-zinc-500 dark:text-zinc-400">
+                {t.products.bxgyValidTo}
+              </label>
+              <Input
+                type="datetime-local"
+                className="mt-1 h-8 text-sm"
+                value={promoValidTo}
+                onChange={(e) => setPromoValidTo(e.target.value)}
+              />
+            </div>
+          </div>
+
+          <div>
+            <label className="text-[10px] font-semibold uppercase tracking-wider text-zinc-500 dark:text-zinc-400">
+              {t.products.bxgyMaxMultiplier}
+            </label>
+            <Input
+              className="mt-1 h-8 text-sm tabular-nums"
+              inputMode="numeric"
+              placeholder="—"
+              value={promoMaxMultiplier}
+              onChange={(e) =>
+                setPromoMaxMultiplier(e.target.value.replace(/[^0-9]/g, ''))
+              }
+            />
+          </div>
+
+          <div className="flex items-center gap-2">
+            <input
+              id="promoActive"
+              type="checkbox"
+              checked={promoActive}
+              onChange={(e) => setPromoActive(e.target.checked)}
+              className="h-4 w-4 rounded border-zinc-300 dark:border-zinc-700"
+            />
+            <label
+              htmlFor="promoActive"
+              className="text-sm text-zinc-700 dark:text-zinc-300 cursor-pointer"
+            >
+              {t.products.bxgyActive}
+            </label>
+          </div>
+
+          {promoMsg && (
+            <p
+              className={`text-xs font-medium ${promoMsg.ok ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'}`}
+            >
+              {promoMsg.text}
+            </p>
+          )}
+
+          <div className="flex gap-2">
+            <Button
+              type="button"
+              variant="secondary"
+              size="sm"
+              disabled={promoSaving}
+              onClick={async () => {
+                setPromoSaving(true);
+                setPromoMsg(null);
+                const res = await fetch(`/api/products/${initial!.id}/promo`, {
+                  method: 'POST',
+                  headers: { 'content-type': 'application/json' },
+                  body: JSON.stringify({
+                    buyQty: promoBuyQty,
+                    freeQty: promoFreeQty,
+                    active: promoActive,
+                    validFrom: promoValidFrom ? new Date(promoValidFrom).toISOString() : null,
+                    validTo: promoValidTo ? new Date(promoValidTo).toISOString() : null,
+                    maxMultiplierPerTx: promoMaxMultiplier ? Number(promoMaxMultiplier) : null,
+                  }),
+                });
+                setPromoSaving(false);
+                if (res.ok) {
+                  const data = (await res.json()) as { promo: BxgyPromo };
+                  setPromo(data.promo);
+                  setPromoMsg({ ok: true, text: t.products.bxgySavedSuccess });
+                } else {
+                  setPromoMsg({ ok: false, text: t.products.bxgySaveFailed });
+                }
+              }}
+            >
+              {t.products.bxgySave}
+            </Button>
+
+            {promo && (
+              <Button
+                type="button"
+                variant="danger"
+                size="sm"
+                disabled={promoSaving}
+                onClick={async () => {
+                  setPromoSaving(true);
+                  setPromoMsg(null);
+                  const res = await fetch(`/api/products/${initial!.id}/promo`, {
+                    method: 'DELETE',
+                  });
+                  setPromoSaving(false);
+                  if (res.ok) {
+                    setPromo(null);
+                    setPromoMsg({ ok: true, text: t.products.bxgyDeletedSuccess });
+                  } else {
+                    setPromoMsg({ ok: false, text: t.products.bxgyDeleteFailed });
+                  }
+                }}
+              >
+                {t.products.bxgyDelete}
+              </Button>
+            )}
+          </div>
+        </div>
+      )}
 
       <Button
         type="submit"
