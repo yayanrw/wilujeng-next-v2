@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useState, useCallback } from 'react';
 import { Pencil } from 'lucide-react';
 
 import { Button } from '@/components/ui/Button';
@@ -30,58 +30,64 @@ export function UsersSettings() {
     [users, selectedId],
   );
 
-  async function fetchUsers(q: string, p: number, append = false) {
-    setLoading(true);
-    try {
-      const params = new URLSearchParams();
-      if (q) params.append('search', q);
-      params.append('limit', LIMIT.toString());
-      params.append('offset', (p * LIMIT).toString());
+  const fetchUsers = useCallback(
+    async (q: string, p: number, append = false) => {
+      setLoading(true);
+      try {
+        const params = new URLSearchParams();
+        if (q) params.append('search', q);
+        params.append('limit', LIMIT.toString());
+        params.append('offset', (p * LIMIT).toString());
 
-      const res = await fetch(`/api/users?${params.toString()}`);
-      const body = await res.json().catch(() => []);
+        const res = await fetch(`/api/users?${params.toString()}`);
+        const body = await res.json().catch(() => []);
 
-      const newUsers = Array.isArray(body) ? body : [];
+        const newUsers = Array.isArray(body) ? body : [];
 
-      setHasMore(newUsers.length === LIMIT);
+        setHasMore(newUsers.length === LIMIT);
 
-      if (append) {
-        setUsers((prev) => {
-          const safePrev = Array.isArray(prev) ? prev : [];
-          const existingIds = new Set(safePrev.map((item) => item.id));
-          return [
-            ...safePrev,
-            ...newUsers.filter((item: UserDto) => !existingIds.has(item.id)),
-          ];
-        });
-      } else {
-        setUsers(newUsers);
+        if (append) {
+          setUsers((prev) => {
+            const safePrev = Array.isArray(prev) ? prev : [];
+            const existingIds = new Set(safePrev.map((item) => item.id));
+            return [
+              ...safePrev,
+              ...newUsers.filter((item: UserDto) => !existingIds.has(item.id)),
+            ];
+          });
+        } else {
+          setUsers(newUsers);
+        }
+      } catch (err) {
+        console.error(err);
+        if (!append) setUsers([]);
+      } finally {
+        setLoading(false);
       }
-    } catch (err) {
-      console.error(err);
-      if (!append) setUsers([]);
-    } finally {
-      setLoading(false);
-    }
-  }
+    },
+    [LIMIT],
+  );
 
-  async function refresh() {
+  const refresh = useCallback(async () => {
     setPage(0);
     await fetchUsers(search, 0, false);
-  }
+  }, [fetchUsers, search]);
 
   useEffect(() => {
-    void refresh();
+    void fetchUsers('', 0, false);
+    // run only on mount
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   // Debounced search
   useEffect(() => {
     setPage(0);
-    const t = window.setTimeout(() => void fetchUsers(search, 0, false), 500);
-    return () => window.clearTimeout(t);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [search]);
+    const timer = window.setTimeout(
+      () => void fetchUsers(search, 0, false),
+      500,
+    );
+    return () => window.clearTimeout(timer);
+  }, [search, fetchUsers]);
 
   const loadMore = () => {
     if (loading || !hasMore) return;
@@ -131,8 +137,8 @@ export function UsersSettings() {
                         key={u.id}
                         className={
                           u.id === selectedId
-                            ? 'border-b border-zinc-100 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-900 dark:bg-zinc-100'
-                            : 'border-b border-zinc-100 dark:border-zinc-800 hover:bg-zinc-50 dark:hover:bg-zinc-900 dark:bg-zinc-100 dark:bg-zinc-900 dark:bg-zinc-100'
+                            ? 'border-b border-zinc-100 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-900'
+                            : 'border-b border-zinc-100 dark:border-zinc-800 hover:bg-zinc-50 dark:hover:bg-zinc-900'
                         }
                       >
                         <td className="py-2">
@@ -153,7 +159,7 @@ export function UsersSettings() {
                           <Button
                             variant="ghost"
                             size="sm"
-                            className="h-8 px-2 text-zinc-500 dark:text-zinc-400 hover:text-zinc-900 dark:text-zinc-50"
+                            className="h-8 px-2 text-zinc-500 hover:text-zinc-900 dark:text-zinc-50"
                             onClick={() => {
                               setSelectedId(u.id);
                               setMode('edit');

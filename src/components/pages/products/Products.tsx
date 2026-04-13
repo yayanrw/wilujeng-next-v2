@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 
 import { Plus, Pencil, Search, ToggleRight, ToggleLeft } from 'lucide-react';
 
@@ -29,7 +29,7 @@ export function Products() {
   const [categoryId, setCategoryId] = useState('all');
   const [brandId, setBrandId] = useState('all');
   const [categories, setCategories] = useState<{ id: string; name: string }[]>(
-    []
+    [],
   );
   const [brands, setBrands] = useState<{ id: string; name: string }[]>([]);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
@@ -41,7 +41,7 @@ export function Products() {
   const selected = useMemo(
     () =>
       selectedId ? (products.find((p) => p.id === selectedId) ?? null) : null,
-    [products, selectedId]
+    [products, selectedId],
   );
 
   useEffect(() => {
@@ -65,7 +65,7 @@ export function Products() {
     cat: string,
     brnd: string,
     p: number,
-    append = false
+    append = false,
   ) {
     setLoading(true);
     try {
@@ -98,24 +98,22 @@ export function Products() {
     }
   }
 
-  async function refresh() {
+  const refresh = useCallback(async () => {
     setPage(0);
     await fetchProducts(search, categoryId, brandId, 0, false);
-  }
+  }, [search, categoryId, brandId]);
 
   useEffect(() => {
     void refresh();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [refresh]);
 
   useEffect(() => {
     setPage(0);
     const t = window.setTimeout(
       () => void fetchProducts(search, categoryId, brandId, 0, false),
-      500 // Increased debounce to 500ms
+      500, // Increased debounce to 500ms
     );
     return () => window.clearTimeout(t);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [search, categoryId, brandId]);
 
   const loadMore = () => {
@@ -138,7 +136,7 @@ export function Products() {
       if (ok) {
         // Optimistically update local state so the toggle changes immediately
         setProducts((prev) =>
-          prev.map((p) => (p.id === id ? { ...p, isActive: !p.isActive } : p))
+          prev.map((p) => (p.id === id ? { ...p, isActive: !p.isActive } : p)),
         );
         showToast(t.products.updatedSuccess);
       } else {
@@ -204,7 +202,7 @@ export function Products() {
             </div>
             <div className="flex gap-3 w-full sm:w-auto">
               <select
-                className="flex h-10 w-full sm:w-[180px] items-center justify-between rounded-md border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-950 px-3 py-2 text-sm ring-offset-white placeholder:text-zinc-500 dark:text-zinc-400 focus:outline-none focus:ring-2 focus:ring-zinc-950 focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                className="flex h-10 w-full sm:w-45 items-center justify-between rounded-md border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-950 px-3 py-2 text-sm ring-offset-white placeholder:text-zinc-500 dark:text-zinc-400 focus:outline-none focus:ring-2 focus:ring-zinc-950 focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
                 value={categoryId}
                 onChange={(e) => setCategoryId(e.target.value)}
               >
@@ -216,7 +214,7 @@ export function Products() {
                 ))}
               </select>
               <select
-                className="flex h-10 w-full sm:w-[180px] items-center justify-between rounded-md border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-950 px-3 py-2 text-sm ring-offset-white placeholder:text-zinc-500 dark:text-zinc-400 focus:outline-none focus:ring-2 focus:ring-zinc-950 focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                className="flex h-10 w-full sm:w-45 items-center justify-between rounded-md border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-950 px-3 py-2 text-sm ring-offset-white placeholder:text-zinc-500 dark:text-zinc-400 focus:outline-none focus:ring-2 focus:ring-zinc-950 focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
                 value={brandId}
                 onChange={(e) => setBrandId(e.target.value)}
               >
@@ -453,4 +451,46 @@ export function Products() {
             mode={mode}
             initial={mode === 'edit' ? (selected ?? undefined) : undefined}
             onSaved={async (success, errorMsg) => {
-              if
+              if (success) {
+                await refresh();
+                if (mode === 'create') {
+                  setMode('create');
+                }
+                showToast(
+                  mode === 'create'
+                    ? t.products.createdSuccess
+                    : t.products.updatedSuccess,
+                );
+              } else {
+                showToast(errorMsg || t.products.saveFailed);
+              }
+            }}
+          />
+        </CardContent>
+      </Card>
+      <ImportProductModal
+        open={isImportModalOpen}
+        onClose={() => setIsImportModalOpen(false)}
+        onSuccess={(msg) => {
+          showToast(msg);
+          setIsImportModalOpen(false);
+          refresh();
+        }}
+      />
+      <ConfirmDialog
+        open={isDeleteDialogOpen}
+        title={t.products.deleteConfirmTitle}
+        description={t.products.deleteConfirmDesc}
+        confirmText={t.common.delete}
+        cancelText={t.common.cancel}
+        onClose={() => {
+          setIsDeleteDialogOpen(false);
+          setDeletingId(null);
+        }}
+        onConfirm={confirmDelete}
+        loading={deleting}
+      />
+      <Toast />
+    </div>
+  );
+}
