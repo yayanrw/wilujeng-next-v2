@@ -20,7 +20,7 @@ export async function GET(req: Request) {
   const offset = isNaN(offsetParam) || offsetParam < 0 ? 0 : offsetParam;
 
   const where = search
-    ? or(ilike(customers.name, `%${search}%`), ilike(customers.phone, `%${search}%`))
+    ? ilike(customers.name, `%${search}%`)
     : undefined;
 
   let orderByColumn;

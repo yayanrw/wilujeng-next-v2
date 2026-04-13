@@ -1,11 +1,22 @@
-import { desc, eq } from "drizzle-orm";
-import { z } from "zod";
+import { desc, eq } from 'drizzle-orm';
+import { z } from 'zod';
 
-import { db } from "@/db";
-import { customers, transactions } from "@/db/schema";
-import { badRequest, json, notFound, readJson, requireApiSession } from "@/server/api-helpers";
+import { db } from '@/db';
+import { customers, transactions } from '@/db/schema';
+import {
+  badRequest,
+  json,
+  notFound,
+  readJson,
+  requireApiSession,
+  requireApiRole,
+} from '@/server/api-helpers';
+import { invalidateCachePattern } from '@/lib/redis';
 
-export async function GET(req: Request, ctx: { params: Promise<{ id: string }> }) {
+export async function GET(
+  req: Request,
+  ctx: { params: Promise<{ id: string }> }
+) {
   const { response } = await requireApiSession(req);
   if (response) return response;
   const { id } = await ctx.params;
@@ -13,7 +24,7 @@ export async function GET(req: Request, ctx: { params: Promise<{ id: string }> }
   const customer = await db.query.customers.findFirst({
     where: (t, { eq: eq2 }) => eq2(t.id, id),
   });
-  if (!customer) return notFound("Customer not found");
+  if (!customer) return notFound('Customer not found');
 
   const txs = await db
     .select({
@@ -39,13 +50,16 @@ const UpdateSchema = z.object({
   totalDebt: z.number().int().min(0).optional(),
 });
 
-export async function PATCH(req: Request, ctx: { params: Promise<{ id: string }> }) {
+export async function PATCH(
+  req: Request,
+  ctx: { params: Promise<{ id: string }> }
+) {
   const { response } = await requireApiSession(req);
   if (response) return response;
   const { id } = await ctx.params;
 
   const { data, error } = await readJson<unknown>(req);
-  if (error || !data) return badRequest("Invalid JSON");
+  if (error || !data) return badRequest('Invalid JSON');
   const parsed = UpdateSchema.safeParse(data);
   if (!parsed.success) return badRequest(parsed.error.message);
 
@@ -55,7 +69,31 @@ export async function PATCH(req: Request, ctx: { params: Promise<{ id: string }>
     .where(eq(customers.id, id))
     .returning();
 
-  if (!row) return notFound("Customer not found");
+  if (!row) return notFound('Customer not found');
   return json(row);
 }
 
+export async function DELETE(
+  req: Request,
+  ctx: { params: Promise<{ id: string }> }
+) {
+  const { response } = await requireApiRole(req, 'admin');
+  if (response) return response;
+  const { id } = await ctx.params;
+
+  const existing = await db.query.customers.findFirst({
+    where: (t, { eq: eq2 }) => eq2(t.id, id),
+  });
+  if (!existing) return notFound('Customer not found');
+
+  // Soft-delete: mark isDeleted = true and also deactivate the customer
+  await db
+    .update(customers)
+    .set({ isDeleted: true, isActive: false })
+    .where(eq(customers.id, id));
+
+  // Invalidate customer listing caches so UI updates quickly
+  await invalidateCachePattern('customers:list:*');
+
+  return json({ deleted: true, id });
+}

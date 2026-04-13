@@ -165,6 +165,10 @@
     "brand": "Merek",
     "price": "Harga",
     "stock": "Stok",
+    "active": "Aktif",
+    "notActive": "Non Aktif",
+    "deactivate": "Non Aktifkan",
+    "activate": "Aktifkan",
     "action": "Aksi",
     "loading": "Memuat produk...",
     "noProducts": "Produk tidak ditemukan.",
@@ -196,7 +200,11 @@
     "uploading": "Mengunggah...",
     "importSuccess": "Impor berhasil",
     "importFailed": "Impor gagal",
-    "selectExcelFile": "Pilih file Excel (.xlsx) untuk mengimpor produk."
+    "selectExcelFile": "Pilih file Excel (.xlsx) untuk mengimpor produk.",
+    "deleteConfirmTitle": "Hapus produk",
+    "deleteConfirmDesc": "Anda yakin ingin menghapus produk ini? Aksi ini tidak dapat dibatalkan.",
+    "deletedSuccess": "Produk berhasil dihapus",
+    "deleteFailed": "Gagal menghapus produk"
   },
   "stock": {
     "title": "Manajemen Stok",
@@ -292,7 +300,11 @@
     "paid": "Dibayar",
     "initialDebt": "Hutang Awal",
     "initialDebtDesc": "Isi bidang ini jika pelanggan memiliki hutang sebelum menggunakan sistem ini.",
-    "paymentNotePlaceholder": "Catatan pembayaran (opsional)"
+    "paymentNotePlaceholder": "Catatan pembayaran (opsional)",
+    "deleteConfirmTitle": "Hapus pelanggan",
+    "deleteConfirmDesc": "Apakah Anda yakin ingin menghapus pelanggan ini? Tindakan ini akan menonaktifkan dan menyembunyikan pelanggan dari daftar.",
+    "deletedSuccess": "Pelanggan dihapus",
+    "deleteFailed": "Gagal menghapus pelanggan"
   },
   "reports": {
     "title": "Laporan",

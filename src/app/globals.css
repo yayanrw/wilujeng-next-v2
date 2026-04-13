@@ -49,19 +49,6 @@ body {
   pointer-events: none;
 }
 
-#nprogress .bar {
-  background: #fbbf24 !important;
-  position: fixed;
-  z-index: 999999 !important;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 5px !important;
-  box-shadow:
-    0 0 15px #fbbf24,
-    0 0 8px #fbbf24 !important;
-}
-
 #nprogress .spinner {
   display: block;
   position: fixed;

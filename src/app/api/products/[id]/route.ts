@@ -29,6 +29,7 @@ const UpdateSchema = z.object({
   stock: z.number().int().min(0).optional(),
   minStockThreshold: z.number().int().min(0).optional(),
   tiers: z.array(TierSchema).optional(),
+  isActive: z.boolean().optional(),
 });
 
 async function ensureCategoryId(input: {
@@ -71,7 +72,7 @@ async function ensureBrandId(input: {
 
 export async function PATCH(
   req: Request,
-  ctx: { params: Promise<{ id: string }> },
+  ctx: { params: Promise<{ id: string }> }
 ) {
   const { response } = await requireApiRole(req, 'admin');
   if (response) return response;
@@ -113,6 +114,9 @@ export async function PATCH(
         ...('minStockThreshold' in parsed.data
           ? { minStockThreshold: parsed.data.minStockThreshold }
           : {}),
+        ...('isActive' in parsed.data
+          ? { isActive: parsed.data.isActive }
+          : {}),
         ...(categoryId !== undefined ? { categoryId } : {}),
         ...(brandId !== undefined ? { brandId } : {}),
         updatedAt: new Date(),
@@ -127,7 +131,7 @@ export async function PATCH(
             productId: id,
             minQty: t.minQty,
             price: t.price,
-          })),
+          }))
         );
       }
     }
@@ -143,4 +147,31 @@ export async function PATCH(
   await invalidateCachePattern('brands:list:*');
 
   return json({ updated: true });
+}
+
+export async function DELETE(
+  req: Request,
+  ctx: { params: Promise<{ id: string }> }
+) {
+  const { response } = await requireApiRole(req, 'admin');
+  if (response) return response;
+  const { id } = await ctx.params;
+
+  const existing = await db.query.products.findFirst({
+    where: eq(products.id, id),
+  });
+  if (!existing) return notFound('Product not found');
+
+  // Soft-delete: mark isDeleted = true and also deactivate the product
+  await db
+    .update(products)
+    .set({ isDeleted: true, isActive: false })
+    .where(eq(products.id, id));
+
+  // Invalidate product catalog cache patterns and POS caches so listings update quickly
+  await invalidateCachePattern('products:catalog:*');
+  await invalidateCache('pos:catalog:all');
+  await invalidateCache('pos:stocks:all');
+
+  return json({ deleted: true, id });
 }

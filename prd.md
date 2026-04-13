@@ -333,7 +333,8 @@ Catatan: Implementasi RBAC di level API Route Handlers dan server components; si
   - id UUID PK, sku TEXT UNIQUE NOT NULL, name TEXT NOT NULL, category_id UUID FK→categories(id), brand_id UUID FK→brands(id),
     base_price INT NOT NULL CHECK(base_price>=0), buy_price INT NOT NULL CHECK(buy_price>=0),
     stock INT NOT NULL CHECK(stock>=0), min_stock_threshold INT NOT NULL DEFAULT 0 CHECK(min_stock_threshold>=0),
-    created_at TIMESTAMPTZ default now(), updated_at TIMESTAMPTZ default now()
+    created_at TIMESTAMPTZ default now(), updated_at TIMESTAMPTZ default now(),
+    is_active BOOLEAN NOT NULL DEFAULT true, is_deleted BOOLEAN NOT NULL DEFAULT false
 - product_tiers
   - id UUID PK, product_id UUID FK→products(id) ON DELETE CASCADE, min_qty INT NOT NULL CHECK(min_qty>0),
     price INT NOT NULL CHECK(price>0), UNIQUE(product_id, min_qty)
@@ -477,3 +478,55 @@ Catatan: Implementasi RBAC di level API Route Handlers dan server components; si
 - Pajak (include/exclude), diskon per item/transaksi, varian produk.
 - Analitik tingkat lanjut & Laporan detail mengenai performa hutang/piutang secara holistik.
 - Multi-cabang, gudang, transfer stok antar cabang.
+
+---
+
+# Perubahan Terkait Status Aktif/Dihapus Produk (BARU)
+
+- Database (produk)
+  - Menambahkan dua kolom baru:
+    - is_active: boolean NOT NULL DEFAULT true — produk dapat diaktifkan/dinonaktifkan tanpa dihapus.
+    - is_deleted: boolean NOT NULL DEFAULT false — tanda hapus lunak untuk produk (tidak menghapus baris secara fisik).
+  - Migrasi: tambahkan kolom is_active dan is_deleted dan isi kembali sesuai kebutuhan (produk yang ada: is_active=true, is_deleted=false).
+
+- Inventaris & Produk (UI/UX)
+  - Daftar produk sekarang menampilkan lencana status "Aktif" per baris dan tombol toggle untuk mengaktifkan/meminimalkan produk.
+  - Produk yang dinonaktifkan tetap ada di database (is_deleted=false) dan dapat diaktifkan kembali melalui toggle.
+  - Produk yang dihapus secara lunak mengatur is_deleted=true dan dikecualikan dari daftar/carian normal secara default.
+  - Mengubah status aktif:
+    - Memerlukan izin admin di API (RBAC ditegakkan di sisi server).
+    - UI melakukan pembaruan optimis: toggle langsung tercermin, menampilkan toast saat sukses/gagal.
+    - Jika API gagal, UI membatalkan dan menampilkan toast kesalahan.
+
+- Perubahan API
+  - Endpoint baru:
+    - PATCH /api/products/:id/status
+      - Tujuan: mengubah is_active produk.
+      - Otorisasi: hanya admin.
+      - Respons: 200 { updated: true, id } saat sukses.
+      - Kesalahan: 404 saat produk tidak ditemukan; 401/403 jika tidak diizinkan.
+    - PATCH produk yang ada tetap ada untuk pembaruan parsial; endpoint status adalah rute kenyamanan untuk mengubah hanya itu.
+  - Endpoint baru:
+    - DELETE /api/products/:id
+      - Tujuan: menghapus produk.
+      - Otorisasi: hanya admin.
+      - Respons: 200 { deleted: true } saat sukses.
+      - Kesalahan: 404 saat produk tidak ditemukan; 401/403 jika tidak diizinkan.
+      - Catatan: implementasi saat ini melakukan penghapusan fisik baris. Jika dibutuhkan pemulihan/audit, pertimbangkan mengubah endpoint menjadi soft-delete (set is_deleted=true) atau menambah endpoint restore.
+  - Invalidasi cache: sama seperti endpoint update/status — invalidate katalog produk dan cache stok (mis. pos:catalog:all, pos:stocks:all).
+
+* UI: Penghapusan Produk
+* - Di daftar produk, tambahkan tombol hapus (di samping tombol edit).
+* - Ketika pengguna mengklik hapus:
+* - Tampilkan dialog konfirmasi (judul + deskripsi) — teks i18n tersedia di en.json/id.json.
+* - Tombol konfirmasi memanggil DELETE /api/products/:id (admin-only).
+* - Setelah sukses: hapus baris dari daftar di UI (optimistik setelah respons sukses) dan tampilkan toast sukses.
+* - Jika gagal: tampilkan toast error.
+* - Hanya admin dapat melihat/menjalankan aksi delete (RBAC at API + UI hint).
+
+- Customer management
+  - Soft-delete support:
+    - Database: customers now include is_active (default true) and is_deleted (default false).
+    - API: new endpoint DELETE /api/customers/:id performing soft-delete (sets is_deleted=true and is_active=false). Admin-only.
+    - UI: Customers list includes a Delete action (next to Edit). Clicking Delete opens a confirmation dialog (i18n texts available). After successful deletion the customer row is removed from the list and a success toast is shown. Listing endpoints exclude is_deleted=true by default.
+    - Cache: invalidate customers listing patterns (e.g. customers:list:\*) when a customer is soft-deleted so UI updates quickly.

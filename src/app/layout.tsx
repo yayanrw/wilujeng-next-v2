@@ -44,7 +44,7 @@ export default function RootLayout({
             showSpinner={false} // Re-enable spinner to help verify it's working
             easing="ease"
             speed={200}
-            shadow="0 0 15px #fbbf24,0 0 8px #fbbf24"
+            shadow="0 0 15px #fbbf24,0 0 1px #fbbf24"
             zIndex={100000}
           />
           {children}

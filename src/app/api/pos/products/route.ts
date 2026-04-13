@@ -1,4 +1,4 @@
-import { asc, inArray } from 'drizzle-orm';
+import { and, asc, eq, inArray } from 'drizzle-orm';
 
 import { db } from '@/db';
 import { productTiers, products } from '@/db/schema';
@@ -29,6 +29,7 @@ export async function GET(req: Request) {
       categoryId: products.categoryId,
     })
     .from(products)
+    .where(and(eq(products.isDeleted, false), eq(products.isActive, true)))
     .orderBy(asc(products.name));
 
   const ids = rows.map((r) => r.id);
