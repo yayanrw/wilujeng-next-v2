@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import { ModalFrame } from '@/components/ui/ModalFrame';
 import { formatIdr } from '@/utils/money';
 import { useTranslation } from '@/i18n/useTranslation';
 
@@ -53,24 +54,17 @@ export function SalesDetailModal({
   }, [transactionId]);
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
-      <div className="w-full max-w-2xl rounded-lg bg-white dark:bg-zinc-950 p-6 shadow-xl max-h-[90vh] overflow-y-auto">
-        <div className="flex items-center justify-between mb-4">
-          <h2 className="text-xl font-semibold">{t.reports.salesDetails}</h2>
-          <button
-            onClick={onClose}
-            className="text-zinc-500 dark:text-zinc-400 hover:text-zinc-900 dark:text-zinc-50"
-          >
-            {t.common.cancel}
-          </button>
+    <ModalFrame
+      title={t.reports.salesDetails}
+      onClose={onClose}
+      maxWidth="2xl"
+    >
+      {loading ? (
+        <div className="py-8 text-center text-zinc-500 dark:text-zinc-400">
+          {t.common.loading}
         </div>
-
-        {loading ? (
-          <div className="py-8 text-center text-zinc-500 dark:text-zinc-400">
-            {t.common.loading}
-          </div>
-        ) : detail ? (
-          <div className="space-y-6">
+      ) : detail ? (
+        <div className="space-y-6 max-h-[60vh] overflow-y-auto custom-scrollbar">
             <div className="grid grid-cols-2 gap-4 text-sm">
               <div>
                 <span className="block text-zinc-500 dark:text-zinc-400">
@@ -172,7 +166,6 @@ export function SalesDetailModal({
             {t.reports.failedToLoadTransaction}
           </div>
         )}
-      </div>
-    </div>
+    </ModalFrame>
   );
 }

@@ -276,7 +276,13 @@
     "previous": "Previous",
     "newBalance": "New Balance",
     "supplierId": "Supplier ID",
-    "noNote": "No note provided"
+    "noNote": "No note provided",
+    "outType": "Out Type",
+    "outTypeDamaged": "Damaged / Lost (Out)",
+    "outTypeReturn": "Customer Return (Return)",
+    "originTransaction": "Origin Transaction (Required for Return)",
+    "returnReason": "Return Reason",
+    "returnReasonPlaceholder": "Example: Defective item, Wrong purchase..."
   },
   "customers": {
     "title": "Customers",

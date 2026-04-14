@@ -1,4 +1,5 @@
 @AGENTS.md
+@DESIGN_SYSTEM.md
 
 ## Context Navigation
 

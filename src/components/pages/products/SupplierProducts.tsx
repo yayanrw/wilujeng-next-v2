@@ -6,8 +6,11 @@ import { useTranslation } from '@/i18n/useTranslation';
 import { ConfirmDialog } from '@/components/ui/ConfirmDialog';
 import { useToast } from '@/hooks/useToast';
 import { Card, CardContent, CardHeader } from '@/components/ui/Card';
-import { Input } from '@/components/ui/Input';
+import { SearchInput } from '@/components/ui/SearchInput';
 import { Button } from '@/components/ui/Button';
+import { TableLoading } from '@/components/ui/TableLoading';
+import { TableEmpty } from '@/components/ui/TableEmpty';
+import { LoadMoreButton } from '@/components/ui/LoadMoreButton';
 
 export function SupplierProducts() {
   const { t } = useTranslation();
@@ -105,7 +108,7 @@ export function SupplierProducts() {
           {tp.suppliersTitle ?? 'Suppliers'}
         </div>
         <div className="mt-3">
-          <Input
+          <SearchInput
             placeholder={t.common?.search}
             value={search}
             onChange={(e) => setSearch(e.target.value)}
@@ -114,58 +117,56 @@ export function SupplierProducts() {
       </CardHeader>
 
       <CardContent>
-        {loading && items.length === 0 ? (
-          <div className="flex items-center justify-center p-12">
-            <div className="flex flex-col items-center gap-3">
-              <div className="h-6 w-6 animate-spin rounded-full border-2 border-zinc-200 border-t-zinc-900 dark:border-zinc-800 dark:border-t-zinc-100" />
-              <div className="text-sm font-medium text-zinc-500 dark:text-zinc-400">
-                {t.common.loading}
-              </div>
-            </div>
-          </div>
-        ) : (
-          <div className="overflow-x-auto">
-            {display.length === 0 ? (
-              <div className="text-sm text-zinc-500">{t.common.noData}</div>
-            ) : (
-              <table className="w-full text-sm">
-                <thead>
-                  <tr className="border-b border-zinc-200 dark:border-zinc-800 text-left text-zinc-500 dark:text-zinc-400">
-                    <th className="py-2">{tp.supplierName ?? t.common.name}</th>
-                    <th className="py-2 text-right">{t.common.action}</th>
+        <div className="overflow-x-auto">
+          <table className="w-full text-sm">
+            <thead className="border-y border-zinc-200 bg-zinc-50/50 dark:border-zinc-800 dark:bg-zinc-900/50">
+              <tr>
+                <th className="py-3 px-4 text-left font-medium text-zinc-900 dark:text-zinc-100">
+                  {tp.supplierName ?? t.common.name}
+                </th>
+                <th className="py-3 px-4 text-right font-medium text-zinc-900 dark:text-zinc-100">
+                  {t.common.action}
+                </th>
+              </tr>
+            </thead>
+            <tbody>
+              {loading && items.length === 0 ? (
+                <TableLoading colSpan={2} message={t.common.loading} />
+              ) : display.length === 0 ? (
+                <TableEmpty colSpan={2} message={t.common.noData} />
+              ) : (
+                display.map((c) => (
+                  <tr
+                    key={c.id}
+                    className="border-b border-zinc-200 hover:bg-zinc-50/50 dark:border-zinc-800 dark:hover:bg-zinc-900/50"
+                  >
+                    <td className="py-3 px-4 align-middle text-zinc-900 dark:text-zinc-100">
+                      {c.name}
+                    </td>
+                    <td className="py-3 px-4 text-right">
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="h-8 w-8 p-0 text-red-500 hover:text-red-600 dark:text-red-400 dark:hover:text-red-300 transition-colors"
+                        onClick={() => openDelete(c.id)}
+                        title={t.common.delete}
+                      >
+                        <Trash className="h-4 w-4" />
+                        <span className="sr-only">{t.common.delete}</span>
+                      </Button>
+                    </td>
                   </tr>
-                </thead>
-                <tbody className="divide-y divide-zinc-100 dark:divide-zinc-800">
-                  {display.map((c) => (
-                    <tr key={c.id}>
-                      <td className="py-3 px-4 align-middle">{c.name}</td>
-                      <td className="py-3 px-4 text-right">
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          className="h-8 w-8 p-0 text-red-500 hover:text-red-600"
-                          onClick={() => openDelete(c.id)}
-                          title={t.common.delete}
-                        >
-                          <Trash className="h-4 w-4" />
-                          <span className="sr-only">{t.common.delete}</span>
-                        </Button>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            )}
-          </div>
-        )}
+                ))
+              )}
+            </tbody>
+          </table>
+        </div>
 
-        {hasMore && (
-          <div className="mt-4 flex justify-center">
-            <Button variant="ghost" onClick={loadMore} disabled={false}>
-              {t.settings?.loadMore ?? 'Load more'}
-            </Button>
-          </div>
-        )}
+        <LoadMoreButton
+          onClick={loadMore}
+          hasMore={hasMore}
+          label={t.settings?.loadMore ?? 'Load more'}
+        />
       </CardContent>
 
       <ConfirmDialog
