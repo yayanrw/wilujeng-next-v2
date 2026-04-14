@@ -279,7 +279,13 @@
     "previous": "Sebelumnya",
     "newBalance": "Saldo Baru",
     "supplierId": "ID Pemasok",
-    "noNote": "Tidak ada catatan"
+    "noNote": "Tidak ada catatan",
+    "outType": "Tipe Keluar",
+    "outTypeDamaged": "Rusak / Hilang (Out)",
+    "outTypeReturn": "Retur Pelanggan (Return)",
+    "originTransaction": "Transaksi Asal (Wajib untuk Retur)",
+    "returnReason": "Alasan Retur",
+    "returnReasonPlaceholder": "Contoh: Barang cacat, Salah beli..."
   },
   "customers": {
     "title": "Pelanggan",

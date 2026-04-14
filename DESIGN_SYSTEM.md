@@ -273,6 +273,65 @@ Horizontal filter control container with apply button.
 
 **Layout:** flex flex-wrap items-end gap-3
 
+## Internationalization (i18n)
+
+**CRITICAL RULE:** All user-facing text must be extracted to i18n files — **NO HARDCODED TEXT** in components.
+
+### What Must Be Internationalized
+- Label text: `<label>`, `<span>`, `<p>`, `<div>` content
+- Placeholder text: `placeholder` attributes
+- Button text and labels
+- Error/success messages
+- Tooltip content
+- Alt text for images
+- Title attributes
+
+### What to Avoid (❌ INCORRECT)
+```tsx
+// ❌ Hardcoded text
+<label>Tipe Keluar</label>
+<Input placeholder="Contoh: Barang cacat..." />
+<Button>Rusak / Hilang (Out)</Button>
+<span>Transaksi Asal (Wajib untuk Retur)</span>
+```
+
+### How to Do It (✅ CORRECT)
+```tsx
+// ✅ Use i18n keys
+import { useTranslation } from '@/i18n/useTranslation';
+
+export function MyComponent() {
+  const { t } = useTranslation();
+
+  return (
+    <>
+      <label>{t.stock.outType}</label>
+      <Input placeholder={t.stock.returnReasonPlaceholder} />
+      <Button>{t.stock.outTypeDamaged}</Button>
+      <span>{t.stock.originTransaction}</span>
+    </>
+  );
+}
+```
+
+### Adding New Translation Keys
+
+1. **Add to both `src/i18n/id.json` and `src/i18n/en.json`**
+2. Group by feature (e.g., under `"stock"`, `"products"`, etc.)
+3. Use descriptive key names reflecting the content
+4. Provide both Indonesian and English translations
+
+**Example:**
+```json
+{
+  "stock": {
+    "outType": "Tipe Keluar",
+    "outTypeDamaged": "Rusak / Hilang (Out)",
+    "returnReasonPlaceholder": "Contoh: Barang cacat, Salah beli..."
+  }
+}
+```
+
 ## Dark Mode
 
 All components include dark mode support via `dark:` prefix:
@@ -339,5 +398,7 @@ When implementing a new page or updating an existing one:
 - [ ] Use `LoadMoreButton` for infinite scroll
 - [ ] Use `ModalFrame` for overlay modals
 - [ ] Wrap modals in fixed-z-100 overlay with backdrop blur
+- [ ] **NO hardcoded text** — extract all labels, placeholders, and messages to i18n
+- [ ] Add missing translation keys to both `id.json` and `en.json`
 - [ ] Test dark mode toggle
 - [ ] Verify responsive behavior on mobile
