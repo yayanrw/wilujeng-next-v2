@@ -6,6 +6,8 @@ import { Eye, Printer } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
 import { Card, CardContent, CardHeader } from '@/components/ui/Card';
 import { Input } from '@/components/ui/Input';
+import { TabNav } from '@/components/ui/TabNav';
+import { PageHeader } from '@/components/ui/PageHeader';
 import { formatIdr } from '@/utils/money';
 
 import { SalesDetailModal } from './reports/SalesDetailModal';
@@ -98,33 +100,19 @@ export function ReportsClient() {
 
   return (
     <div className="flex flex-col gap-4">
-      <div className="space-y-1.5">
-        <div className="text-xl font-bold tracking-tight">
-          {t.reports.title}
-        </div>
-        <div className="text-sm text-zinc-500 dark:text-zinc-400">
-          {t.reports.subtitle}
-        </div>
-      </div>
+      <PageHeader
+        title={t.reports.title}
+        subtitle={t.reports.subtitle}
+      />
 
-      <div className="flex flex-wrap gap-2">
-        {(['sales', 'stock', 'receivables', 'pnl', 'suppliers'] as Tab[]).map(
-          (tTab) => (
-            <button
-              key={tTab}
-              type="button"
-              className={
-                tTab === tab
-                  ? 'rounded-full bg-zinc-900 px-4 py-2 text-sm text-white shadow-sm dark:bg-zinc-100 dark:text-zinc-900 capitalize'
-                  : 'rounded-full border border-zinc-200 bg-white px-4 py-2 text-sm transition-colors hover:bg-zinc-50 dark:border-zinc-800 dark:bg-zinc-950 dark:text-zinc-400 dark:hover:bg-zinc-900 capitalize'
-              }
-              onClick={() => setTab(tTab)}
-            >
-              {t.reports[tTab as keyof typeof t.reports]}
-            </button>
-          ),
-        )}
-      </div>
+      <TabNav
+        tabs={(['sales', 'stock', 'receivables', 'pnl', 'suppliers'] as Tab[]).map((tTab) => ({
+          value: tTab,
+          label: t.reports[tTab as keyof typeof t.reports],
+        }))}
+        value={tab}
+        onChange={(value) => setTab(value as Tab)}
+      />
 
       <Card>
         <CardHeader className="border-b border-zinc-100 dark:border-zinc-800 bg-zinc-50/50 dark:bg-zinc-900/50 pb-4">
@@ -232,8 +220,8 @@ export function ReportsClient() {
           ) : tab === 'sales' && Array.isArray(data) ? (
             <div className="overflow-x-auto">
               <table className="w-full text-sm">
-                <thead>
-                  <tr className="border-b border-zinc-200 bg-zinc-50/50 text-left text-zinc-500 dark:border-zinc-800 dark:bg-zinc-900/50 dark:text-zinc-400">
+                <thead className="border-y border-zinc-200 bg-zinc-50/50 dark:border-zinc-800 dark:bg-zinc-900/50">
+                  <tr>
                     <th className="px-4 py-3 font-medium">{t.reports.date}</th>
                     <th className="px-4 py-3 font-medium">{t.reports.id}</th>
                     <th className="px-4 py-3 font-medium">
@@ -329,8 +317,8 @@ export function ReportsClient() {
           {tab === 'stock' && Array.isArray(data) ? (
             <div className="overflow-x-auto">
               <table className="w-full text-sm">
-                <thead>
-                  <tr className="border-b border-zinc-200 bg-zinc-50/50 text-left text-zinc-500 dark:border-zinc-800 dark:bg-zinc-900/50 dark:text-zinc-400">
+                <thead className="border-y border-zinc-200 bg-zinc-50/50 dark:border-zinc-800 dark:bg-zinc-900/50">
+                  <tr>
                     <th className="px-4 py-3 font-medium">{t.products.sku}</th>
                     <th className="px-4 py-3 font-medium">{t.products.name}</th>
                     <th className="px-4 py-3 font-medium text-right">
@@ -369,8 +357,8 @@ export function ReportsClient() {
           {tab === 'receivables' && Array.isArray(data) ? (
             <div className="overflow-x-auto">
               <table className="w-full text-sm">
-                <thead>
-                  <tr className="border-b border-zinc-200 bg-zinc-50/50 text-left text-zinc-500 dark:border-zinc-800 dark:bg-zinc-900/50 dark:text-zinc-400">
+                <thead className="border-y border-zinc-200 bg-zinc-50/50 dark:border-zinc-800 dark:bg-zinc-900/50">
+                  <tr>
                     <th className="px-4 py-3 font-medium">
                       {t.dashboard.customer}
                     </th>
@@ -457,8 +445,8 @@ export function ReportsClient() {
           {tab === 'suppliers' && Array.isArray(data) ? (
             <div className="overflow-x-auto">
               <table className="w-full text-sm">
-                <thead>
-                  <tr className="border-b border-zinc-200 bg-zinc-50/50 text-left text-zinc-500 dark:border-zinc-800 dark:bg-zinc-900/50 dark:text-zinc-400">
+                <thead className="border-y border-zinc-200 bg-zinc-50/50 dark:border-zinc-800 dark:bg-zinc-900/50">
+                  <tr>
                     <th className="px-4 py-3 font-medium">
                       {t.dashboard.supplier}
                     </th>

@@ -6,6 +6,11 @@ import { Eye } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
 import { Card, CardContent, CardHeader } from '@/components/ui/Card';
 import { Input } from '@/components/ui/Input';
+import { TabNav } from '@/components/ui/TabNav';
+import { PageHeader } from '@/components/ui/PageHeader';
+import { TableLoading } from '@/components/ui/TableLoading';
+import { TableEmpty } from '@/components/ui/TableEmpty';
+import { LoadMoreButton } from '@/components/ui/LoadMoreButton';
 import { ProductPicker } from '@/components/shared/ProductPicker';
 import { SupplierPicker } from '@/components/shared/SupplierPicker';
 import { formatIdr } from '@/utils/money';
@@ -150,29 +155,19 @@ export function StockClient() {
 
   return (
     <div className="flex flex-col gap-4">
-      <div className="space-y-1.5">
-        <div className="text-xl font-bold tracking-tight">{t.stock.title}</div>
-        <div className="text-sm text-zinc-500 dark:text-zinc-400">
-          {t.stock.subtitle}
-        </div>
-      </div>
+      <PageHeader
+        title={t.stock.title}
+        subtitle={t.stock.subtitle}
+      />
 
-      <div className="flex flex-wrap gap-2">
-        {(['in', 'out', 'opname', 'logs'] as Tab[]).map((tTab) => (
-          <button
-            key={tTab}
-            type="button"
-            className={
-              tTab === tab
-                ? 'rounded-full bg-zinc-900 px-4 py-2 text-sm text-white dark:bg-zinc-100 dark:text-zinc-900 shadow-sm capitalize'
-                : 'rounded-full border border-zinc-200 bg-white px-4 py-2 text-sm hover:bg-zinc-50 dark:border-zinc-800 dark:bg-zinc-950 dark:text-zinc-400 dark:hover:bg-zinc-900 transition-colors capitalize'
-            }
-            onClick={() => setTab(tTab)}
-          >
-            {t.stock[tTab as keyof typeof t.stock]}
-          </button>
-        ))}
-      </div>
+      <TabNav
+        tabs={(['in', 'out', 'opname', 'logs'] as Tab[]).map((tTab) => ({
+          value: tTab,
+          label: t.stock[tTab as keyof typeof t.stock],
+        }))}
+        value={tab}
+        onChange={(value) => setTab(value as Tab)}
+      />
 
       {tab !== 'logs' ? (
         <Card className="max-w-3xl overflow-visible">
@@ -465,11 +460,16 @@ export function StockClient() {
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-zinc-100 dark:divide-zinc-800">
-                  {logs.map((l) => (
-                    <tr
-                      key={l.id}
-                      className="group hover:bg-zinc-50/50 dark:hover:bg-zinc-900/50 transition-colors"
-                    >
+                  {loadingLogs && logs.length === 0 ? (
+                    <TableLoading colSpan={7} message={t.stock.loadingLogs} />
+                  ) : logs.length === 0 ? (
+                    <TableEmpty colSpan={7} message={t.stock.noLogs} />
+                  ) : (
+                    logs.map((l) => (
+                      <tr
+                        key={l.id}
+                        className="group hover:bg-zinc-50/50 dark:hover:bg-zinc-900/50 transition-colors"
+                      >
                       <td className="py-3 px-4 align-middle">
                         <div className="font-semibold text-zinc-900 dark:text-zinc-100">
                           {l.productName ?? '-'}
@@ -549,44 +549,17 @@ export function StockClient() {
                         </Button>
                       </td>
                     </tr>
-                  ))}
-                  {loadingLogs && logs.length === 0 && (
-                    <tr>
-                      <td colSpan={7} className="py-12">
-                        <div className="flex flex-col items-center justify-center gap-3">
-                          <div className="h-6 w-6 animate-spin rounded-full border-2 border-zinc-200 border-t-zinc-900 dark:border-zinc-800 dark:border-t-zinc-100" />
-                          <div className="text-sm font-medium text-zinc-500 dark:text-zinc-400">
-                            {t.stock.loadingLogs}
-                          </div>
-                        </div>
-                      </td>
-                    </tr>
-                  )}
-                  {logs.length === 0 && !loadingLogs && (
-                    <tr>
-                      <td
-                        colSpan={7}
-                        className="py-8 text-center text-zinc-500 dark:text-zinc-400"
-                      >
-                        {t.stock.noLogs}
-                      </td>
-                    </tr>
+                    ))
                   )}
                 </tbody>
               </table>
             </div>
 
-            {hasMore && (
-              <div className="p-4 flex justify-center border-t border-zinc-100 dark:border-zinc-800">
-                <Button
-                  variant="secondary"
-                  onClick={loadMoreLogs}
-                  className="w-full max-w-xs"
-                >
-                  {t.stock.loadMore}
-                </Button>
-              </div>
-            )}
+            <LoadMoreButton
+              onClick={loadMoreLogs}
+              hasMore={hasMore}
+              label={t.stock.loadMore}
+            />
           </CardContent>
         </Card>
       )}

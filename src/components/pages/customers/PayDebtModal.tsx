@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { HandCoins } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
+import { ModalFrame } from '@/components/ui/ModalFrame';
 import { formatIdr } from '@/utils/money';
 import { useTranslation } from '@/i18n/useTranslation';
 
@@ -23,38 +24,14 @@ export function PayDebtModal({
   const { t } = useTranslation();
 
   return (
-    <div className="fixed inset-0 z-[200] grid place-items-center bg-black/60 p-4 backdrop-blur-sm">
-      <div className="w-full max-w-sm overflow-hidden rounded-2xl bg-white dark:bg-zinc-950 shadow-2xl animate-in fade-in zoom-in-95 duration-200">
-        <div className="flex items-center justify-between border-b border-zinc-100 bg-zinc-50 px-6 py-4 dark:border-zinc-800 dark:bg-zinc-900">
-          <div className="flex items-center gap-2">
-            <HandCoins className="h-5 w-5 text-zinc-600 dark:text-zinc-400" />
-            <h2 className="text-lg font-semibold text-zinc-900 dark:text-zinc-50">
-              {t.customers.payDebt}
-            </h2>
-          </div>
-          <button
-            type="button"
-            className="rounded-full p-2 text-zinc-400 transition-colors hover:bg-zinc-200 dark:hover:bg-zinc-700 dark:bg-zinc-800 hover:text-zinc-600 dark:text-zinc-400"
-            onClick={onClose}
-          >
-            <span className="sr-only">{t.common.cancel}</span>
-            <svg
-              className="h-4 w-4"
-              fill="none"
-              viewBox="0 0 24 24"
-              stroke="currentColor"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M6 18L18 6M6 6l12 12"
-              />
-            </svg>
-          </button>
-        </div>
-
-        <div className="p-6 space-y-4">
+    <ModalFrame
+      title={t.customers.payDebt}
+      icon={<HandCoins className="h-5 w-5" />}
+      onClose={onClose}
+      maxWidth="sm"
+      zIndex={200}
+    >
+      <div className="space-y-4">
           <div>
             <label className="text-xs font-semibold uppercase tracking-wider text-zinc-500 dark:text-zinc-400">
               {t.dashboard.customer}
@@ -123,9 +100,8 @@ export function PayDebtModal({
               placeholder={t.stock.optionalRemarks}
             />
           </div>
-        </div>
 
-        <div className="border-t border-zinc-100 bg-zinc-50 px-6 py-4 dark:border-zinc-800 dark:bg-zinc-900 flex justify-end gap-2">
+        <div className="border-t border-zinc-200 dark:border-zinc-800 mt-6 pt-4 flex justify-end gap-2">
           <Button variant="secondary" onClick={onClose} disabled={loading}>
             {t.common.cancel}
           </Button>
@@ -144,6 +120,6 @@ export function PayDebtModal({
           </Button>
         </div>
       </div>
-    </div>
+    </ModalFrame>
   );
 }

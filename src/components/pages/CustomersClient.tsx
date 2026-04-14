@@ -8,14 +8,18 @@ import {
   ArrowUp,
   ArrowDown,
   ArrowUpDown,
-  Search,
   HandCoins,
+  Trash,
 } from 'lucide-react';
 
 import { Badge } from '@/components/ui/Badge';
 import { Button } from '@/components/ui/Button';
 import { Card, CardContent, CardHeader } from '@/components/ui/Card';
-import { Input } from '@/components/ui/Input';
+import { SearchInput } from '@/components/ui/SearchInput';
+import { TableLoading } from '@/components/ui/TableLoading';
+import { TableEmpty } from '@/components/ui/TableEmpty';
+import { LoadMoreButton } from '@/components/ui/LoadMoreButton';
+import { PageHeader } from '@/components/ui/PageHeader';
 import { formatIdr } from '@/utils/money';
 import { useToast } from '@/hooks/useToast';
 import { CustomerForm, type CustomerDto } from './customers/CustomerForm';
@@ -209,77 +213,65 @@ export function CustomersClient() {
 
   return (
     <div className="flex flex-col gap-4">
-      <div className="space-y-1.5">
-        <div className="text-xl font-bold tracking-tight">
-          {t.customers.title}
-        </div>
-        <div className="text-sm text-zinc-500 dark:text-zinc-400">
-          {t.customers.subtitle}
-        </div>
-      </div>
+      <PageHeader
+        title={t.customers.title}
+        subtitle={t.customers.subtitle}
+      />
 
       <div className="grid grid-cols-1 gap-4 lg:grid-cols-[1fr_420px]">
         <Card className="h-fit">
-          <CardHeader className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between pb-6">
-            <div className="w-full sm:w-72 relative">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-zinc-500 dark:text-zinc-400" />
-              <Input
-                placeholder={t.customers.searchPlaceholder}
-                value={search}
-                onChange={(e) => setSearch(e.target.value)}
-                className="pl-9 w-full"
-              />
-            </div>
+          <CardHeader className="pb-6">
+            <SearchInput
+              placeholder={t.customers.searchPlaceholder}
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              wrapperClassName="w-full sm:w-72"
+            />
           </CardHeader>
           <CardContent className="p-0">
-            {loading && customers.length === 0 ? (
-              <div className="flex items-center justify-center p-12">
-                <div className="flex flex-col items-center gap-3">
-                  <div className="h-6 w-6 animate-spin rounded-full border-2 border-zinc-200 border-t-zinc-900 dark:border-zinc-800 dark:border-t-zinc-100" />
-                  <div className="text-sm font-medium text-zinc-500 dark:text-zinc-400">
-                    {t.customers.loading}
-                  </div>
-                </div>
-              </div>
-            ) : (
-              <div className="overflow-x-auto">
-                <table className="w-full text-sm">
-                  <thead>
-                    <tr className="border-y border-zinc-200 dark:border-zinc-800 bg-zinc-50/50 dark:bg-zinc-900/50 text-left text-zinc-500 dark:text-zinc-400">
-                      <th
-                        className="py-3 px-4 font-medium cursor-pointer hover:text-zinc-700 dark:hover:text-zinc-300 transition-colors"
-                        onClick={() => handleSort('name')}
-                      >
-                        <div className="flex items-center">
-                          {t.customers.customerDetails}
-                          <SortIcon column="name" />
-                        </div>
-                      </th>
-                      <th
-                        className="py-3 px-4 font-medium text-right cursor-pointer hover:text-zinc-700 dark:hover:text-zinc-300 transition-colors"
-                        onClick={() => handleSort('points')}
-                      >
-                        <div className="flex items-center justify-end">
-                          {t.customers.points}
-                          <SortIcon column="points" />
-                        </div>
-                      </th>
-                      <th
-                        className="py-3 px-4 font-medium text-right cursor-pointer hover:text-zinc-700 dark:hover:text-zinc-300 transition-colors"
-                        onClick={() => handleSort('totalDebt')}
-                      >
-                        <div className="flex items-center justify-end">
-                          {t.pos.outstandingDebt}
-                          <SortIcon column="totalDebt" />
-                        </div>
-                      </th>
-                      <th className="py-3 px-4 font-medium text-right">
-                        {t.common.action}
-                      </th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-zinc-100 dark:divide-zinc-800">
-                    {customers.map((c) => (
+            <div className="overflow-x-auto">
+              <table className="w-full text-sm">
+                <thead>
+                  <tr className="border-y border-zinc-200 dark:border-zinc-800 bg-zinc-50/50 dark:bg-zinc-900/50 text-left text-zinc-500 dark:text-zinc-400">
+                    <th
+                      className="py-3 px-4 font-medium cursor-pointer hover:text-zinc-700 dark:hover:text-zinc-300 transition-colors"
+                      onClick={() => handleSort('name')}
+                    >
+                      <div className="flex items-center">
+                        {t.customers.customerDetails}
+                        <SortIcon column="name" />
+                      </div>
+                    </th>
+                    <th
+                      className="py-3 px-4 font-medium text-right cursor-pointer hover:text-zinc-700 dark:hover:text-zinc-300 transition-colors"
+                      onClick={() => handleSort('points')}
+                    >
+                      <div className="flex items-center justify-end">
+                        {t.customers.points}
+                        <SortIcon column="points" />
+                      </div>
+                    </th>
+                    <th
+                      className="py-3 px-4 font-medium text-right cursor-pointer hover:text-zinc-700 dark:hover:text-zinc-300 transition-colors"
+                      onClick={() => handleSort('totalDebt')}
+                    >
+                      <div className="flex items-center justify-end">
+                        {t.pos.outstandingDebt}
+                        <SortIcon column="totalDebt" />
+                      </div>
+                    </th>
+                    <th className="py-3 px-4 font-medium text-right">
+                      {t.common.action}
+                    </th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-zinc-100 dark:divide-zinc-800">
+                  {loading && customers.length === 0 ? (
+                    <TableLoading colSpan={4} message={t.customers.loading} />
+                  ) : customers.length === 0 ? (
+                    <TableEmpty colSpan={4} message={t.customers.noCustomers} />
+                  ) : (
+                    customers.map((c) => (
                       <tr
                         key={c.id}
                         className={`group transition-colors ${
@@ -363,52 +355,27 @@ export function CustomersClient() {
                             <Button
                               variant="ghost"
                               size="sm"
-                              className="h-8 w-8 p-0 text-red-500 hover:text-red-600 transition-colors"
+                              className="h-8 w-8 p-0 text-red-500 hover:text-red-600 dark:text-red-400 dark:hover:text-red-300 transition-colors"
                               onClick={() => openDeleteDialog(c.id)}
                               title={t.common.delete}
                             >
+                              <Trash className="h-4 w-4" />
                               <span className="sr-only">{t.common.delete}</span>
-                              <svg
-                                className="h-4 w-4"
-                                viewBox="0 0 24 24"
-                                fill="none"
-                                stroke="currentColor"
-                              >
-                                <path
-                                  strokeWidth="2"
-                                  strokeLinecap="round"
-                                  strokeLinejoin="round"
-                                  d="M6 18L18 6M6 6l12 12"
-                                />
-                              </svg>
                             </Button>
                           </div>
                         </td>
                       </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            )}
+                    ))
+                  )}
+                </tbody>
+              </table>
+            </div>
 
-            {!loading && customers.length === 0 ? (
-              <div className="mt-3 text-sm text-zinc-500 dark:text-zinc-400 text-center py-8">
-                {t.customers.noCustomers}
-              </div>
-            ) : null}
-
-            {hasMore && customers.length > 0 && !loading && (
-              <div className="p-4 flex justify-center border-t border-zinc-100 dark:border-zinc-800">
-                <Button
-                  variant="secondary"
-                  onClick={loadMore}
-                  disabled={loading}
-                  className="w-full max-w-xs"
-                >
-                  {t.customers.loadMore}
-                </Button>
-              </div>
-            )}
+            <LoadMoreButton
+              onClick={loadMore}
+              hasMore={hasMore && customers.length > 0}
+              label={t.customers.loadMore}
+            />
           </CardContent>
         </Card>
 

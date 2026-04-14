@@ -5,7 +5,10 @@ import { Pencil } from 'lucide-react';
 
 import { Button } from '@/components/ui/Button';
 import { Card, CardContent, CardHeader } from '@/components/ui/Card';
-import { Input } from '@/components/ui/Input';
+import { SearchInput } from '@/components/ui/SearchInput';
+import { TableLoading } from '@/components/ui/TableLoading';
+import { TableEmpty } from '@/components/ui/TableEmpty';
+import { LoadMoreButton } from '@/components/ui/LoadMoreButton';
 import { useToast } from '@/hooks/useToast';
 import { UserForm, type UserDto } from './UserForm';
 import { useTranslation } from '@/i18n/useTranslation';
@@ -102,7 +105,7 @@ export function UsersSettings() {
         <CardHeader>
           <div className="text-lg font-semibold">{t.settings.users}</div>
           <div className="mt-3">
-            <Input
+            <SearchInput
               placeholder={t.settings.searchUsers}
               value={search}
               onChange={(e) => setSearch(e.target.value)}
@@ -110,90 +113,85 @@ export function UsersSettings() {
           </div>
         </CardHeader>
         <CardContent>
-          {loading && users.length === 0 ? (
-            <div className="flex items-center justify-center p-12">
-              <div className="flex flex-col items-center gap-3">
-                <div className="h-6 w-6 animate-spin rounded-full border-2 border-zinc-200 border-t-zinc-900 dark:border-zinc-800 dark:border-t-zinc-100" />
-                <div className="text-sm font-medium text-zinc-500 dark:text-zinc-400">
-                  {t.settings.loadingUsers}
-                </div>
-              </div>
-            </div>
-          ) : (
-            <div className="overflow-x-auto">
-              <table className="w-full text-sm">
-                <thead>
-                  <tr className="border-b border-zinc-200 dark:border-zinc-800 text-left text-zinc-500 dark:text-zinc-400">
-                    <th className="py-2">{t.settings.email}</th>
-                    <th className="py-2">{t.settings.name}</th>
-                    <th className="py-2">{t.settings.role}</th>
-                    <th className="py-2 text-right">{t.common.action}</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {Array.isArray(users) &&
-                    users.map((u) => (
-                      <tr
-                        key={u.id}
-                        className={
-                          u.id === selectedId
-                            ? 'border-b border-zinc-100 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-900'
-                            : 'border-b border-zinc-100 dark:border-zinc-800 hover:bg-zinc-50 dark:hover:bg-zinc-900'
-                        }
-                      >
-                        <td className="py-2">
-                          <button
-                            type="button"
-                            className="font-medium hover:underline"
-                            onClick={() => {
-                              setSelectedId(u.id);
-                              setMode('edit');
-                            }}
-                          >
-                            {u.email}
-                          </button>
-                        </td>
-                        <td className="py-2">{u.name ?? '-'}</td>
-                        <td className="py-2">{u.role}</td>
-                        <td className="py-2 text-right">
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            className="h-8 px-2 text-zinc-500 hover:text-zinc-900 dark:text-zinc-50"
-                            onClick={() => {
-                              setSelectedId(u.id);
-                              setMode('edit');
-                            }}
-                            title={t.settings.editUser}
-                          >
-                            <Pencil className="h-4 w-4" />
-                            <span className="sr-only">{t.common.edit}</span>
-                          </Button>
-                        </td>
-                      </tr>
-                    ))}
-                  {users.length === 0 && !loading && (
-                    <tr>
-                      <td
-                        colSpan={4}
-                        className="py-4 text-center text-zinc-500 dark:text-zinc-400"
-                      >
-                        {t.settings.noUsers}
+          <div className="overflow-x-auto">
+            <table className="w-full text-sm">
+              <thead className="border-y border-zinc-200 bg-zinc-50/50 dark:border-zinc-800 dark:bg-zinc-900/50">
+                <tr>
+                  <th className="py-3 px-4 text-left font-medium text-zinc-900 dark:text-zinc-100">
+                    {t.settings.email}
+                  </th>
+                  <th className="py-3 px-4 text-left font-medium text-zinc-900 dark:text-zinc-100">
+                    {t.settings.name}
+                  </th>
+                  <th className="py-3 px-4 text-left font-medium text-zinc-900 dark:text-zinc-100">
+                    {t.settings.role}
+                  </th>
+                  <th className="py-3 px-4 text-right font-medium text-zinc-900 dark:text-zinc-100">
+                    {t.common.action}
+                  </th>
+                </tr>
+              </thead>
+              <tbody>
+                {loading && users.length === 0 ? (
+                  <TableLoading colSpan={4} message={t.settings.loadingUsers} />
+                ) : users.length === 0 ? (
+                  <TableEmpty colSpan={4} message={t.settings.noUsers} />
+                ) : (
+                  Array.isArray(users) &&
+                  users.map((u) => (
+                    <tr
+                      key={u.id}
+                      className={`border-b border-zinc-200 dark:border-zinc-800 ${
+                        u.id === selectedId
+                          ? 'bg-zinc-50 dark:bg-zinc-900'
+                          : 'hover:bg-zinc-50/50 dark:hover:bg-zinc-900/50'
+                      }`}
+                    >
+                      <td className="py-3 px-4 align-middle">
+                        <button
+                          type="button"
+                          className="font-medium text-blue-600 dark:text-blue-400 hover:underline"
+                          onClick={() => {
+                            setSelectedId(u.id);
+                            setMode('edit');
+                          }}
+                        >
+                          {u.email}
+                        </button>
+                      </td>
+                      <td className="py-3 px-4 align-middle text-zinc-900 dark:text-zinc-100">
+                        {u.name ?? '-'}
+                      </td>
+                      <td className="py-3 px-4 align-middle text-zinc-900 dark:text-zinc-100">
+                        {u.role}
+                      </td>
+                      <td className="py-3 px-4 align-middle text-right">
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className="h-8 px-2 text-zinc-500 hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-zinc-100"
+                          onClick={() => {
+                            setSelectedId(u.id);
+                            setMode('edit');
+                          }}
+                          title={t.settings.editUser}
+                        >
+                          <Pencil className="h-4 w-4" />
+                          <span className="sr-only">{t.common.edit}</span>
+                        </Button>
                       </td>
                     </tr>
-                  )}
-                </tbody>
-              </table>
-            </div>
-          )}
+                  ))
+                )}
+              </tbody>
+            </table>
+          </div>
 
-          {hasMore && (
-            <div className="mt-4 flex justify-center">
-              <Button variant="ghost" onClick={loadMore} disabled={false}>
-                {t.settings.loadMore}
-              </Button>
-            </div>
-          )}
+          <LoadMoreButton
+            onClick={loadMore}
+            hasMore={hasMore}
+            label={t.settings.loadMore}
+          />
         </CardContent>
       </Card>
 

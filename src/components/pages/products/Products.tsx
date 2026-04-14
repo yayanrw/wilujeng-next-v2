@@ -2,12 +2,15 @@
 
 import { useCallback, useEffect, useMemo, useState } from 'react';
 
-import { Plus, Pencil, Search, ToggleRight, ToggleLeft } from 'lucide-react';
+import { Plus, Pencil, ToggleRight, ToggleLeft, Trash } from 'lucide-react';
 
 import { Badge } from '@/components/ui/Badge';
 import { Button } from '@/components/ui/Button';
 import { Card, CardContent, CardHeader } from '@/components/ui/Card';
-import { Input } from '@/components/ui/Input';
+import { SearchInput } from '@/components/ui/SearchInput';
+import { TableLoading } from '@/components/ui/TableLoading';
+import { TableEmpty } from '@/components/ui/TableEmpty';
+import { LoadMoreButton } from '@/components/ui/LoadMoreButton';
 import { formatIdr } from '@/utils/money';
 
 import { useTranslation } from '@/i18n/useTranslation';
@@ -191,15 +194,12 @@ export function Products() {
             </div>
           </div>
           <div className="flex flex-col sm:flex-row gap-3 w-full pt-2">
-            <div className="relative flex-1">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-zinc-500 dark:text-zinc-400" />
-              <Input
-                placeholder={t.products.searchPlaceholder}
-                value={search}
-                onChange={(e) => setSearch(e.target.value)}
-                className="pl-9 w-full"
-              />
-            </div>
+            <SearchInput
+              placeholder={t.products.searchPlaceholder}
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              wrapperClassName="flex-1"
+            />
             <div className="flex gap-3 w-full sm:w-auto">
               <select
                 className="flex h-10 w-full sm:w-45 items-center justify-between rounded-md border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-950 px-3 py-2 text-sm ring-offset-white placeholder:text-zinc-500 dark:text-zinc-400 focus:outline-none focus:ring-2 focus:ring-zinc-950 focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
@@ -236,38 +236,33 @@ export function Products() {
           </div>
         </CardHeader>
         <CardContent className="p-0">
-          {loading && products.length === 0 ? (
-            <div className="flex items-center justify-center p-12">
-              <div className="flex flex-col items-center gap-3">
-                <div className="h-6 w-6 animate-spin rounded-full border-2 border-zinc-200 border-t-zinc-900 dark:border-zinc-800 dark:border-t-zinc-100" />
-                <div className="text-sm font-medium text-zinc-500 dark:text-zinc-400">
-                  {t.products.loading}
-                </div>
-              </div>
-            </div>
-          ) : (
-            <div className="overflow-x-auto">
-              <table className="w-full text-sm">
-                <thead>
-                  <tr className="border-y border-zinc-200 dark:border-zinc-800 bg-zinc-50/50 dark:bg-zinc-900/50 text-left text-zinc-500 dark:text-zinc-400">
-                    <th className="py-3 px-4 font-medium">{t.products.sku}</th>
-                    <th className="py-3 px-4 font-medium">{t.products.name}</th>
-                    <th className="py-3 px-4 font-medium">
-                      {t.products.price}
-                    </th>
-                    <th className="py-3 px-4 font-medium">
-                      {t.products.stock}
-                    </th>
-                    <th className="py-3 px-4 font-medium">
-                      {t.products.active}
-                    </th>
-                    <th className="py-3 px-4 font-medium text-right">
-                      {t.products.action}
-                    </th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-zinc-100 dark:divide-zinc-800">
-                  {products.map((p) => (
+          <div className="overflow-x-auto">
+            <table className="w-full text-sm">
+              <thead>
+                <tr className="border-y border-zinc-200 dark:border-zinc-800 bg-zinc-50/50 dark:bg-zinc-900/50 text-left text-zinc-500 dark:text-zinc-400">
+                  <th className="py-3 px-4 font-medium">{t.products.sku}</th>
+                  <th className="py-3 px-4 font-medium">{t.products.name}</th>
+                  <th className="py-3 px-4 font-medium">
+                    {t.products.price}
+                  </th>
+                  <th className="py-3 px-4 font-medium">
+                    {t.products.stock}
+                  </th>
+                  <th className="py-3 px-4 font-medium">
+                    {t.products.active}
+                  </th>
+                  <th className="py-3 px-4 font-medium text-right">
+                    {t.products.action}
+                  </th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-zinc-100 dark:divide-zinc-800">
+                {loading && products.length === 0 ? (
+                  <TableLoading colSpan={6} message={t.products.loading} />
+                ) : products.length === 0 ? (
+                  <TableEmpty colSpan={6} message={t.products.noProducts} />
+                ) : (
+                  products.map((p) => (
                     <tr
                       key={p.id}
                       className={`group transition-colors ${
@@ -370,51 +365,26 @@ export function Products() {
                         <Button
                           variant="ghost"
                           size="sm"
-                          className="h-8 w-8 p-0 text-red-500 hover:text-red-600 transition-colors"
+                          className="h-8 w-8 p-0 text-red-500 hover:text-red-600 dark:text-red-400 dark:hover:text-red-300 transition-colors"
                           onClick={() => openDeleteDialog(p.id)}
                           title={t.common.delete}
                         >
+                          <Trash className="h-4 w-4" />
                           <span className="sr-only">{t.common.delete}</span>
-                          {/* simple X icon */}
-                          <svg
-                            className="h-4 w-4"
-                            viewBox="0 0 24 24"
-                            fill="none"
-                            stroke="currentColor"
-                          >
-                            <path
-                              strokeWidth="2"
-                              strokeLinecap="round"
-                              strokeLinejoin="round"
-                              d="M6 18L18 6M6 6l12 12"
-                            />
-                          </svg>
                         </Button>
                       </td>
                     </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          )}
-          {!loading && products.length === 0 ? (
-            <div className="mt-3 text-sm text-zinc-500 dark:text-zinc-400 text-center py-4">
-              {t.products.noProducts}
-            </div>
-          ) : null}
+                  ))
+                )}
+              </tbody>
+            </table>
+          </div>
 
-          {hasMore && products.length > 0 && !loading && (
-            <div className="mt-6 flex justify-center pb-4">
-              <Button
-                variant="secondary"
-                onClick={loadMore}
-                disabled={loading}
-                className="w-full sm:w-auto"
-              >
-                {t.products.loadMore}
-              </Button>
-            </div>
-          )}
+          <LoadMoreButton
+            onClick={loadMore}
+            hasMore={hasMore && products.length > 0}
+            label={t.products.loadMore}
+          />
         </CardContent>
       </Card>
 

@@ -1,7 +1,8 @@
 'use client';
 
 import { formatIdr } from '@/utils/money';
-import { Package, ArrowRightLeft, X } from 'lucide-react';
+import { Package, ArrowRightLeft } from 'lucide-react';
+import { ModalFrame } from '@/components/ui/ModalFrame';
 import { useTranslation } from '@/i18n/useTranslation';
 
 type StockLog = {
@@ -29,26 +30,13 @@ export function StockLogDetailModal({
   const { t } = useTranslation();
 
   return (
-    <div className="fixed inset-0 z-[100] grid place-items-center bg-black/60 p-4 backdrop-blur-sm">
-      <div className="w-full max-w-lg overflow-hidden rounded-2xl bg-white dark:bg-zinc-950 shadow-2xl animate-in fade-in zoom-in-95 duration-200">
-        <div className="flex items-center justify-between border-b border-zinc-100 dark:border-zinc-800 bg-zinc-50/80 dark:bg-zinc-900/80 px-6 py-4">
-          <div className="flex items-center gap-2">
-            <Package className="h-5 w-5 text-zinc-600 dark:text-zinc-400" />
-            <h2 className="text-lg font-semibold text-zinc-900 dark:text-zinc-50">
-              {t.stock.logDetail}
-            </h2>
-          </div>
-          <button
-            type="button"
-            className="rounded-full p-2 text-zinc-400 transition-colors hover:bg-zinc-200 hover:text-zinc-600 dark:hover:bg-zinc-800 dark:hover:text-zinc-300"
-            onClick={onClose}
-          >
-            <span className="sr-only">{t.common.cancel}</span>
-            <X className="h-4 w-4" />
-          </button>
-        </div>
-
-        <div className="p-6 space-y-6 max-h-[80vh] overflow-y-auto custom-scrollbar">
+    <ModalFrame
+      title={t.stock.logDetail}
+      icon={<Package className="h-5 w-5" />}
+      onClose={onClose}
+      maxWidth="lg"
+    >
+      <div className="space-y-6 max-h-[70vh] overflow-y-auto custom-scrollbar">
           <div className="grid grid-cols-2 gap-4">
             <div>
               <span className="block text-xs font-semibold uppercase tracking-wider text-zinc-500 dark:text-zinc-400">
@@ -155,8 +143,7 @@ export function StockLogDetailModal({
               </div>
             </div>
           </div>
-        </div>
       </div>
-    </div>
+    </ModalFrame>
   );
 }
