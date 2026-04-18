@@ -481,6 +481,194 @@ Catatan: Implementasi RBAC di level API Route Handlers dan server components; si
 
 ---
 
+# Fitur Tambahan (Post-MVP Additions)
+
+## 8. Buy X Get Y Free (BXGY) Promotions
+
+### 8.1 Overview
+
+Sistem promosi BXGY memungkinkan toko untuk menawarkan penawaran "Beli X dapatkan Y gratis" pada produk tertentu. Fitur ini otomatis menerapkan diskon berdasarkan qty yang dibeli dalam transaksi.
+
+### 8.2 Database Schema
+
+**Tabel: `product_bxgy_promos`**
+- `id` (UUID, PK): Identifier unik promosi
+- `product_id` (UUID, FK→products): Produk yang mendapat promo
+- `buy_qty` (INT): Kuantitas minimum yang harus dibeli
+- `free_qty` (INT): Kuantitas gratis yang diberikan
+- `active` (BOOLEAN): Status promosi aktif/nonaktif
+- `valid_from` (TIMESTAMP): Tanggal mulai promo (opsional)
+- `valid_to` (TIMESTAMP): Tanggal akhir promo (opsional)
+- `max_multiplier_per_tx` (INT): Batas jumlah kali promo dapat diterapkan per transaksi (opsional)
+- `createdAt`, `updatedAt`: Timestamps
+
+**Unique Constraint:** `(product_id, buy_qty, free_qty)` — mencegah duplikasi promo untuk kombinasi yang sama
+
+### 8.3 Business Logic
+
+- **Trigger Promosi:** Saat checkout, sistem memeriksa setiap item dalam cart untuk melihat apakah ada BXGY promo yang berlaku.
+- **Validasi Tanggal:** Promo hanya berlaku jika `valid_from ≤ hari ini ≤ valid_to` (jika tanggal diisi).
+- **Aplikasi Otomatis:** Jika qty item ≥ `buy_qty`, sistem menambahkan `free_qty` item gratis ke dalam total qty untuk kalkulasi harga.
+  - Contoh: Promo "Beli 2 gratis 1", qty dibeli = 5 → qty final = 5 + 1 = 6 (1 x free).
+  - Jika `max_multiplier_per_tx = 2`, maka aplikasi terbatas: qty dibeli = 10 → qty final = 10 + 2 = 12 (max 2 x free).
+- **Perhitungan Harga:** Kuantitas gratis tidak diperhitungkan dalam harga penjualan. Hanya qty yang dibayar yang dikalikan harga unit.
+  - Contoh: Harga Rp10.000 per unit, promo "Beli 2 gratis 1", qty dibeli = 3 → subtotal = 3 × Rp10.000 = Rp30.000 (qty gratis tidak diminta pembayaran).
+- **Integrasi Tiering:** BXGY dihitung setelah tiering harga. Jika qty 5 dengan promo "Beli 2 gratis 1", qty akhir = 5 + (5 ÷ 2) × 1 = 5 + 2 = 7 (dengan max_multiplier).
+
+### 8.4 UI/UX Changes
+
+#### Dashboard & Product List
+- **Promo Badge:** Produk dengan promo BXGY aktif ditampilkan dengan badge khusus (contoh: "Buy 2 Get 1 Free").
+- **Product Details:** Menampilkan informasi promosi yang sedang berlaku jika tersedia.
+
+#### POS (Kasir)
+- **Cart Display:** Item dengan promo aktif menampilkan badge/indikator di cart (contoh: "+1 Gratis" di sebelah qty).
+- **Real-time Calculation:** Qty gratis dihitung dan ditampilkan secara real-time saat user mengubah qty.
+- **Receipt (Struk):** Struk cetak menampilkan qty aktual dibayar vs qty total (dengan catatan qty gratis).
+
+### 8.5 API Contract
+
+**GET /api/pos/promos?product_ids=[]**
+- Mengambil daftar promo BXGY yang aktif untuk produk-produk tertentu.
+- Response: `200 [{ productId, buyQty, freeQty, validFrom, validTo, maxMultiplierPerTx }]`
+
+**GET /api/products/:id/promo**
+- Mengambil detail promo BXGY untuk produk spesifik.
+- Response: `200 { productId, buyQty, freeQty, active, validFrom, validTo, maxMultiplierPerTx }` atau `404` jika tidak ada promo.
+
+**POST /api/admin/promos** (Admin-only)
+- Membuat promo BXGY baru.
+- Body: `{ productId, buyQty, freeQty, validFrom?, validTo?, maxMultiplierPerTx?, active }`
+- Response: `201 { id }`
+
+**PATCH /api/admin/promos/:id** (Admin-only)
+- Mengubah promo BXGY yang ada.
+- Body: subset field
+- Response: `200 { updated: true }`
+
+**DELETE /api/admin/promos/:id** (Admin-only)
+- Menghapus promo BXGY.
+- Response: `200 { deleted: true }`
+
+---
+
+## 9. Soft Delete & Status Management untuk Master Data
+
+### 9.1 Products
+
+**Perubahan Database:**
+- `is_active` (BOOLEAN, default true): Produk dapat diaktifkan/dinonaktifkan.
+- `is_deleted` (BOOLEAN, default false): Soft delete flag.
+
+**API Changes:**
+- **PATCH /api/products/:id/status** (Admin-only): Mengubah `is_active`.
+  - Body: `{ isActive: boolean }`
+  - Response: `200 { updated: true, id }`
+- **DELETE /api/products/:id** (Admin-only): Soft delete produk (set `is_deleted = true`).
+  - Response: `200 { deleted: true }`
+  - Alternative: Implementasi fisik delete jika audit trail tidak diperlukan.
+
+**UI Changes:**
+- **Product List:**
+  - Menampilkan badge status "Aktif" / "Nonaktif" per produk.
+  - Tombol toggle untuk mengaktifkan/menonaktifkan produk (optimistic update).
+  - Tombol delete (ikon sampah) dengan konfirmasi dialog.
+  - Produk nonaktif tidak ditampilkan dalam pencarian POS secara default (filter `is_active = true` dan `is_deleted = false`).
+  - Produk terhapus tidak ditampilkan (filter `is_deleted = false`).
+
+**Cache Invalidation:**
+- Saat toggle status atau delete: invalidate `products:catalog:*`, `pos:stocks:*` patterns.
+
+### 9.2 Customers
+
+**Perubahan Database:**
+- `is_active` (BOOLEAN, default true): Pelanggan aktif/nonaktif.
+- `is_deleted` (BOOLEAN, default false): Soft delete flag.
+
+**API Changes:**
+- **PATCH /api/customers/:id/status** (Admin-only): Mengubah `is_active`.
+  - Body: `{ isActive: boolean }`
+  - Response: `200 { updated: true, id }`
+- **DELETE /api/customers/:id** (Admin-only): Soft delete pelanggan (set `is_deleted = true` dan `is_active = false`).
+  - Response: `200 { deleted: true }`
+
+**UI Changes:**
+- **Customer List:**
+  - Menampilkan badge status "Aktif" / "Nonaktif" per pelanggan.
+  - Tombol toggle untuk mengaktifkan/menonaktifkan (opsional).
+  - Tombol delete (ikon sampah) dengan konfirmasi dialog.
+  - Pelanggan terhapus tidak ditampilkan di list default (filter `is_deleted = false`).
+  - Customer Picker di checkout hanya menampilkan pelanggan aktif dan tidak terhapus.
+
+**Cache Invalidation:**
+- Saat delete: invalidate `customers:list:*` patterns.
+
+### 9.3 Master Data (Brands, Categories, Suppliers)
+
+**UI Management Tabs:**
+Tambahan tabs di halaman **Products Settings** atau menu **Inventory** untuk mengelola master data:
+- **Tab: Brands** — Daftar semua brand dengan tombol delete.
+- **Tab: Categories** — Daftar semua kategori dengan tombol delete.
+- **Tab: Suppliers** — Daftar semua supplier dengan tombol delete.
+
+Setiap tab menampilkan:
+- Kolom: Nama, Aksi (delete icon).
+- Tombol delete (ikon sampah) dengan konfirmasi dialog.
+- Toast notifikasi sukses/gagal setelah delete.
+
+**API Changes:**
+- **DELETE /api/brands/:id** (Admin-only)
+  - Validasi: Jika ada produk yang mereferensikan brand ini → return 400 dengan error message.
+  - Response: `200 { deleted: true }` atau `400 { error: "Brand masih digunakan..." }`
+  - Cache invalidation: `brands:list:*`
+
+- **DELETE /api/categories/:id** (Admin-only)
+  - Validasi: Jika ada produk yang mereferensikan kategori ini → return 400 dengan error message.
+  - Response: `200 { deleted: true }` atau `400 { error: "Kategori masih digunakan..." }`
+  - Cache invalidation: `categories:list:*`
+
+- **DELETE /api/suppliers/:id** (Admin-only)
+  - Validasi: Jika ada stock_logs yang mereferensikan supplier ini → return 400 dengan error message.
+  - Response: `200 { deleted: true }` atau `400 { error: "Supplier masih digunakan..." }`
+  - Cache invalidation: `suppliers:list:*`
+
+**Error Handling:**
+- Jika master data masih direferensikan, tampilkan toast error dengan pesan jelas: "Tidak dapat menghapus [Brand/Kategori/Supplier] karena masih digunakan oleh produk / stok logs."
+
+**Internationalization:**
+- Semua teks dialog konfirmasi, error messages, dan toast notifications harus menggunakan i18n keys dari `en.json` dan `id.json`.
+
+---
+
+## 10. Database Schema Updates
+
+### New Tables
+
+**product_bxgy_promos**
+- id (UUID, PK)
+- product_id (UUID, FK→products)
+- buy_qty (INT, NOT NULL)
+- free_qty (INT, NOT NULL, default 0)
+- active (BOOLEAN, NOT NULL, default true)
+- valid_from (TIMESTAMP, nullable)
+- valid_to (TIMESTAMP, nullable)
+- max_multiplier_per_tx (INT, nullable)
+- createdAt (TIMESTAMP, default now())
+- updatedAt (TIMESTAMP, default now())
+- Unique constraint: (product_id, buy_qty, free_qty)
+
+### Updated Tables
+
+**products**
+- Added: `is_active` (BOOLEAN, default true)
+- Added: `is_deleted` (BOOLEAN, default false)
+
+**customers**
+- Added: `is_active` (BOOLEAN, default true)
+- Added: `is_deleted` (BOOLEAN, default false)
+
+---
+
 # Perubahan Terkait Status Aktif/Dihapus Produk (BARU)
 
 - Database (produk)

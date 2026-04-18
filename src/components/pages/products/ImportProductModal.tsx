@@ -2,7 +2,6 @@
 
 import { useState, useRef } from 'react';
 import { Upload, Download, FileSpreadsheet, AlertCircle, X } from 'lucide-react';
-import * as xlsx from 'xlsx';
 
 import { Button } from '@/components/ui/Button';
 import { useTranslation } from '@/i18n/useTranslation';
@@ -24,22 +23,16 @@ export function ImportProductModal({
 
   if (!open) return null;
 
-  const handleDownloadTemplate = () => {
-    const ws = xlsx.utils.json_to_sheet([
-      {
-        SKU: 'PROD-001',
-        Name: 'Example Product',
-        Category: 'Beverages',
-        Brand: 'Brand A',
-        'Base Price': 15000,
-        'Buy Price': 10000,
-        Stock: 100,
-        'Min Stock': 10,
-      },
-    ]);
-    const wb = xlsx.utils.book_new();
-    xlsx.utils.book_append_sheet(wb, ws, 'Products');
-    xlsx.writeFile(wb, 'product_import_template.xlsx');
+  const handleDownloadTemplate = async () => {
+    const res = await fetch('/api/products/export');
+    if (!res.ok) return;
+    const blob = await res.blob();
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'products_export.xlsx';
+    a.click();
+    URL.revokeObjectURL(url);
   };
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {

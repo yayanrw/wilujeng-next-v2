@@ -1,4 +1,5 @@
 import * as xlsx from 'xlsx';
+import { eq } from 'drizzle-orm';
 
 import { db } from '@/db';
 import { brands, categories, products } from '@/db/schema';
@@ -78,6 +79,8 @@ export async function POST(req: Request) {
       const rowNum = i + 2; // Assuming row 1 is header
 
       try {
+        // id column is optional — if present and non-empty, update by id (SKU can change)
+        const rowId = String(row['id'] ?? '').trim();
         const sku = String(row['SKU'] ?? '').trim();
         const name = String(row['Name'] ?? '').trim();
         const categoryName = String(row['Category'] ?? '').trim();
@@ -106,41 +109,42 @@ export async function POST(req: Request) {
           continue;
         }
 
-        let categoryId = null;
+        let categoryId: string | null = null;
         if (categoryName) {
           if (categoryCache.has(categoryName)) {
-            categoryId = categoryCache.get(categoryName);
+            categoryId = categoryCache.get(categoryName) ?? null;
           } else {
             categoryId = await ensureCategoryByName(categoryName);
             categoryCache.set(categoryName, categoryId);
           }
         }
 
-        let brandId = null;
+        let brandId: string | null = null;
         if (brandName) {
           if (brandCache.has(brandName)) {
-            brandId = brandCache.get(brandName);
+            brandId = brandCache.get(brandName) ?? null;
           } else {
             brandId = await ensureBrandByName(brandName);
             brandCache.set(brandName, brandId);
           }
         }
 
-        await db
-          .insert(products)
-          .values({
-            sku,
-            name,
-            categoryId,
-            brandId,
-            basePrice,
-            buyPrice,
-            stock,
-            minStockThreshold,
-          })
-          .onConflictDoUpdate({
-            target: products.sku,
-            set: {
+        if (rowId) {
+          // id provided — update the existing product by id (SKU can be changed)
+          const existing = await db.query.products.findFirst({
+            where: (t, { eq: eq2 }) => eq2(t.id, rowId),
+          });
+
+          if (!existing) {
+            errors.push(`Row ${rowNum}: Product with id "${rowId}" not found — skipped`);
+            errorCount++;
+            continue;
+          }
+
+          await db
+            .update(products)
+            .set({
+              sku,
               name,
               categoryId,
               brandId,
@@ -149,8 +153,36 @@ export async function POST(req: Request) {
               stock,
               minStockThreshold,
               updatedAt: new Date(),
-            },
-          });
+            })
+            .where(eq(products.id, rowId));
+        } else {
+          // No id — insert new product; on SKU conflict update non-tiering fields
+          await db
+            .insert(products)
+            .values({
+              sku,
+              name,
+              categoryId,
+              brandId,
+              basePrice,
+              buyPrice,
+              stock,
+              minStockThreshold,
+            })
+            .onConflictDoUpdate({
+              target: products.sku,
+              set: {
+                name,
+                categoryId,
+                brandId,
+                basePrice,
+                buyPrice,
+                stock,
+                minStockThreshold,
+                updatedAt: new Date(),
+              },
+            });
+        }
 
         successCount++;
       } catch (err: unknown) {
@@ -165,6 +197,7 @@ export async function POST(req: Request) {
       await invalidateCachePattern('products:catalog:*');
       await invalidateCachePattern('categories:list:*');
       await invalidateCachePattern('brands:list:*');
+      await invalidateCachePattern('pos:catalog:all');
     }
 
     return json({
