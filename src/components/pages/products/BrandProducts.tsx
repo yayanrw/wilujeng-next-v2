@@ -116,8 +116,8 @@ export function BrandProducts() {
           />
         </div>
       </CardHeader>
-      <CardContent>
-        <div className="overflow-x-auto">
+      <CardContent className="min-w-0">
+        <div className="overflow-hidden">
           <table className="w-full text-sm">
             <thead className="border-y border-zinc-200 bg-zinc-50/50 dark:border-zinc-800 dark:bg-zinc-900/50">
               <tr>

@@ -24,6 +24,7 @@ export function PosClient() {
   const [cartOpen, setCartOpen] = useState(false);
   const [scannerOpen, setScannerOpen] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
+  const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
   const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>('cash');
   const [amountReceived, setAmountReceived] = useState(0);
   const [checkoutPending, setCheckoutPending] = useState(false);
@@ -110,6 +111,19 @@ export function PosClient() {
     mq.addEventListener('change', handler);
     return () => mq.removeEventListener('change', handler);
   }, []);
+
+  // Load view mode preference from localStorage on mount
+  useEffect(() => {
+    const saved = localStorage.getItem('pos-view-mode');
+    if (saved === 'grid' || saved === 'list') {
+      setViewMode(saved);
+    }
+  }, []);
+
+  function handleViewModeChange(mode: 'grid' | 'list') {
+    setViewMode(mode);
+    localStorage.setItem('pos-view-mode', mode);
+  }
 
   function handleBarcodeScan(sku: string) {
     const product = products.find(
@@ -206,6 +220,8 @@ export function PosClient() {
           onToast={showToast}
           refreshKey={refreshKey}
           onCameraClick={() => setScannerOpen(true)}
+          viewMode={viewMode}
+          onViewModeChange={handleViewModeChange}
         />
         <div className="hidden lg:flex lg:flex-col lg:min-h-0">
           <CartPanel total={total} onCheckout={() => setCheckoutOpen(true)} />

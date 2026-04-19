@@ -182,8 +182,8 @@ export function Products() {
   }
 
   return (
-    <div className="grid grid-cols-1 gap-4 lg:grid-cols-[1fr_420px]">
-      <Card className="h-fit">
+    <div className="grid grid-cols-1 gap-4 lg:grid-cols-[1fr_420px] min-w-0">
+      <Card className="h-fit min-w-0">
         <CardHeader className="flex flex-col gap-4 pb-6">
           <div className="space-y-1.5">
             <div className="text-xl font-bold tracking-tight">
@@ -235,8 +235,8 @@ export function Products() {
             </div>
           </div>
         </CardHeader>
-        <CardContent className="p-0">
-          <div className="overflow-x-auto">
+        <CardContent className="p-0 min-w-0">
+          <div className="overflow-hidden">
             <table className="w-full text-sm">
               <thead>
                 <tr className="border-y border-zinc-200 dark:border-zinc-800 bg-zinc-50/50 dark:bg-zinc-900/50 text-left text-zinc-500 dark:text-zinc-400">
@@ -283,9 +283,9 @@ export function Products() {
                           {p.sku}
                         </button>
                       </td>
-                      <td className="py-3 px-4 align-middle">
-                        <div className="flex flex-col gap-1">
-                          <div className="flex items-center gap-2">
+                      <td className="py-3 px-4 align-middle min-w-0">
+                        <div className="flex flex-col gap-1 min-w-0">
+                          <div className="flex items-center gap-2 min-w-0">
                             <span className="truncate font-semibold text-zinc-900 dark:text-zinc-100">
                               {p.name}
                             </span>

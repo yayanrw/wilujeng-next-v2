@@ -18,18 +18,21 @@ export function SearchPanel({
   onToast,
   refreshKey,
   onCameraClick,
+  viewMode = 'grid',
+  onViewModeChange,
 }: {
   inputRef: React.RefObject<HTMLInputElement | null>;
   onToast: (m: string) => void;
   refreshKey?: number;
   onCameraClick?: () => void;
+  viewMode?: 'grid' | 'list';
+  onViewModeChange?: (mode: 'grid' | 'list') => void;
 }) {
   const [query, setQuery] = useState('');
   const [categoryId, setCategoryId] = useState('all');
   const [categories, setCategories] = useState<{ id: string; name: string }[]>(
     [],
   );
-  const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
   const { t } = useTranslation();
 
   const products = useCatalogStore((s) => s.products);
@@ -75,7 +78,7 @@ export function SearchPanel({
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-zinc-500 dark:text-zinc-400" />
             <Input
               ref={inputRef}
-              className={onCameraClick ? 'pl-9 pr-16' : 'pl-9'}
+              className="pl-9 text-base"
               placeholder={t.pos.searchPlaceholder}
               value={query}
               onChange={(e) => setQuery(e.target.value)}
@@ -99,17 +102,6 @@ export function SearchPanel({
                 }
               }}
             />
-            {onCameraClick && (
-              <button
-                type="button"
-                onClick={onCameraClick}
-                className="absolute right-8 top-1/2 -translate-y-1/2 rounded-full p-0.5 text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-300 transition-colors"
-                title={t.pos.scanWithCamera}
-                aria-label={t.pos.scanWithCamera}
-              >
-                <Camera className="h-4 w-4" />
-              </button>
-            )}
             {query && (
               <button
                 type="button"
@@ -124,31 +116,44 @@ export function SearchPanel({
               </button>
             )}
           </div>
-          <div className="flex shrink-0 items-center rounded-md border border-zinc-200 p-1 dark:border-zinc-800">
-            <button
-              type="button"
-              onClick={() => setViewMode('grid')}
-              className={`rounded p-1.5 transition-colors ${
-                viewMode === 'grid'
-                  ? 'bg-zinc-100 text-zinc-900 dark:bg-zinc-800 dark:text-zinc-100'
-                  : 'text-zinc-500 hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-zinc-100'
-              }`}
-              title="Grid View"
-            >
-              <LayoutGrid className="h-4 w-4" />
-            </button>
-            <button
-              type="button"
-              onClick={() => setViewMode('list')}
-              className={`rounded p-1.5 transition-colors ${
-                viewMode === 'list'
-                  ? 'bg-zinc-100 text-zinc-900 dark:bg-zinc-800 dark:text-zinc-100'
-                  : 'text-zinc-500 hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-zinc-100'
-              }`}
-              title="List View"
-            >
-              <List className="h-4 w-4" />
-            </button>
+          <div className="flex shrink-0 items-center gap-1">
+            {onCameraClick && (
+              <button
+                type="button"
+                onClick={onCameraClick}
+                className="flex h-8 w-8 items-center justify-center rounded-md border border-zinc-200 bg-white text-zinc-500 hover:text-zinc-900 transition-colors dark:border-zinc-800 dark:bg-zinc-950 dark:text-zinc-400 dark:hover:text-zinc-100"
+                title={t.pos.scanWithCamera}
+                aria-label={t.pos.scanWithCamera}
+              >
+                <Camera className="h-4 w-4" />
+              </button>
+            )}
+            <div className="flex shrink-0 items-center rounded-md border border-zinc-200 p-1 dark:border-zinc-800">
+              <button
+                type="button"
+                onClick={() => onViewModeChange?.('grid')}
+                className={`rounded p-1.5 transition-colors ${
+                  viewMode === 'grid'
+                    ? 'bg-zinc-100 text-zinc-900 dark:bg-zinc-800 dark:text-zinc-100'
+                    : 'text-zinc-500 hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-zinc-100'
+                }`}
+                title="Grid View"
+              >
+                <LayoutGrid className="h-4 w-4" />
+              </button>
+              <button
+                type="button"
+                onClick={() => onViewModeChange?.('list')}
+                className={`rounded p-1.5 transition-colors ${
+                  viewMode === 'list'
+                    ? 'bg-zinc-100 text-zinc-900 dark:bg-zinc-800 dark:text-zinc-100'
+                    : 'text-zinc-500 hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-zinc-100'
+                }`}
+                title="List View"
+              >
+                <List className="h-4 w-4" />
+              </button>
+            </div>
           </div>
         </div>
 
@@ -232,7 +237,7 @@ export function SearchPanel({
                           }
                           className="h-5 px-1.5 py-0 text-[10px] font-semibold uppercase tracking-wider"
                         >
-                          {p.stock} Qty
+                          {p.stock}
                         </Badge>
                         {p.category && p.category.id !== categoryId ? (
                           <span className="truncate text-[10px] font-medium text-zinc-400 dark:text-zinc-500">
@@ -259,7 +264,7 @@ export function SearchPanel({
                 ) : (
                   <>
                     <div className="flex flex-1 items-center gap-3 min-w-0">
-                      <div className="flex w-12 shrink-0 flex-col gap-1">
+                      <div className="flex shrink-0 flex-col items-start gap-1">
                         <Badge
                           tone={
                             p.stock <= 0
@@ -268,9 +273,9 @@ export function SearchPanel({
                                 ? 'warning'
                                 : 'success'
                           }
-                          className="w-fit px-1 py-0 text-[9px] font-semibold uppercase tracking-wider"
+                          className="h-6 px-2 py-0.5 text-[11px] font-semibold uppercase tracking-wider"
                         >
-                          {p.stock}
+                          {p.stock} Qty
                         </Badge>
                       </div>
                       <div className="flex flex-1 flex-col min-w-0 pr-2">

@@ -14,12 +14,12 @@ export function ProductsClient() {
   const { t } = useTranslation();
 
   return (
-    <div className="flex flex-col gap-4">
+    <div className="flex flex-col gap-4 min-w-0 overflow-x-hidden">
       <div className="text-lg font-semibold text-zinc-900 dark:text-zinc-50">
         {t.nav.products}
       </div>
 
-      <div className="flex gap-2">
+      <div className="flex gap-2 min-w-0">
         {(['products', 'brands', 'categories', 'suppliers'] as const).map(
           (tTab) => (
             <button
