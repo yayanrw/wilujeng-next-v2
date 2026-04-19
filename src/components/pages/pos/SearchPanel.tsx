@@ -78,7 +78,7 @@ export function SearchPanel({
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-zinc-500 dark:text-zinc-400" />
             <Input
               ref={inputRef}
-              className="pl-9"
+              className="pl-9 text-base"
               placeholder={t.pos.searchPlaceholder}
               value={query}
               onChange={(e) => setQuery(e.target.value)}
