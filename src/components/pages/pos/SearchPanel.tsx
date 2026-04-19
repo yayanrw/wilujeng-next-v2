@@ -18,33 +18,22 @@ export function SearchPanel({
   onToast,
   refreshKey,
   onCameraClick,
+  viewMode = 'grid',
+  onViewModeChange,
 }: {
   inputRef: React.RefObject<HTMLInputElement | null>;
   onToast: (m: string) => void;
   refreshKey?: number;
   onCameraClick?: () => void;
+  viewMode?: 'grid' | 'list';
+  onViewModeChange?: (mode: 'grid' | 'list') => void;
 }) {
   const [query, setQuery] = useState('');
   const [categoryId, setCategoryId] = useState('all');
   const [categories, setCategories] = useState<{ id: string; name: string }[]>(
     [],
   );
-  const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
   const { t } = useTranslation();
-
-  // Load view mode from localStorage on mount
-  useEffect(() => {
-    const saved = localStorage.getItem('pos-view-mode');
-    if (saved === 'grid' || saved === 'list') {
-      setViewMode(saved);
-    }
-  }, []);
-
-  // Save view mode to localStorage when it changes
-  const handleViewModeChange = (mode: 'grid' | 'list') => {
-    setViewMode(mode);
-    localStorage.setItem('pos-view-mode', mode);
-  };
 
   const products = useCatalogStore((s) => s.products);
   const stocks = useCatalogStore((s) => s.stocks);
@@ -142,7 +131,7 @@ export function SearchPanel({
             <div className="flex shrink-0 items-center rounded-md border border-zinc-200 p-1 dark:border-zinc-800">
               <button
                 type="button"
-                onClick={() => handleViewModeChange('grid')}
+                onClick={() => onViewModeChange?.('grid')}
                 className={`rounded p-1.5 transition-colors ${
                   viewMode === 'grid'
                     ? 'bg-zinc-100 text-zinc-900 dark:bg-zinc-800 dark:text-zinc-100'
@@ -154,7 +143,7 @@ export function SearchPanel({
               </button>
             <button
               type="button"
-              onClick={() => handleViewModeChange('list')}
+              onClick={() => onViewModeChange?.('list')}
               className={`rounded p-1.5 transition-colors ${
                 viewMode === 'list'
                   ? 'bg-zinc-100 text-zinc-900 dark:bg-zinc-800 dark:text-zinc-100'
