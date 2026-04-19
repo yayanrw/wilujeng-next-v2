@@ -75,7 +75,7 @@ export function SearchPanel({
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-zinc-500 dark:text-zinc-400" />
             <Input
               ref={inputRef}
-              className={onCameraClick ? 'pl-9 pr-16' : 'pl-9'}
+              className="pl-9"
               placeholder={t.pos.searchPlaceholder}
               value={query}
               onChange={(e) => setQuery(e.target.value)}
@@ -99,17 +99,6 @@ export function SearchPanel({
                 }
               }}
             />
-            {onCameraClick && (
-              <button
-                type="button"
-                onClick={onCameraClick}
-                className="absolute right-8 top-1/2 -translate-y-1/2 rounded-full p-0.5 text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-300 transition-colors"
-                title={t.pos.scanWithCamera}
-                aria-label={t.pos.scanWithCamera}
-              >
-                <Camera className="h-4 w-4" />
-              </button>
-            )}
             {query && (
               <button
                 type="button"
@@ -124,19 +113,31 @@ export function SearchPanel({
               </button>
             )}
           </div>
-          <div className="flex shrink-0 items-center rounded-md border border-zinc-200 p-1 dark:border-zinc-800">
-            <button
-              type="button"
-              onClick={() => setViewMode('grid')}
-              className={`rounded p-1.5 transition-colors ${
-                viewMode === 'grid'
-                  ? 'bg-zinc-100 text-zinc-900 dark:bg-zinc-800 dark:text-zinc-100'
-                  : 'text-zinc-500 hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-zinc-100'
-              }`}
-              title="Grid View"
-            >
-              <LayoutGrid className="h-4 w-4" />
-            </button>
+          <div className="flex shrink-0 items-center gap-1">
+            {onCameraClick && (
+              <button
+                type="button"
+                onClick={onCameraClick}
+                className="flex h-8 w-8 items-center justify-center rounded-md border border-zinc-200 bg-white text-zinc-500 hover:text-zinc-900 transition-colors dark:border-zinc-800 dark:bg-zinc-950 dark:text-zinc-400 dark:hover:text-zinc-100"
+                title={t.pos.scanWithCamera}
+                aria-label={t.pos.scanWithCamera}
+              >
+                <Camera className="h-4 w-4" />
+              </button>
+            )}
+            <div className="flex shrink-0 items-center rounded-md border border-zinc-200 p-1 dark:border-zinc-800">
+              <button
+                type="button"
+                onClick={() => setViewMode('grid')}
+                className={`rounded p-1.5 transition-colors ${
+                  viewMode === 'grid'
+                    ? 'bg-zinc-100 text-zinc-900 dark:bg-zinc-800 dark:text-zinc-100'
+                    : 'text-zinc-500 hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-zinc-100'
+                }`}
+                title="Grid View"
+              >
+                <LayoutGrid className="h-4 w-4" />
+              </button>
             <button
               type="button"
               onClick={() => setViewMode('list')}
@@ -149,6 +150,7 @@ export function SearchPanel({
             >
               <List className="h-4 w-4" />
             </button>
+            </div>
           </div>
         </div>
 
