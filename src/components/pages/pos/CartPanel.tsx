@@ -1,6 +1,6 @@
 'use client';
 
-import { Minus, Plus, Trash2, ShoppingCart } from 'lucide-react';
+import { Minus, Plus, Trash2, ShoppingCart, X } from 'lucide-react';
 
 import { Button } from '@/components/ui/Button';
 import { Card, CardHeader } from '@/components/ui/Card';
@@ -11,9 +11,11 @@ import { useTranslation } from '@/i18n/useTranslation';
 export function CartPanel({
   total,
   onCheckout,
+  onClose,
 }: {
   total: number;
   onCheckout: () => void;
+  onClose?: () => void;
 }) {
   const items = usePosStore((s) => s.items);
   const setQty = usePosStore((s) => s.setQty);
@@ -39,15 +41,28 @@ export function CartPanel({
               </p>
             </div>
           </div>
-          <Button
-            variant="ghost"
-            size="sm"
-            className="text-red-600 hover:text-red-700 hover:bg-red-50 h-8 px-2"
-            onClick={clear}
-            disabled={!items.length}
-          >
-            {t.pos.clearAll}
-          </Button>
+          <div className="flex items-center gap-1">
+            <Button
+              variant="ghost"
+              size="sm"
+              className="text-red-600 hover:text-red-700 hover:bg-red-50 h-8 px-2"
+              onClick={clear}
+              disabled={!items.length}
+            >
+              {t.pos.clearAll}
+            </Button>
+            {onClose ? (
+              <Button
+                variant="ghost"
+                size="sm"
+                className="h-8 w-8 p-0 text-zinc-400 hover:text-zinc-600"
+                onClick={onClose}
+                aria-label="Close cart"
+              >
+                <X className="h-4 w-4" />
+              </Button>
+            ) : null}
+          </div>
         </div>
       </CardHeader>
 

@@ -1,4 +1,4 @@
-# PRD — SimplePOS Pro
+p# PRD — SimplePOS Pro
 
 > PRD telah dipecah menjadi file-file kecil di `docs/prd/`. Gunakan index di bawah untuk navigasi.
 
