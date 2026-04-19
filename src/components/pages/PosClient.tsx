@@ -180,7 +180,7 @@ export function PosClient() {
   }
 
   return (
-    <div className="flex flex-col gap-4 pb-20 lg:pb-0 lg:h-[calc(100vh-6rem)]">
+    <div className="flex flex-col gap-4 pb-20 lg:pb-0 lg:h-[calc(100vh-6rem)] w-full min-w-0 overflow-x-hidden">
       <div className="flex items-center justify-between shrink-0">
         <div className="text-lg font-semibold">{t.nav.pos}</div>
         {lastTxId ? (
@@ -200,7 +200,7 @@ export function PosClient() {
         ) : null}
       </div>
 
-      <div className="grid lg:flex-1 lg:min-h-0 grid-cols-1 gap-4 lg:grid-cols-[1fr_420px]">
+      <div className="grid lg:flex-1 lg:min-h-0 grid-cols-1 gap-4 lg:grid-cols-[1fr_420px] min-w-0">
         <SearchPanel
           inputRef={inputRef}
           onToast={showToast}
