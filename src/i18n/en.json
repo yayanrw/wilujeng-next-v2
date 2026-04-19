@@ -125,6 +125,7 @@
     "checkout": "Checkout",
     "checkoutTitle": "Checkout",
     "walkInCustomer": "Walk-in Customer",
+    "searchCustomerPlaceholder": "Search by name or phone (leave empty for walk-in)",
     "amountReceived": "Amount Received",
     "exactAmount": "Exact Amount",
     "paymentMethod": "Payment Method",
