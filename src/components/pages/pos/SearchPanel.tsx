@@ -141,18 +141,18 @@ export function SearchPanel({
               >
                 <LayoutGrid className="h-4 w-4" />
               </button>
-            <button
-              type="button"
-              onClick={() => onViewModeChange?.('list')}
-              className={`rounded p-1.5 transition-colors ${
-                viewMode === 'list'
-                  ? 'bg-zinc-100 text-zinc-900 dark:bg-zinc-800 dark:text-zinc-100'
-                  : 'text-zinc-500 hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-zinc-100'
-              }`}
-              title="List View"
-            >
-              <List className="h-4 w-4" />
-            </button>
+              <button
+                type="button"
+                onClick={() => onViewModeChange?.('list')}
+                className={`rounded p-1.5 transition-colors ${
+                  viewMode === 'list'
+                    ? 'bg-zinc-100 text-zinc-900 dark:bg-zinc-800 dark:text-zinc-100'
+                    : 'text-zinc-500 hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-zinc-100'
+                }`}
+                title="List View"
+              >
+                <List className="h-4 w-4" />
+              </button>
             </div>
           </div>
         </div>
@@ -237,7 +237,7 @@ export function SearchPanel({
                           }
                           className="h-5 px-1.5 py-0 text-[10px] font-semibold uppercase tracking-wider"
                         >
-                          {p.stock} Qty
+                          {p.stock}
                         </Badge>
                         {p.category && p.category.id !== categoryId ? (
                           <span className="truncate text-[10px] font-medium text-zinc-400 dark:text-zinc-500">
