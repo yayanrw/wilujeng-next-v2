@@ -264,7 +264,7 @@ export function SearchPanel({
                 ) : (
                   <>
                     <div className="flex flex-1 items-center gap-3 min-w-0">
-                      <div className="flex w-12 shrink-0 flex-col gap-1">
+                      <div className="flex shrink-0 flex-col items-start gap-1">
                         <Badge
                           tone={
                             p.stock <= 0
@@ -273,9 +273,9 @@ export function SearchPanel({
                                 ? 'warning'
                                 : 'success'
                           }
-                          className="w-fit px-1 py-0 text-[9px] font-semibold uppercase tracking-wider"
+                          className="h-6 px-2 py-0.5 text-[11px] font-semibold uppercase tracking-wider"
                         >
-                          {p.stock}
+                          {p.stock} Qty
                         </Badge>
                       </div>
                       <div className="flex flex-1 flex-col min-w-0 pr-2">
