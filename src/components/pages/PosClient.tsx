@@ -180,7 +180,7 @@ export function PosClient() {
   }
 
   return (
-    <div className="flex h-[calc(100vh-6rem)] flex-col gap-4">
+    <div className="flex flex-col gap-4 pb-20 lg:pb-0 lg:h-[calc(100vh-6rem)]">
       <div className="flex items-center justify-between shrink-0">
         <div className="text-lg font-semibold">{t.nav.pos}</div>
         {lastTxId ? (
@@ -200,7 +200,7 @@ export function PosClient() {
         ) : null}
       </div>
 
-      <div className="grid flex-1 min-h-0 grid-cols-1 gap-4 lg:grid-cols-[1fr_420px]">
+      <div className="grid lg:flex-1 lg:min-h-0 grid-cols-1 gap-4 lg:grid-cols-[1fr_420px]">
         <SearchPanel
           inputRef={inputRef}
           onToast={showToast}
@@ -212,8 +212,8 @@ export function PosClient() {
         </div>
       </div>
 
-      {/* Mobile sticky cart bar */}
-      <div className="lg:hidden shrink-0">
+      {/* Mobile sticky cart bar — fixed to bottom of viewport */}
+      <div className="lg:hidden fixed bottom-0 inset-x-0 z-20 px-4 pb-4 pt-2 bg-gradient-to-t from-zinc-50 dark:from-zinc-950 to-transparent">
         <button
           type="button"
           onClick={() => setCartOpen(true)}

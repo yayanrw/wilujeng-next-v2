@@ -10,29 +10,35 @@ import { Button } from '@/components/ui/Button';
 import { formatIdr } from '@/utils/money';
 import { useTranslation } from '@/i18n/useTranslation';
 
+const DEFAULT_SCAN_INTERVAL_MS = 2000;
+
 interface BarcodeScannerModalProps {
   open: boolean;
   onScan: (sku: string) => void;
   onClose: () => void;
-  isMobile: boolean;
-  totalQty: number;
-  total: number;
-  onOpenCart: () => void;
+  isMobile?: boolean;
+  totalQty?: number;
+  total?: number;
+  onOpenCart?: () => void;
+  scanIntervalMs?: number;
 }
 
 export function BarcodeScannerModal({
   open,
   onScan,
   onClose,
-  isMobile,
-  totalQty,
-  total,
+  isMobile = false,
+  totalQty = 0,
+  total = 0,
   onOpenCart,
+  scanIntervalMs = DEFAULT_SCAN_INTERVAL_MS,
 }: BarcodeScannerModalProps) {
   const { t } = useTranslation();
   const videoRef = useRef<HTMLVideoElement>(null);
   const controlsRef = useRef<IScannerControls | null>(null);
   const readerRef = useRef<BrowserMultiFormatOneDReader | null>(null);
+  // tracks last scan timestamp per barcode to enforce per-SKU cooldown
+  const scanTimestamps = useRef<Map<string, number>>(new Map());
 
   const [devices, setDevices] = useState<MediaDeviceInfo[]>([]);
   const [activeIndex, setActiveIndex] = useState(0);
@@ -60,6 +66,10 @@ export function BarcodeScannerModal({
           (result, err) => {
             if (result) {
               const text = result.getText();
+              const now = Date.now();
+              const lastTime = scanTimestamps.current.get(text) ?? 0;
+              if (now - lastTime < scanIntervalMs) return; // still in cooldown
+              scanTimestamps.current.set(text, now);
               onScan(text);
               setLastScanned(text);
               setTimeout(() => setLastScanned(null), 1200);
@@ -78,7 +88,7 @@ export function BarcodeScannerModal({
         }
       }
     },
-    [onScan, stopScanning, t.pos.scannerNoCamera, t.pos.scannerPermissionDenied],
+    [onScan, scanIntervalMs, stopScanning, t.pos.scannerNoCamera, t.pos.scannerPermissionDenied],
   );
 
   useEffect(() => {
@@ -86,6 +96,7 @@ export function BarcodeScannerModal({
 
     setError(null);
     setLastScanned(null);
+    scanTimestamps.current.clear();
 
     async function init() {
       try {
@@ -213,7 +224,7 @@ export function BarcodeScannerModal({
     <div className="shrink-0 px-3 pb-3 pt-1">
       <button
         type="button"
-        onClick={onOpenCart}
+        onClick={() => onOpenCart?.()}
         className="w-full flex items-center justify-between bg-zinc-800 hover:bg-zinc-700 text-white px-4 py-3 rounded-xl transition-colors active:opacity-80"
       >
         <div className="flex items-center gap-2">
