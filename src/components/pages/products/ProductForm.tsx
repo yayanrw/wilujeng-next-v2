@@ -2,12 +2,13 @@
 
 import { useMemo, useState, useEffect, useCallback } from 'react';
 
-import { Plus, Trash2, Dices } from 'lucide-react';
+import { Plus, Trash2, Dices, Camera } from 'lucide-react';
 
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
 
 import { AutocompleteInput } from './AutocompleteInput';
+import { BarcodeScannerModal } from '../pos/BarcodeScannerModal';
 import { useTranslation } from '@/i18n/useTranslation';
 
 type BxgyPromo = {
@@ -62,6 +63,7 @@ export function ProductForm({
     initial?.tiers ?? [],
   );
   const [pending, setPending] = useState(false);
+  const [scannerOpen, setScannerOpen] = useState(false);
   const { t } = useTranslation();
 
   // BxGy promo state
@@ -218,6 +220,16 @@ export function ProductForm({
               className="flex-1 font-mono text-sm"
               placeholder="Item SKU"
             />
+            <Button
+              type="button"
+              variant="secondary"
+              onClick={() => setScannerOpen(true)}
+              title={t.pos.scanWithCamera}
+              className="px-3"
+              aria-label={t.pos.scanWithCamera}
+            >
+              <Camera className="h-4 w-4 text-zinc-500 dark:text-zinc-400" />
+            </Button>
             <Button
               type="button"
               variant="secondary"
@@ -616,6 +628,16 @@ export function ProductForm({
       >
         {pending ? t.common.saving : t.products.saveProduct}
       </Button>
+
+      <BarcodeScannerModal
+        open={scannerOpen}
+        onScan={(code) => {
+          setSku(code);
+          setScannerOpen(false);
+        }}
+        onClose={() => setScannerOpen(false)}
+        scanIntervalMs={0}
+      />
     </form>
   );
 }

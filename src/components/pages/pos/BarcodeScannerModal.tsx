@@ -16,10 +16,10 @@ interface BarcodeScannerModalProps {
   open: boolean;
   onScan: (sku: string) => void;
   onClose: () => void;
-  isMobile: boolean;
-  totalQty: number;
-  total: number;
-  onOpenCart: () => void;
+  isMobile?: boolean;
+  totalQty?: number;
+  total?: number;
+  onOpenCart?: () => void;
   scanIntervalMs?: number;
 }
 
@@ -27,9 +27,9 @@ export function BarcodeScannerModal({
   open,
   onScan,
   onClose,
-  isMobile,
-  totalQty,
-  total,
+  isMobile = false,
+  totalQty = 0,
+  total = 0,
   onOpenCart,
   scanIntervalMs = DEFAULT_SCAN_INTERVAL_MS,
 }: BarcodeScannerModalProps) {
@@ -224,7 +224,7 @@ export function BarcodeScannerModal({
     <div className="shrink-0 px-3 pb-3 pt-1">
       <button
         type="button"
-        onClick={onOpenCart}
+        onClick={() => onOpenCart?.()}
         className="w-full flex items-center justify-between bg-zinc-800 hover:bg-zinc-700 text-white px-4 py-3 rounded-xl transition-colors active:opacity-80"
       >
         <div className="flex items-center gap-2">
