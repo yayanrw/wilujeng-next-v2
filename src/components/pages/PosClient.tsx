@@ -32,6 +32,7 @@ export function PosClient() {
   const [refreshKey, setRefreshKey] = useState(0);
   const [debtPaymentAmount, setDebtPaymentAmount] = useState<number>(0);
   const [debtPaymentNote, setDebtPaymentNote] = useState<string>('');
+  const [kbHeight, setKbHeight] = useState(0);
   const { t } = useTranslation();
   const { showToast, Toast } = useToast();
 
@@ -110,6 +111,24 @@ export function PosClient() {
     const handler = (e: MediaQueryListEvent) => setIsMobile(e.matches);
     mq.addEventListener('change', handler);
     return () => mq.removeEventListener('change', handler);
+  }, []);
+
+  useEffect(() => {
+    const vv = window.visualViewport;
+    if (!vv) return;
+
+    function update() {
+      const hidden = window.innerHeight - (vv!.height + vv!.offsetTop);
+      setKbHeight(Math.max(0, hidden));
+    }
+
+    vv.addEventListener('resize', update);
+    vv.addEventListener('scroll', update);
+    update();
+    return () => {
+      vv.removeEventListener('resize', update);
+      vv.removeEventListener('scroll', update);
+    };
   }, []);
 
   // Load view mode preference from localStorage on mount
@@ -229,7 +248,10 @@ export function PosClient() {
       </div>
 
       {/* Mobile sticky cart bar — fixed to bottom of viewport */}
-      <div className="lg:hidden fixed bottom-0 inset-x-0 z-20 px-4 pb-4 pt-2 bg-gradient-to-t from-zinc-50 dark:from-zinc-950 to-transparent">
+      <div
+        className="lg:hidden fixed inset-x-0 z-20 px-4 pb-4 pt-2 bg-gradient-to-t from-zinc-50 dark:from-zinc-950 to-transparent transition-[bottom] ease-out"
+        style={{ bottom: kbHeight + 16 }}
+      >
         <button
           type="button"
           onClick={() => setCartOpen(true)}
