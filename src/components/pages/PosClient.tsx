@@ -12,6 +12,7 @@ import { formatIdr } from '@/utils/money';
 import { useTranslation } from '@/i18n/useTranslation';
 import { useToast } from '@/hooks/useToast';
 
+import { BarcodeScannerModal } from './pos/BarcodeScannerModal';
 import { CartBottomSheet } from './pos/CartBottomSheet';
 import { CartPanel } from './pos/CartPanel';
 import { CheckoutModal } from './pos/CheckoutModal';
@@ -21,6 +22,8 @@ export function PosClient() {
   const inputRef = useRef<HTMLInputElement | null>(null);
   const [checkoutOpen, setCheckoutOpen] = useState(false);
   const [cartOpen, setCartOpen] = useState(false);
+  const [scannerOpen, setScannerOpen] = useState(false);
+  const [isMobile, setIsMobile] = useState(false);
   const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>('cash');
   const [amountReceived, setAmountReceived] = useState(0);
   const [checkoutPending, setCheckoutPending] = useState(false);
@@ -34,6 +37,10 @@ export function PosClient() {
   const items = usePosStore((s) => s.items);
   const customerId = usePosStore((s) => s.customerId);
   const clear = usePosStore((s) => s.clear);
+  const addProduct = usePosStore((s) => s.addProduct);
+
+  const products = useCatalogStore((s) => s.products);
+  const stocks = useCatalogStore((s) => s.stocks);
 
   const setProducts = useCatalogStore((s) => s.setProducts);
   const updateStocks = useCatalogStore((s) => s.updateStocks);
@@ -96,6 +103,31 @@ export function PosClient() {
     inputRef.current?.focus();
   }, []);
 
+  useEffect(() => {
+    const mq = window.matchMedia('(max-width: 1023px)');
+    setIsMobile(mq.matches);
+    const handler = (e: MediaQueryListEvent) => setIsMobile(e.matches);
+    mq.addEventListener('change', handler);
+    return () => mq.removeEventListener('change', handler);
+  }, []);
+
+  function handleBarcodeScan(sku: string) {
+    const product = products.find(
+      (p) => p.sku.toLowerCase() === sku.toLowerCase(),
+    );
+    if (!product) {
+      showToast(t.pos.productNotFound);
+      return;
+    }
+    const stock = stocks[product.id] ?? 0;
+    if (stock === 0) {
+      showToast(t.pos.scannerOutOfStock ?? t.pos.outOfStock);
+      return;
+    }
+    addProduct({ ...product, stock }, 1);
+    showToast(`${product.name} +1`);
+  }
+
   async function doCheckout() {
     if (!items.length) return;
     if (payment.status === 'debt' && !customerId) {
@@ -136,6 +168,7 @@ export function PosClient() {
 
     setLastTxId(body.transactionId);
     setCheckoutOpen(false);
+    setScannerOpen(false);
     showToast(t.pos.transactionSaved);
     clear();
     setAmountReceived(0);
@@ -172,6 +205,7 @@ export function PosClient() {
           inputRef={inputRef}
           onToast={showToast}
           refreshKey={refreshKey}
+          onCameraClick={() => setScannerOpen(true)}
         />
         <div className="hidden lg:flex lg:flex-col lg:min-h-0">
           <CartPanel total={total} onCheckout={() => setCheckoutOpen(true)} />
@@ -198,6 +232,16 @@ export function PosClient() {
       </div>
 
       <Toast />
+
+      <BarcodeScannerModal
+        open={scannerOpen}
+        onScan={handleBarcodeScan}
+        onClose={() => setScannerOpen(false)}
+        isMobile={isMobile}
+        totalQty={totalQty}
+        total={total}
+        onOpenCart={() => setCartOpen(true)}
+      />
 
       <CartBottomSheet
         open={cartOpen}

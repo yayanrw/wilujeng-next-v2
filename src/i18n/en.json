@@ -151,7 +151,16 @@
     "status": "Status",
     "paid": "Paid",
     "freeItem": "FREE",
-    "freeItemLabel": "{{name}} (FREE)"
+    "freeItemLabel": "{{name}} (FREE)",
+    "scanWithCamera": "Scan with camera",
+    "scannerTitle": "Scan Barcode",
+    "scannerHint": "Point camera at barcode",
+    "scannerPermissionDenied": "Camera access denied. Please enable it in browser settings.",
+    "scannerNoCamera": "No camera found on this device.",
+    "scannerSwitchCamera": "Switch camera",
+    "scannerAdded": "Added",
+    "productNotFound": "Product not found",
+    "scannerOutOfStock": "Out of stock"
   },
   "products": {
     "title": "Products",
