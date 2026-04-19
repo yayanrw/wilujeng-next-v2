@@ -7,6 +7,7 @@ import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
 import { CustomerPicker } from '@/components/shared/CustomerPicker';
 import { usePosStore } from '@/stores/posStore';
+import { useCustomerStore } from '@/stores/customerStore';
 import type { PaymentMethod } from '@/utils/checkout';
 import { formatIdr } from '@/utils/money';
 import { useTranslation } from '@/i18n/useTranslation';
@@ -26,27 +27,11 @@ function CustomerDebtPayButton({
   debtPaymentNote?: string;
   onDebtPaymentNoteChange?: (s: string) => void;
 }) {
-  const [debt, setDebt] = useState<number | null>(null);
+  const customers = useCustomerStore((s) => s.customers);
+  const debt = customers.find((c) => c.id === customerId)?.totalDebt ?? 0;
   const { t } = useTranslation();
 
-  useEffect(() => {
-    let cancelled = false;
-    fetch(`/api/customers/${customerId}`)
-      .then((res) => res.json())
-      .then((data) => {
-        if (!cancelled && data.customer?.totalDebt > 0) {
-          setDebt(data.customer.totalDebt);
-        } else if (!cancelled) {
-          setDebt(0);
-        }
-      })
-      .catch(() => {});
-    return () => {
-      cancelled = true;
-    };
-  }, [customerId]);
-
-  if (debt === null || debt <= 0) return null;
+  if (debt <= 0) return null;
 
   return (
     <div className="flex flex-col gap-3 rounded-lg bg-red-50 dark:bg-red-900/20 border border-red-100 dark:border-red-900/50 p-3">
@@ -138,6 +123,7 @@ export function CheckoutModal({
 }) {
   const customerId = usePosStore((s) => s.customerId);
   const setCustomerId = usePosStore((s) => s.setCustomerId);
+  const addCustomer = useCustomerStore((s) => s.addCustomer);
 
   const [newCustomerName, setNewCustomerName] = useState('');
   const [newCustomerPhone, setNewCustomerPhone] = useState('');
@@ -170,6 +156,7 @@ export function CheckoutModal({
     }
     if (!body || !('id' in body)) throw new Error(t.customers.failedToCreate);
     setCustomerId(body.id);
+    addCustomer({ id: body.id, name: newCustomerName, phone: newCustomerPhone || null, totalDebt: 0 });
     setNewCustomerName('');
     setNewCustomerPhone('');
   }

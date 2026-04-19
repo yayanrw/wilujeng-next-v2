@@ -7,6 +7,7 @@ import { Printer, ShoppingCart } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
 import { usePosStore } from '@/stores/posStore';
 import { useCatalogStore } from '@/stores/catalogStore';
+import { useCustomerStore, type CustomerRow } from '@/stores/customerStore';
 import { computePayment, type PaymentMethod } from '@/utils/checkout';
 import { formatIdr } from '@/utils/money';
 import { useTranslation } from '@/i18n/useTranslation';
@@ -32,7 +33,7 @@ export function PosClient() {
   const [refreshKey, setRefreshKey] = useState(0);
   const [debtPaymentAmount, setDebtPaymentAmount] = useState<number>(0);
   const [debtPaymentNote, setDebtPaymentNote] = useState<string>('');
-  const [kbHeight, setKbHeight] = useState(0);
+  const cartBarRef = useRef<HTMLDivElement>(null);
   const { t } = useTranslation();
   const { showToast, Toast } = useToast();
 
@@ -48,6 +49,9 @@ export function PosClient() {
   const updateStocks = useCatalogStore((s) => s.updateStocks);
   const setLoading = useCatalogStore((s) => s.setLoading);
 
+  const setCustomers = useCustomerStore((s) => s.setCustomers);
+  const customersLoaded = useCustomerStore((s) => s.loaded);
+
   const total = useMemo(
     () => items.reduce((acc, i) => acc + i.subtotal, 0),
     [items],
@@ -60,6 +64,18 @@ export function PosClient() {
     () => computePayment({ totalAmount: total, paymentMethod, amountReceived }),
     [total, paymentMethod, amountReceived],
   );
+
+  useEffect(() => {
+    async function fetchCustomers() {
+      try {
+        const res = await fetch('/api/customers?limit=1000&sortBy=name&sortOrder=asc');
+        if (!res.ok) return;
+        const data = await res.json() as CustomerRow[];
+        setCustomers(data);
+      } catch {}
+    }
+    if (!customersLoaded) void fetchCustomers();
+  }, [setCustomers, customersLoaded]);
 
   // Initial catalog fetch
   useEffect(() => {
@@ -118,8 +134,10 @@ export function PosClient() {
     if (!vv) return;
 
     function update() {
+      const el = cartBarRef.current;
+      if (!el) return;
       const hidden = window.innerHeight - (vv!.height + vv!.offsetTop);
-      setKbHeight(Math.max(0, hidden));
+      el.style.bottom = `${Math.max(0, hidden) + 16}px`;
     }
 
     vv.addEventListener('resize', update);
@@ -210,6 +228,12 @@ export function PosClient() {
     setPaymentMethod('cash');
     setRefreshKey((k) => k + 1);
     inputRef.current?.focus();
+
+    // Refresh customer list so debt balances reflect the completed transaction
+    fetch('/api/customers?limit=1000&sortBy=name&sortOrder=asc')
+      .then((r) => r.json())
+      .then((data: CustomerRow[]) => setCustomers(data))
+      .catch(() => {});
   }
 
   return (
@@ -249,8 +273,9 @@ export function PosClient() {
 
       {/* Mobile sticky cart bar — fixed to bottom of viewport */}
       <div
-        className="lg:hidden fixed inset-x-0 z-20 px-4 pb-4 pt-2 bg-gradient-to-t from-zinc-50 dark:from-zinc-950 to-transparent transition-[bottom] ease-out"
-        style={{ bottom: kbHeight + 16 }}
+        ref={cartBarRef}
+        className="lg:hidden fixed inset-x-0 z-20 px-4 pb-4 pt-2 bg-gradient-to-t from-zinc-50 dark:from-zinc-950 to-transparent"
+        style={{ bottom: 16 }}
       >
         <button
           type="button"

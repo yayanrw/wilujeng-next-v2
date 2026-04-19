@@ -126,6 +126,7 @@
     "checkout": "Bayar",
     "checkoutTitle": "Pembayaran",
     "walkInCustomer": "Pelanggan Umum",
+    "searchCustomerPlaceholder": "Cari nama atau telepon (kosongkan untuk umum)",
     "amountReceived": "Jumlah Diterima",
     "exactAmount": "Uang Pas",
     "paymentMethod": "Metode Pembayaran",
