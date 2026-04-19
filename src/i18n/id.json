@@ -154,7 +154,16 @@
     "initialDebt": "Hutang Awal",
     "initialDebtDesc": "Isi bidang ini jika pelanggan memiliki hutang sebelum menggunakan sistem ini.",
     "freeItem": "GRATIS",
-    "freeItemLabel": "{{name}} (GRATIS)"
+    "freeItemLabel": "{{name}} (GRATIS)",
+    "scanWithCamera": "Scan dengan kamera",
+    "scannerTitle": "Scan Barcode",
+    "scannerHint": "Arahkan kamera ke barcode",
+    "scannerPermissionDenied": "Akses kamera ditolak. Aktifkan di pengaturan browser.",
+    "scannerNoCamera": "Tidak ada kamera yang ditemukan.",
+    "scannerSwitchCamera": "Ganti kamera",
+    "scannerAdded": "Ditambahkan",
+    "productNotFound": "Produk tidak ditemukan",
+    "scannerOutOfStock": "Stok habis"
   },
   "products": {
     "title": "Produk",

@@ -2,7 +2,7 @@
 
 import { useEffect, useState, useMemo } from 'react';
 
-import { Search, LayoutGrid, List, X } from 'lucide-react';
+import { Search, LayoutGrid, List, X, Camera } from 'lucide-react';
 
 import { Badge } from '@/components/ui/Badge';
 import { Button } from '@/components/ui/Button';
@@ -17,10 +17,12 @@ export function SearchPanel({
   inputRef,
   onToast,
   refreshKey,
+  onCameraClick,
 }: {
   inputRef: React.RefObject<HTMLInputElement | null>;
   onToast: (m: string) => void;
   refreshKey?: number;
+  onCameraClick?: () => void;
 }) {
   const [query, setQuery] = useState('');
   const [categoryId, setCategoryId] = useState('all');
@@ -73,7 +75,7 @@ export function SearchPanel({
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-zinc-500 dark:text-zinc-400" />
             <Input
               ref={inputRef}
-              className="pl-9"
+              className={onCameraClick ? 'pl-9 pr-16' : 'pl-9'}
               placeholder={t.pos.searchPlaceholder}
               value={query}
               onChange={(e) => setQuery(e.target.value)}
@@ -97,6 +99,17 @@ export function SearchPanel({
                 }
               }}
             />
+            {onCameraClick && (
+              <button
+                type="button"
+                onClick={onCameraClick}
+                className="absolute right-8 top-1/2 -translate-y-1/2 rounded-full p-0.5 text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-300 transition-colors"
+                title={t.pos.scanWithCamera}
+                aria-label={t.pos.scanWithCamera}
+              >
+                <Camera className="h-4 w-4" />
+              </button>
+            )}
             {query && (
               <button
                 type="button"

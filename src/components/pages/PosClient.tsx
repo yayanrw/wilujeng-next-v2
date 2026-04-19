@@ -2,15 +2,18 @@
 
 import { useEffect, useMemo, useRef, useState } from 'react';
 
-import { Printer } from 'lucide-react';
+import { Printer, ShoppingCart } from 'lucide-react';
 
 import { Button } from '@/components/ui/Button';
 import { usePosStore } from '@/stores/posStore';
 import { useCatalogStore } from '@/stores/catalogStore';
 import { computePayment, type PaymentMethod } from '@/utils/checkout';
+import { formatIdr } from '@/utils/money';
 import { useTranslation } from '@/i18n/useTranslation';
 import { useToast } from '@/hooks/useToast';
 
+import { BarcodeScannerModal } from './pos/BarcodeScannerModal';
+import { CartBottomSheet } from './pos/CartBottomSheet';
 import { CartPanel } from './pos/CartPanel';
 import { CheckoutModal } from './pos/CheckoutModal';
 import { SearchPanel } from './pos/SearchPanel';
@@ -18,6 +21,9 @@ import { SearchPanel } from './pos/SearchPanel';
 export function PosClient() {
   const inputRef = useRef<HTMLInputElement | null>(null);
   const [checkoutOpen, setCheckoutOpen] = useState(false);
+  const [cartOpen, setCartOpen] = useState(false);
+  const [scannerOpen, setScannerOpen] = useState(false);
+  const [isMobile, setIsMobile] = useState(false);
   const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>('cash');
   const [amountReceived, setAmountReceived] = useState(0);
   const [checkoutPending, setCheckoutPending] = useState(false);
@@ -31,6 +37,10 @@ export function PosClient() {
   const items = usePosStore((s) => s.items);
   const customerId = usePosStore((s) => s.customerId);
   const clear = usePosStore((s) => s.clear);
+  const addProduct = usePosStore((s) => s.addProduct);
+
+  const products = useCatalogStore((s) => s.products);
+  const stocks = useCatalogStore((s) => s.stocks);
 
   const setProducts = useCatalogStore((s) => s.setProducts);
   const updateStocks = useCatalogStore((s) => s.updateStocks);
@@ -38,6 +48,10 @@ export function PosClient() {
 
   const total = useMemo(
     () => items.reduce((acc, i) => acc + i.subtotal, 0),
+    [items],
+  );
+  const totalQty = useMemo(
+    () => items.reduce((acc, i) => acc + i.qty, 0),
     [items],
   );
   const payment = useMemo(
@@ -89,6 +103,31 @@ export function PosClient() {
     inputRef.current?.focus();
   }, []);
 
+  useEffect(() => {
+    const mq = window.matchMedia('(max-width: 1023px)');
+    setIsMobile(mq.matches);
+    const handler = (e: MediaQueryListEvent) => setIsMobile(e.matches);
+    mq.addEventListener('change', handler);
+    return () => mq.removeEventListener('change', handler);
+  }, []);
+
+  function handleBarcodeScan(sku: string) {
+    const product = products.find(
+      (p) => p.sku.toLowerCase() === sku.toLowerCase(),
+    );
+    if (!product) {
+      showToast(t.pos.productNotFound);
+      return;
+    }
+    const stock = stocks[product.id] ?? 0;
+    if (stock === 0) {
+      showToast(t.pos.scannerOutOfStock ?? t.pos.outOfStock);
+      return;
+    }
+    addProduct({ ...product, stock }, 1);
+    showToast(`${product.name} +1`);
+  }
+
   async function doCheckout() {
     if (!items.length) return;
     if (payment.status === 'debt' && !customerId) {
@@ -129,6 +168,7 @@ export function PosClient() {
 
     setLastTxId(body.transactionId);
     setCheckoutOpen(false);
+    setScannerOpen(false);
     showToast(t.pos.transactionSaved);
     clear();
     setAmountReceived(0);
@@ -165,11 +205,53 @@ export function PosClient() {
           inputRef={inputRef}
           onToast={showToast}
           refreshKey={refreshKey}
+          onCameraClick={() => setScannerOpen(true)}
         />
-        <CartPanel total={total} onCheckout={() => setCheckoutOpen(true)} />
+        <div className="hidden lg:flex lg:flex-col lg:min-h-0">
+          <CartPanel total={total} onCheckout={() => setCheckoutOpen(true)} />
+        </div>
+      </div>
+
+      {/* Mobile sticky cart bar */}
+      <div className="lg:hidden shrink-0">
+        <button
+          type="button"
+          onClick={() => setCartOpen(true)}
+          className="w-full flex items-center justify-between bg-zinc-900 dark:bg-zinc-100 text-white dark:text-zinc-900 px-4 py-3 rounded-xl shadow-lg transition-opacity active:opacity-80"
+        >
+          <div className="flex items-center gap-2">
+            <ShoppingCart className="h-5 w-5" />
+            <span className="text-sm font-medium">
+              {totalQty} {totalQty === 1 ? t.pos.item : t.pos.items}
+            </span>
+          </div>
+          <span className="text-sm font-semibold tabular-nums">
+            {formatIdr(total)}
+          </span>
+        </button>
       </div>
 
       <Toast />
+
+      <BarcodeScannerModal
+        open={scannerOpen}
+        onScan={handleBarcodeScan}
+        onClose={() => setScannerOpen(false)}
+        isMobile={isMobile}
+        totalQty={totalQty}
+        total={total}
+        onOpenCart={() => setCartOpen(true)}
+      />
+
+      <CartBottomSheet
+        open={cartOpen}
+        total={total}
+        onClose={() => setCartOpen(false)}
+        onCheckout={() => {
+          setCartOpen(false);
+          setCheckoutOpen(true);
+        }}
+      />
 
       <CheckoutModal
         open={checkoutOpen}
