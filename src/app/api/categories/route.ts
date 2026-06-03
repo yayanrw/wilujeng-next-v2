@@ -23,20 +23,22 @@ export async function GET(req: Request) {
 
   const { searchParams } = new URL(req.url);
   const search = (searchParams.get('search') ?? '').trim();
+  const all = searchParams.get('all') === '1';
 
-  const cacheKey = `categories:list:${search || 'all'}`;
+  const cacheKey = `categories:list:${all ? 'all-full' : search || 'all'}`;
   const cachedData = await getCachedData(cacheKey);
 
   if (cachedData) {
     return json(cachedData);
   }
 
-  const rows = await db
+  const query = db
     .select({ id: categories.id, name: categories.name })
     .from(categories)
     .where(search ? ilike(categories.name, `%${search}%`) : undefined)
-    .orderBy(asc(categories.name))
-    .limit(50);
+    .orderBy(asc(categories.name));
+
+  const rows = all ? await query : await query.limit(50);
 
   await setCachedData(cacheKey, rows);
   return json(rows);

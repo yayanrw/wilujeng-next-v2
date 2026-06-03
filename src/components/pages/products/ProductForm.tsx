@@ -10,6 +10,7 @@ import { Input } from '@/components/ui/Input';
 import { AutocompleteInput } from './AutocompleteInput';
 import { BarcodeScannerModal } from '../pos/BarcodeScannerModal';
 import { useTranslation } from '@/i18n/useTranslation';
+import { useCatalogMetaStore } from '@/stores/catalogMetaStore';
 
 type BxgyPromo = {
   id: string;
@@ -64,8 +65,39 @@ export function ProductForm({
   );
   const [pending, setPending] = useState(false);
   const [scannerOpen, setScannerOpen] = useState(false);
+  const skuInputRef = useRef<HTMLInputElement>(null);
   const nameInputRef = useRef<HTMLInputElement>(null);
   const { t } = useTranslation();
+
+  // Catalog metadata (categories + brands) loaded once, searched locally
+  const categories = useCatalogMetaStore((s) => s.categories);
+  const brands = useCatalogMetaStore((s) => s.brands);
+  const catalogLoaded = useCatalogMetaStore((s) => s.loaded);
+  const setCategories = useCatalogMetaStore((s) => s.setCategories);
+  const setBrands = useCatalogMetaStore((s) => s.setBrands);
+  const setCatalogLoaded = useCatalogMetaStore((s) => s.setLoaded);
+  const addCategory = useCatalogMetaStore((s) => s.addCategory);
+  const addBrand = useCatalogMetaStore((s) => s.addBrand);
+
+  // Load all categories and brands once, then search them locally
+  useEffect(() => {
+    if (catalogLoaded) return;
+    let active = true;
+    Promise.all([
+      fetch('/api/categories?all=1').then((r) => r.json()),
+      fetch('/api/brands?all=1').then((r) => r.json()),
+    ])
+      .then(([cats, brs]) => {
+        if (!active) return;
+        if (Array.isArray(cats)) setCategories(cats);
+        if (Array.isArray(brs)) setBrands(brs);
+        setCatalogLoaded(true);
+      })
+      .catch(console.error);
+    return () => {
+      active = false;
+    };
+  }, [catalogLoaded, setCategories, setBrands, setCatalogLoaded]);
 
   // BxGy promo state
   const [promo, setPromo] = useState<BxgyPromo | null>(null);
@@ -194,6 +226,10 @@ export function ProductForm({
           return;
         }
 
+        // Keep local catalog in sync for newly typed category/brand
+        if (cat) addCategory({ id: cat, name: cat });
+        if (brand) addBrand({ id: brand, name: brand });
+
         if (mode === 'create') {
           setSku('');
           setName('');
@@ -207,6 +243,7 @@ export function ProductForm({
         }
 
         onSaved(true);
+        skuInputRef.current?.focus();
       }}
     >
       <div>
@@ -215,6 +252,7 @@ export function ProductForm({
         </label>
         <div className="flex gap-2 mt-1.5">
           <Input
+            ref={skuInputRef}
             value={sku}
             onChange={(e) => setSku(e.target.value)}
             onKeyDown={(e) => {
@@ -267,7 +305,7 @@ export function ProductForm({
             label={t.products.category}
             value={categoryName}
             onChange={setCategoryName}
-            fetchEndpoint="/api/categories"
+            options={categories}
             placeholder={t.products.typeToCreate}
           />
         </div>
@@ -276,7 +314,7 @@ export function ProductForm({
             label={t.products.brand}
             value={brandName}
             onChange={setBrandName}
-            fetchEndpoint="/api/brands"
+            options={brands}
             placeholder={t.products.typeToCreate}
           />
         </div>
