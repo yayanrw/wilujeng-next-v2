@@ -21,6 +21,7 @@ import { ImportProductModal } from './ImportProductModal';
 
 export function Products() {
   const [search, setSearch] = useState('');
+  const [debouncedSearch, setDebouncedSearch] = useState('');
   const [products, setProducts] = useState<ProductDto[]>([]);
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [mode, setMode] = useState<'create' | 'edit'>('create');
@@ -101,29 +102,26 @@ export function Products() {
     }
   }
 
+  // Debounce search input — only update debouncedSearch after 500ms of inactivity
+  useEffect(() => {
+    const id = window.setTimeout(() => setDebouncedSearch(search), 500);
+    return () => window.clearTimeout(id);
+  }, [search]);
+
   const refresh = useCallback(async () => {
     setPage(0);
-    await fetchProducts(search, categoryId, brandId, 0, false);
-  }, [search, categoryId, brandId]);
+    await fetchProducts(debouncedSearch, categoryId, brandId, 0, false);
+  }, [debouncedSearch, categoryId, brandId]);
 
   useEffect(() => {
     void refresh();
   }, [refresh]);
 
-  useEffect(() => {
-    setPage(0);
-    const t = window.setTimeout(
-      () => void fetchProducts(search, categoryId, brandId, 0, false),
-      500, // Increased debounce to 500ms
-    );
-    return () => window.clearTimeout(t);
-  }, [search, categoryId, brandId]);
-
   const loadMore = () => {
     if (loading || !hasMore) return;
     const nextPage = page + 1;
     setPage(nextPage);
-    fetchProducts(search, categoryId, brandId, nextPage, true);
+    fetchProducts(debouncedSearch, categoryId, brandId, nextPage, true);
   };
 
   async function handleStatusChange(id: string) {
