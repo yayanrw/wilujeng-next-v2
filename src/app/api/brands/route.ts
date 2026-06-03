@@ -22,23 +22,26 @@ export async function GET(req: Request) {
 
   const { searchParams } = new URL(req.url);
   const search = (searchParams.get('search') ?? '').trim();
+  const all = searchParams.get('all') === '1';
   const limit = Math.min(parseInt(searchParams.get('limit') || '50', 10), 100);
   const offset = parseInt(searchParams.get('offset') || '0', 10);
 
-  const cacheKey = `brands:list:${search || 'all'}:${limit}:${offset}`;
+  const cacheKey = all
+    ? 'brands:list:all-full'
+    : `brands:list:${search || 'all'}:${limit}:${offset}`;
   const cachedData = await getCachedData(cacheKey);
 
   if (cachedData) {
     return json(cachedData);
   }
 
-  const rows = await db
+  const query = db
     .select({ id: brands.id, name: brands.name })
     .from(brands)
     .where(search ? ilike(brands.name, `%${search}%`) : undefined)
-    .orderBy(asc(brands.name))
-    .limit(limit)
-    .offset(offset);
+    .orderBy(asc(brands.name));
+
+  const rows = all ? await query : await query.limit(limit).offset(offset);
 
   await setCachedData(cacheKey, rows);
   return json(rows);

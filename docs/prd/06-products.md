@@ -18,8 +18,8 @@
 | Harga Jual Dasar | Wajib, ≥ 0 |
 | Stok Awal | Wajib, ≥ 0 |
 | Min Stock Threshold | Default 0 |
-| Kategori | Autocomplete + Type to Create; di-cache Redis |
-| Merk | Autocomplete + Type to Create; di-cache Redis |
+| Kategori | Autocomplete + Type to Create; semua kategori di-load sekali ke store (Zustand) lalu di-search lokal — tidak hit API per ketukan |
+| Merk | Autocomplete + Type to Create; semua merk di-load sekali ke store (Zustand) lalu di-search lokal — tidak hit API per ketukan |
 
 - **Multi-Tier Pricing:** Form dinamis `{min_qty > 0, price > 0}`; unique per `min_qty`
 - Auto-reset form + Toast sukses/gagal setelah save
@@ -45,7 +45,9 @@ Saat update/status/delete: invalidate `products:catalog:*`, `pos:stocks:*`
 
 ## Master Data — Brands & Categories
 
-- `GET /api/brands?search=` → `200 [{id,name}]`
+- `GET /api/brands?search=` → `200 [{id,name}]` (default limit 50)
+- `GET /api/brands?all=1` → `200 [{id,name}]` (semua merk, tanpa limit; cache key `brands:list:all-full`) — dipakai ProductForm untuk search lokal
 - `DELETE /api/brands/:id` (admin) → validasi referensi produk → `200 {deleted:true}` atau `400`; invalidate `brands:list:*`
-- `GET /api/categories?search=` → `200 [{id,name}]`
+- `GET /api/categories?search=` → `200 [{id,name}]` (default limit 50)
+- `GET /api/categories?all=1` → `200 [{id,name}]` (semua kategori, tanpa limit; cache key `categories:list:all-full`) — dipakai ProductForm untuk search lokal
 - `DELETE /api/categories/:id` (admin) → validasi referensi produk → `200 {deleted:true}` atau `400`; invalidate `categories:list:*`

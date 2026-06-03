@@ -1,13 +1,15 @@
 'use client';
 
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useMemo, useRef } from 'react';
 import { Input } from '@/components/ui/Input';
 import { useTranslation } from '@/i18n/useTranslation';
+
+type AutocompleteOption = { id: string; name: string };
 
 type AutocompleteProps = {
   value: string;
   onChange: (val: string) => void;
-  fetchEndpoint: string;
+  options: AutocompleteOption[];
   placeholder?: string;
   label?: string;
 };
@@ -15,14 +17,12 @@ type AutocompleteProps = {
 export function AutocompleteInput({
   value,
   onChange,
-  fetchEndpoint,
+  options,
   placeholder,
   label,
 }: AutocompleteProps) {
   const [query, setQuery] = useState(value);
-  const [options, setOptions] = useState<{ id: string; name: string }[]>([]);
   const [isOpen, setIsOpen] = useState(false);
-  const [loading, setLoading] = useState(false);
   const wrapperRef = useRef<HTMLDivElement>(null);
   const { t } = useTranslation();
 
@@ -44,37 +44,27 @@ export function AutocompleteInput({
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
-  // Debounce logic for fetch requests
-  useEffect(() => {
-    if (!isOpen || !query.trim()) {
-      if (!query.trim()) setOptions([]);
-      return;
-    }
+  // Filter locally — no network request per keystroke
+  const filtered = useMemo(() => {
+    const q = query.trim().toLowerCase();
+    const matches = q
+      ? options.filter((o) => o.name.toLowerCase().includes(q))
+      : options;
+    return matches.slice(0, 50);
+  }, [query, options]);
 
-    const t = setTimeout(async () => {
-      setLoading(true);
-      try {
-        const res = await fetch(
-          `${fetchEndpoint}?search=${encodeURIComponent(query)}`,
-        );
-        if (res.ok) {
-          const data = await res.json();
-          setOptions(data);
-        }
-      } catch (e) {
-        console.error(e);
-      } finally {
-        setLoading(false);
-      }
-    }, 500); // Increased debounce to 500ms for optimal typing experience
-
-    return () => clearTimeout(t);
-  }, [query, isOpen, fetchEndpoint]);
+  const hasExactMatch = useMemo(
+    () =>
+      options.some((o) => o.name.toLowerCase() === query.trim().toLowerCase()),
+    [options, query],
+  );
 
   return (
     <div ref={wrapperRef} className="relative">
       {label && (
-        <label className="text-sm font-medium mb-1 block">{label}</label>
+        <label className="text-xs font-semibold uppercase tracking-wider text-zinc-500 dark:text-zinc-400 mb-1.5 block">
+          {label}
+        </label>
       )}
       <Input
         value={query}
@@ -92,15 +82,11 @@ export function AutocompleteInput({
         autoComplete="off"
       />
 
-      {isOpen && query.trim().length > 0 && (
+      {isOpen && (
         <div className="absolute z-50 mt-1 max-h-60 w-full overflow-auto rounded-md border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-950 p-1 text-sm shadow-md">
-          {loading ? (
-            <div className="px-2 py-1.5 text-zinc-500 dark:text-zinc-400">
-              {t.common.searching}
-            </div>
-          ) : options.length > 0 ? (
+          {filtered.length > 0 ? (
             <>
-              {options.map((opt) => (
+              {filtered.map((opt) => (
                 <button
                   key={opt.id}
                   type="button"
@@ -115,20 +101,22 @@ export function AutocompleteInput({
                 </button>
               ))}
               {/* If exact match doesn't exist, show create option */}
-              {!options.find(
-                (o) => o.name.toLowerCase() === query.toLowerCase(),
-              ) && (
+              {query.trim().length > 0 && !hasExactMatch && (
                 <div className="px-2 py-1.5 text-xs text-zinc-500 dark:text-zinc-400 border-t border-zinc-100 dark:border-zinc-800 mt-1 pt-1.5">
                   {t.products.pressEnterToCreate} &quot;{query}&quot;
                 </div>
               )}
             </>
-          ) : (
+          ) : query.trim().length > 0 ? (
             <div className="px-2 py-1.5 text-zinc-500 dark:text-zinc-400 flex flex-col gap-1">
               <span>{t.products.noMatches}</span>
               <span className="text-xs">
                 {t.products.pressEnterToCreate} &quot;{query}&quot;
               </span>
+            </div>
+          ) : (
+            <div className="px-2 py-1.5 text-zinc-500 dark:text-zinc-400">
+              {t.products.noMatches}
             </div>
           )}
         </div>

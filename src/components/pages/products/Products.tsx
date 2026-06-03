@@ -2,12 +2,13 @@
 
 import { useCallback, useEffect, useMemo, useState } from 'react';
 
-import { Plus, Pencil, ToggleRight, ToggleLeft, Trash } from 'lucide-react';
+import { Plus, Pencil, ToggleRight, ToggleLeft, Trash, FileUp } from 'lucide-react';
 
 import { Badge } from '@/components/ui/Badge';
 import { Button } from '@/components/ui/Button';
 import { Card, CardContent, CardHeader } from '@/components/ui/Card';
 import { SearchInput } from '@/components/ui/SearchInput';
+import { SearchableSelect } from '@/components/ui/SearchableSelect';
 import { TableLoading } from '@/components/ui/TableLoading';
 import { TableEmpty } from '@/components/ui/TableEmpty';
 import { LoadMoreButton } from '@/components/ui/LoadMoreButton';
@@ -15,12 +16,14 @@ import { formatIdr } from '@/utils/money';
 
 import { useTranslation } from '@/i18n/useTranslation';
 import { ConfirmDialog } from '@/components/ui/ConfirmDialog';
+import { useCatalogMetaStore } from '@/stores/catalogMetaStore';
 import { ProductDto, ProductForm } from './ProductForm';
 import { useToast } from '@/hooks/useToast';
 import { ImportProductModal } from './ImportProductModal';
 
 export function Products() {
   const [search, setSearch] = useState('');
+  const [debouncedSearch, setDebouncedSearch] = useState('');
   const [products, setProducts] = useState<ProductDto[]>([]);
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [mode, setMode] = useState<'create' | 'edit'>('create');
@@ -31,37 +34,42 @@ export function Products() {
   const { showToast, Toast } = useToast();
   const [categoryId, setCategoryId] = useState('all');
   const [brandId, setBrandId] = useState('all');
-  const [categories, setCategories] = useState<{ id: string; name: string }[]>(
-    [],
-  );
-  const [brands, setBrands] = useState<{ id: string; name: string }[]>([]);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const [deleting, setDeleting] = useState(false);
   const { t } = useTranslation();
   const LIMIT = 50;
 
+  // Use catalog meta store (loaded once, shared with ProductForm)
+  const categories = useCatalogMetaStore((s) => s.categories);
+  const brands = useCatalogMetaStore((s) => s.brands);
+  const catalogLoaded = useCatalogMetaStore((s) => s.loaded);
+  const setStoreCategories = useCatalogMetaStore((s) => s.setCategories);
+  const setStoreBrands = useCatalogMetaStore((s) => s.setBrands);
+  const setCatalogLoaded = useCatalogMetaStore((s) => s.setLoaded);
+
+  useEffect(() => {
+    if (catalogLoaded) return;
+    let active = true;
+    Promise.all([
+      fetch('/api/categories?all=1').then((r) => r.json()),
+      fetch('/api/brands?all=1').then((r) => r.json()),
+    ])
+      .then(([cats, brs]) => {
+        if (!active) return;
+        if (Array.isArray(cats)) setStoreCategories(cats);
+        if (Array.isArray(brs)) setStoreBrands(brs);
+        setCatalogLoaded(true);
+      })
+      .catch(console.error);
+    return () => { active = false; };
+  }, [catalogLoaded, setStoreCategories, setStoreBrands, setCatalogLoaded]);
+
   const selected = useMemo(
     () =>
       selectedId ? (products.find((p) => p.id === selectedId) ?? null) : null,
     [products, selectedId],
   );
-
-  useEffect(() => {
-    fetch('/api/categories')
-      .then((r) => r.json())
-      .then((data) => {
-        if (Array.isArray(data)) setCategories(data);
-      })
-      .catch(console.error);
-
-    fetch('/api/brands')
-      .then((r) => r.json())
-      .then((data) => {
-        if (Array.isArray(data)) setBrands(data);
-      })
-      .catch(console.error);
-  }, []);
 
   async function fetchProducts(
     q: string,
@@ -101,29 +109,26 @@ export function Products() {
     }
   }
 
+  // Debounce search input — only update debouncedSearch after 500ms of inactivity
+  useEffect(() => {
+    const id = window.setTimeout(() => setDebouncedSearch(search), 500);
+    return () => window.clearTimeout(id);
+  }, [search]);
+
   const refresh = useCallback(async () => {
     setPage(0);
-    await fetchProducts(search, categoryId, brandId, 0, false);
-  }, [search, categoryId, brandId]);
+    await fetchProducts(debouncedSearch, categoryId, brandId, 0, false);
+  }, [debouncedSearch, categoryId, brandId]);
 
   useEffect(() => {
     void refresh();
   }, [refresh]);
 
-  useEffect(() => {
-    setPage(0);
-    const t = window.setTimeout(
-      () => void fetchProducts(search, categoryId, brandId, 0, false),
-      500, // Increased debounce to 500ms
-    );
-    return () => window.clearTimeout(t);
-  }, [search, categoryId, brandId]);
-
   const loadMore = () => {
     if (loading || !hasMore) return;
     const nextPage = page + 1;
     setPage(nextPage);
-    fetchProducts(search, categoryId, brandId, nextPage, true);
+    fetchProducts(debouncedSearch, categoryId, brandId, nextPage, true);
   };
 
   async function handleStatusChange(id: string) {
@@ -201,42 +206,35 @@ export function Products() {
               wrapperClassName="flex-1"
             />
             <div className="flex gap-3 w-full sm:w-auto">
-              <select
-                className="flex h-10 w-full sm:w-45 items-center justify-between rounded-md border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-950 px-3 py-2 text-sm ring-offset-white placeholder:text-zinc-500 dark:text-zinc-400 focus:outline-none focus:ring-2 focus:ring-zinc-950 focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+              <SearchableSelect
                 value={categoryId}
-                onChange={(e) => setCategoryId(e.target.value)}
-              >
-                <option value="all">{t.common.allCategories}</option>
-                {categories.map((c) => (
-                  <option key={c.id} value={c.id}>
-                    {c.name}
-                  </option>
-                ))}
-              </select>
-              <select
-                className="flex h-10 w-full sm:w-45 items-center justify-between rounded-md border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-950 px-3 py-2 text-sm ring-offset-white placeholder:text-zinc-500 dark:text-zinc-400 focus:outline-none focus:ring-2 focus:ring-zinc-950 focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                onChange={setCategoryId}
+                options={categories}
+                allLabel={t.common.allCategories}
+                searchPlaceholder={t.common.search}
+                className="w-full sm:w-45"
+              />
+              <SearchableSelect
                 value={brandId}
-                onChange={(e) => setBrandId(e.target.value)}
-              >
-                <option value="all">{t.common.allBrands}</option>
-                {brands.map((b) => (
-                  <option key={b.id} value={b.id}>
-                    {b.name}
-                  </option>
-                ))}
-              </select>
+                onChange={setBrandId}
+                options={brands}
+                allLabel={t.common.allBrands}
+                searchPlaceholder={t.common.search}
+                className="w-full sm:w-45"
+              />
               <Button
                 variant="secondary"
-                className="h-10 whitespace-nowrap bg-white dark:bg-zinc-950"
+                className="h-10 whitespace-nowrap bg-white dark:bg-zinc-950 gap-1.5"
                 onClick={() => setIsImportModalOpen(true)}
               >
+                <FileUp className="h-4 w-4 shrink-0" />
                 {t.products.importProducts || 'Import'}
               </Button>
             </div>
           </div>
         </CardHeader>
         <CardContent className="p-0 min-w-0">
-          <div className="overflow-hidden">
+          <div className="overflow-x-auto">
             <table className="w-full text-sm">
               <thead>
                 <tr className="border-y border-zinc-200 dark:border-zinc-800 bg-zinc-50/50 dark:bg-zinc-900/50 text-left text-zinc-500 dark:text-zinc-400">
@@ -245,10 +243,10 @@ export function Products() {
                   <th className="py-3 px-4 font-medium">
                     {t.products.price}
                   </th>
-                  <th className="py-3 px-4 font-medium">
+                  <th className="py-3 px-4 font-medium hidden sm:table-cell">
                     {t.products.stock}
                   </th>
-                  <th className="py-3 px-4 font-medium">
+                  <th className="py-3 px-4 font-medium hidden sm:table-cell">
                     {t.products.active}
                   </th>
                   <th className="py-3 px-4 font-medium text-right">
@@ -299,21 +297,27 @@ export function Products() {
                               </Badge>
                             ) : null}
                           </div>
-                          <div className="flex gap-2 text-[11px] font-medium text-zinc-500 dark:text-zinc-400 uppercase tracking-wider">
+                          <div className="flex flex-wrap gap-2 text-[11px] font-medium text-zinc-500 dark:text-zinc-400 uppercase tracking-wider">
                             {p.category ? <span>{p.category.name}</span> : null}
                             {p.category && p.brand ? (
-                              <span className="text-zinc-300 dark:text-zinc-700">
-                                •
-                              </span>
+                              <span className="text-zinc-300 dark:text-zinc-700">•</span>
                             ) : null}
                             {p.brand ? <span>{p.brand.name}</span> : null}
+                            <span className="sm:hidden text-zinc-300 dark:text-zinc-700">•</span>
+                            <span className={`sm:hidden ${p.stock <= 0 ? 'text-red-500 dark:text-red-400' : ''}`}>
+                              {t.products.stock} {p.stock}
+                            </span>
+                            <span className="sm:hidden text-zinc-300 dark:text-zinc-700">•</span>
+                            <span className={`sm:hidden ${p.isActive ? 'text-emerald-600 dark:text-emerald-400' : 'text-red-500 dark:text-red-400'}`}>
+                              {p.isActive ? t.products.active : t.products.notActive}
+                            </span>
                           </div>
                         </div>
                       </td>
                       <td className="py-3 px-4 align-middle font-medium text-zinc-900 dark:text-zinc-100 tabular-nums">
                         {formatIdr(p.basePrice)}
                       </td>
-                      <td className="py-3 px-4 align-middle">
+                      <td className="py-3 px-4 align-middle hidden sm:table-cell">
                         <Badge
                           tone={p.stock <= 0 ? 'danger' : 'neutral'}
                           className="tabular-nums font-semibold"
@@ -321,7 +325,7 @@ export function Products() {
                           {p.stock}
                         </Badge>
                       </td>
-                      <td className="py-3 px-4 align-middle">
+                      <td className="py-3 px-4 align-middle hidden sm:table-cell">
                         {p.isActive ? (
                           <Badge tone="success">{t.products.active}</Badge>
                         ) : (

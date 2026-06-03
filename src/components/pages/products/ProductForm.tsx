@@ -1,6 +1,6 @@
 'use client';
 
-import { useMemo, useState, useEffect, useCallback } from 'react';
+import { useMemo, useState, useEffect, useCallback, useRef } from 'react';
 
 import { Plus, Trash2, Dices, Camera } from 'lucide-react';
 
@@ -10,6 +10,7 @@ import { Input } from '@/components/ui/Input';
 import { AutocompleteInput } from './AutocompleteInput';
 import { BarcodeScannerModal } from '../pos/BarcodeScannerModal';
 import { useTranslation } from '@/i18n/useTranslation';
+import { useCatalogMetaStore } from '@/stores/catalogMetaStore';
 
 type BxgyPromo = {
   id: string;
@@ -64,9 +65,42 @@ export function ProductForm({
   );
   const [pending, setPending] = useState(false);
   const [scannerOpen, setScannerOpen] = useState(false);
+  const skuInputRef = useRef<HTMLInputElement>(null);
+  const nameInputRef = useRef<HTMLInputElement>(null);
   const { t } = useTranslation();
 
+  // Catalog metadata (categories + brands) loaded once, searched locally
+  const categories = useCatalogMetaStore((s) => s.categories);
+  const brands = useCatalogMetaStore((s) => s.brands);
+  const catalogLoaded = useCatalogMetaStore((s) => s.loaded);
+  const setCategories = useCatalogMetaStore((s) => s.setCategories);
+  const setBrands = useCatalogMetaStore((s) => s.setBrands);
+  const setCatalogLoaded = useCatalogMetaStore((s) => s.setLoaded);
+  const addCategory = useCatalogMetaStore((s) => s.addCategory);
+  const addBrand = useCatalogMetaStore((s) => s.addBrand);
+
+  // Load all categories and brands once, then search them locally
+  useEffect(() => {
+    if (catalogLoaded) return;
+    let active = true;
+    Promise.all([
+      fetch('/api/categories?all=1').then((r) => r.json()),
+      fetch('/api/brands?all=1').then((r) => r.json()),
+    ])
+      .then(([cats, brs]) => {
+        if (!active) return;
+        if (Array.isArray(cats)) setCategories(cats);
+        if (Array.isArray(brs)) setBrands(brs);
+        setCatalogLoaded(true);
+      })
+      .catch(console.error);
+    return () => {
+      active = false;
+    };
+  }, [catalogLoaded, setCategories, setBrands, setCatalogLoaded]);
+
   // BxGy promo state
+  const [promoEnabled, setPromoEnabled] = useState(false);
   const [promo, setPromo] = useState<BxgyPromo | null>(null);
   const [promoBuyQty, setPromoBuyQty] = useState(2);
   const [promoFreeQty, setPromoFreeQty] = useState(1);
@@ -82,6 +116,7 @@ export function ProductForm({
     if (!res.ok) return;
     const data = (await res.json()) as { promo: BxgyPromo | null };
     setPromo(data.promo);
+    setPromoEnabled(!!data.promo);
     if (data.promo) {
       setPromoBuyQty(data.promo.buyQty);
       setPromoFreeQty(data.promo.freeQty);
@@ -123,6 +158,7 @@ export function ProductForm({
       setBrandName('');
       setTiers([]);
       setPromo(null);
+      setPromoEnabled(false);
     }
   }, [initial, mode, fetchPromo]);
 
@@ -185,12 +221,33 @@ export function ProductForm({
           },
         );
         const body = (await res.json().catch(() => null)) as {
+          id?: string;
           error?: { message?: string };
         } | null;
         setPending(false);
         if (!res.ok) {
           onSaved(false, body?.error?.message ?? 'Save failed');
           return;
+        }
+
+        // Keep local catalog in sync for newly typed category/brand
+        if (cat) addCategory({ id: cat, name: cat });
+        if (brand) addBrand({ id: brand, name: brand });
+
+        // In create mode, save promo alongside the new product if enabled
+        if (mode === 'create' && promoEnabled && body?.id) {
+          await fetch(`/api/products/${body.id}/promo`, {
+            method: 'POST',
+            headers: { 'content-type': 'application/json' },
+            body: JSON.stringify({
+              buyQty: promoBuyQty,
+              freeQty: promoFreeQty,
+              active: promoActive,
+              validFrom: promoValidFrom ? new Date(promoValidFrom).toISOString() : null,
+              validTo: promoValidTo ? new Date(promoValidTo).toISOString() : null,
+              maxMultiplierPerTx: promoMaxMultiplier ? Number(promoMaxMultiplier) : null,
+            }),
+          });
         }
 
         if (mode === 'create') {
@@ -203,56 +260,70 @@ export function ProductForm({
           setCategoryName('');
           setBrandName('');
           setTiers([]);
+          setPromoEnabled(false);
+          setPromoBuyQty(2);
+          setPromoFreeQty(1);
+          setPromoActive(true);
+          setPromoValidFrom('');
+          setPromoValidTo('');
+          setPromoMaxMultiplier('');
         }
 
         onSaved(true);
+        skuInputRef.current?.focus();
       }}
     >
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <div>
-          <label className="text-xs font-semibold uppercase tracking-wider text-zinc-500 dark:text-zinc-400">
-            {t.products.sku}
-          </label>
-          <div className="flex gap-2 mt-1.5">
-            <Input
-              value={sku}
-              onChange={(e) => setSku(e.target.value)}
-              className="flex-1 font-mono text-sm"
-              placeholder="Item SKU"
-            />
-            <Button
-              type="button"
-              variant="secondary"
-              onClick={() => setScannerOpen(true)}
-              title={t.pos.scanWithCamera}
-              className="px-3"
-              aria-label={t.pos.scanWithCamera}
-            >
-              <Camera className="h-4 w-4 text-zinc-500 dark:text-zinc-400" />
-            </Button>
-            <Button
-              type="button"
-              variant="secondary"
-              onClick={generateSku}
-              title={t.products.generateSku}
-              className="px-3"
-              aria-label={t.products.generateSku}
-            >
-              <Dices className="h-4 w-4 text-zinc-500 dark:text-zinc-400" />
-            </Button>
-          </div>
-        </div>
-        <div>
-          <label className="text-xs font-semibold uppercase tracking-wider text-zinc-500 dark:text-zinc-400">
-            {t.products.name}
-          </label>
+      <div>
+        <label className="text-xs font-semibold uppercase tracking-wider text-zinc-500 dark:text-zinc-400">
+          {t.products.sku}
+        </label>
+        <div className="flex gap-2 mt-1.5">
           <Input
-            value={name}
-            onChange={(e) => setName(e.target.value)}
-            className="mt-1.5 font-medium"
-            placeholder={t.products.productName}
+            ref={skuInputRef}
+            value={sku}
+            onChange={(e) => setSku(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter') {
+                e.preventDefault();
+                nameInputRef.current?.focus();
+              }
+            }}
+            className="flex-1 font-mono text-sm"
+            placeholder="Item SKU"
           />
+          <Button
+            type="button"
+            variant="secondary"
+            onClick={() => setScannerOpen(true)}
+            title={t.pos.scanWithCamera}
+            className="px-3"
+            aria-label={t.pos.scanWithCamera}
+          >
+            <Camera className="h-4 w-4 text-zinc-500 dark:text-zinc-400" />
+          </Button>
+          <Button
+            type="button"
+            variant="secondary"
+            onClick={generateSku}
+            title={t.products.generateSku}
+            className="px-3"
+            aria-label={t.products.generateSku}
+          >
+            <Dices className="h-4 w-4 text-zinc-500 dark:text-zinc-400" />
+          </Button>
         </div>
+      </div>
+      <div>
+        <label className="text-xs font-semibold uppercase tracking-wider text-zinc-500 dark:text-zinc-400">
+          {t.products.name}
+        </label>
+        <Input
+          ref={nameInputRef}
+          value={name}
+          onChange={(e) => setName(e.target.value)}
+          className="mt-1.5 font-medium"
+          placeholder={t.products.productName}
+        />
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -261,7 +332,7 @@ export function ProductForm({
             label={t.products.category}
             value={categoryName}
             onChange={setCategoryName}
-            fetchEndpoint="/api/categories"
+            options={categories}
             placeholder={t.products.typeToCreate}
           />
         </div>
@@ -270,7 +341,7 @@ export function ProductForm({
             label={t.products.brand}
             value={brandName}
             onChange={setBrandName}
-            fetchEndpoint="/api/brands"
+            options={brands}
             placeholder={t.products.typeToCreate}
           />
         </div>
@@ -455,16 +526,38 @@ export function ProductForm({
         </div>
       </div>
 
-      {mode === 'edit' && (
-        <div className="rounded-xl border border-zinc-200 dark:border-zinc-800 bg-zinc-50/50 dark:bg-zinc-900/50 p-4 space-y-4">
-          <div>
-            <div className="text-sm font-semibold text-zinc-900 dark:text-zinc-100">
-              {t.products.bxgyPromo}
+      <div className="rounded-xl border border-zinc-200 dark:border-zinc-800 bg-zinc-50/50 dark:bg-zinc-900/50 p-4 space-y-4">
+          <button
+            type="button"
+            className="flex w-full items-center justify-between gap-3"
+            onClick={() => setPromoEnabled((v) => !v)}
+          >
+            <div className="text-left">
+              <div className="text-sm font-semibold text-zinc-900 dark:text-zinc-100">
+                {t.products.bxgyPromo}
+              </div>
+              <div className="text-xs text-zinc-500 dark:text-zinc-400">
+                {t.products.bxgyDesc}
+              </div>
             </div>
-            <div className="text-xs text-zinc-500 dark:text-zinc-400">
-              {t.products.bxgyDesc}
-            </div>
-          </div>
+            <span
+              role="switch"
+              aria-checked={promoEnabled}
+              className={`relative inline-flex h-5 w-9 shrink-0 rounded-full border-2 border-transparent transition-colors ${
+                promoEnabled
+                  ? 'bg-zinc-900 dark:bg-zinc-100'
+                  : 'bg-zinc-200 dark:bg-zinc-700'
+              }`}
+            >
+              <span
+                className={`pointer-events-none inline-block h-4 w-4 transform rounded-full bg-white shadow transition-transform ${
+                  promoEnabled ? 'translate-x-4' : 'translate-x-0'
+                } ${promoEnabled ? 'dark:bg-zinc-900' : ''}`}
+              />
+            </span>
+          </button>
+
+        {promoEnabled && (<>
 
           <div className="grid grid-cols-2 gap-3">
             <div>
@@ -559,67 +652,70 @@ export function ProductForm({
             </p>
           )}
 
-          <div className="flex gap-2">
-            <Button
-              type="button"
-              variant="secondary"
-              size="sm"
-              disabled={promoSaving}
-              onClick={async () => {
-                setPromoSaving(true);
-                setPromoMsg(null);
-                const res = await fetch(`/api/products/${initial!.id}/promo`, {
-                  method: 'POST',
-                  headers: { 'content-type': 'application/json' },
-                  body: JSON.stringify({
-                    buyQty: promoBuyQty,
-                    freeQty: promoFreeQty,
-                    active: promoActive,
-                    validFrom: promoValidFrom ? new Date(promoValidFrom).toISOString() : null,
-                    validTo: promoValidTo ? new Date(promoValidTo).toISOString() : null,
-                    maxMultiplierPerTx: promoMaxMultiplier ? Number(promoMaxMultiplier) : null,
-                  }),
-                });
-                setPromoSaving(false);
-                if (res.ok) {
-                  const data = (await res.json()) as { promo: BxgyPromo };
-                  setPromo(data.promo);
-                  setPromoMsg({ ok: true, text: t.products.bxgySavedSuccess });
-                } else {
-                  setPromoMsg({ ok: false, text: t.products.bxgySaveFailed });
-                }
-              }}
-            >
-              {t.products.bxgySave}
-            </Button>
-
-            {promo && (
+          {mode === 'edit' && (
+            <div className="flex gap-2">
               <Button
                 type="button"
-                variant="danger"
+                variant="secondary"
                 size="sm"
                 disabled={promoSaving}
                 onClick={async () => {
                   setPromoSaving(true);
                   setPromoMsg(null);
                   const res = await fetch(`/api/products/${initial!.id}/promo`, {
-                    method: 'DELETE',
+                    method: 'POST',
+                    headers: { 'content-type': 'application/json' },
+                    body: JSON.stringify({
+                      buyQty: promoBuyQty,
+                      freeQty: promoFreeQty,
+                      active: promoActive,
+                      validFrom: promoValidFrom ? new Date(promoValidFrom).toISOString() : null,
+                      validTo: promoValidTo ? new Date(promoValidTo).toISOString() : null,
+                      maxMultiplierPerTx: promoMaxMultiplier ? Number(promoMaxMultiplier) : null,
+                    }),
                   });
                   setPromoSaving(false);
                   if (res.ok) {
-                    setPromo(null);
-                    setPromoMsg({ ok: true, text: t.products.bxgyDeletedSuccess });
+                    const data = (await res.json()) as { promo: BxgyPromo };
+                    setPromo(data.promo);
+                    setPromoMsg({ ok: true, text: t.products.bxgySavedSuccess });
                   } else {
-                    setPromoMsg({ ok: false, text: t.products.bxgyDeleteFailed });
+                    setPromoMsg({ ok: false, text: t.products.bxgySaveFailed });
                   }
                 }}
               >
-                {t.products.bxgyDelete}
+                {t.products.bxgySave}
               </Button>
-            )}
-          </div>
-        </div>
-      )}
+
+              {promo && (
+                <Button
+                  type="button"
+                  variant="danger"
+                  size="sm"
+                  disabled={promoSaving}
+                  onClick={async () => {
+                    setPromoSaving(true);
+                    setPromoMsg(null);
+                    const res = await fetch(`/api/products/${initial!.id}/promo`, {
+                      method: 'DELETE',
+                    });
+                    setPromoSaving(false);
+                    if (res.ok) {
+                      setPromo(null);
+                      setPromoEnabled(false);
+                      setPromoMsg({ ok: true, text: t.products.bxgyDeletedSuccess });
+                    } else {
+                      setPromoMsg({ ok: false, text: t.products.bxgyDeleteFailed });
+                    }
+                  }}
+                >
+                  {t.products.bxgyDelete}
+                </Button>
+              )}
+            </div>
+          )}
+        </>)}
+      </div>
 
       <Button
         type="submit"
