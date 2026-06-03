@@ -1,6 +1,6 @@
 'use client';
 
-import { useMemo, useState, useEffect, useCallback } from 'react';
+import { useMemo, useState, useEffect, useCallback, useRef } from 'react';
 
 import { Plus, Trash2, Dices, Camera } from 'lucide-react';
 
@@ -64,6 +64,7 @@ export function ProductForm({
   );
   const [pending, setPending] = useState(false);
   const [scannerOpen, setScannerOpen] = useState(false);
+  const nameInputRef = useRef<HTMLInputElement>(null);
   const { t } = useTranslation();
 
   // BxGy promo state
@@ -216,6 +217,12 @@ export function ProductForm({
           <Input
             value={sku}
             onChange={(e) => setSku(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter') {
+                e.preventDefault();
+                nameInputRef.current?.focus();
+              }
+            }}
             className="flex-1 font-mono text-sm"
             placeholder="Item SKU"
           />
@@ -246,6 +253,7 @@ export function ProductForm({
           {t.products.name}
         </label>
         <Input
+          ref={nameInputRef}
           value={name}
           onChange={(e) => setName(e.target.value)}
           className="mt-1.5 font-medium"
