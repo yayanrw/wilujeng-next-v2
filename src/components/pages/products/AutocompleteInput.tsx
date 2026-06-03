@@ -74,7 +74,9 @@ export function AutocompleteInput({
   return (
     <div ref={wrapperRef} className="relative">
       {label && (
-        <label className="text-sm font-medium mb-1 block">{label}</label>
+        <label className="text-xs font-semibold uppercase tracking-wider text-zinc-500 dark:text-zinc-400 mb-1.5 block">
+          {label}
+        </label>
       )}
       <Input
         value={query}
