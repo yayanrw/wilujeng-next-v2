@@ -208,51 +208,49 @@ export function ProductForm({
         onSaved(true);
       }}
     >
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <div>
-          <label className="text-xs font-semibold uppercase tracking-wider text-zinc-500 dark:text-zinc-400">
-            {t.products.sku}
-          </label>
-          <div className="flex gap-2 mt-1.5">
-            <Input
-              value={sku}
-              onChange={(e) => setSku(e.target.value)}
-              className="flex-1 font-mono text-sm"
-              placeholder="Item SKU"
-            />
-            <Button
-              type="button"
-              variant="secondary"
-              onClick={() => setScannerOpen(true)}
-              title={t.pos.scanWithCamera}
-              className="px-3"
-              aria-label={t.pos.scanWithCamera}
-            >
-              <Camera className="h-4 w-4 text-zinc-500 dark:text-zinc-400" />
-            </Button>
-            <Button
-              type="button"
-              variant="secondary"
-              onClick={generateSku}
-              title={t.products.generateSku}
-              className="px-3"
-              aria-label={t.products.generateSku}
-            >
-              <Dices className="h-4 w-4 text-zinc-500 dark:text-zinc-400" />
-            </Button>
-          </div>
-        </div>
-        <div>
-          <label className="text-xs font-semibold uppercase tracking-wider text-zinc-500 dark:text-zinc-400">
-            {t.products.name}
-          </label>
+      <div>
+        <label className="text-xs font-semibold uppercase tracking-wider text-zinc-500 dark:text-zinc-400">
+          {t.products.sku}
+        </label>
+        <div className="flex gap-2 mt-1.5">
           <Input
-            value={name}
-            onChange={(e) => setName(e.target.value)}
-            className="mt-1.5 font-medium"
-            placeholder={t.products.productName}
+            value={sku}
+            onChange={(e) => setSku(e.target.value)}
+            className="flex-1 font-mono text-sm"
+            placeholder="Item SKU"
           />
+          <Button
+            type="button"
+            variant="secondary"
+            onClick={() => setScannerOpen(true)}
+            title={t.pos.scanWithCamera}
+            className="px-3"
+            aria-label={t.pos.scanWithCamera}
+          >
+            <Camera className="h-4 w-4 text-zinc-500 dark:text-zinc-400" />
+          </Button>
+          <Button
+            type="button"
+            variant="secondary"
+            onClick={generateSku}
+            title={t.products.generateSku}
+            className="px-3"
+            aria-label={t.products.generateSku}
+          >
+            <Dices className="h-4 w-4 text-zinc-500 dark:text-zinc-400" />
+          </Button>
         </div>
+      </div>
+      <div>
+        <label className="text-xs font-semibold uppercase tracking-wider text-zinc-500 dark:text-zinc-400">
+          {t.products.name}
+        </label>
+        <Input
+          value={name}
+          onChange={(e) => setName(e.target.value)}
+          className="mt-1.5 font-medium"
+          placeholder={t.products.productName}
+        />
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
