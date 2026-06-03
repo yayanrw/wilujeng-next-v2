@@ -8,6 +8,7 @@ import { Badge } from '@/components/ui/Badge';
 import { Button } from '@/components/ui/Button';
 import { Card, CardContent, CardHeader } from '@/components/ui/Card';
 import { SearchInput } from '@/components/ui/SearchInput';
+import { SearchableSelect } from '@/components/ui/SearchableSelect';
 import { TableLoading } from '@/components/ui/TableLoading';
 import { TableEmpty } from '@/components/ui/TableEmpty';
 import { LoadMoreButton } from '@/components/ui/LoadMoreButton';
@@ -15,6 +16,7 @@ import { formatIdr } from '@/utils/money';
 
 import { useTranslation } from '@/i18n/useTranslation';
 import { ConfirmDialog } from '@/components/ui/ConfirmDialog';
+import { useCatalogMetaStore } from '@/stores/catalogMetaStore';
 import { ProductDto, ProductForm } from './ProductForm';
 import { useToast } from '@/hooks/useToast';
 import { ImportProductModal } from './ImportProductModal';
@@ -32,37 +34,42 @@ export function Products() {
   const { showToast, Toast } = useToast();
   const [categoryId, setCategoryId] = useState('all');
   const [brandId, setBrandId] = useState('all');
-  const [categories, setCategories] = useState<{ id: string; name: string }[]>(
-    [],
-  );
-  const [brands, setBrands] = useState<{ id: string; name: string }[]>([]);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const [deleting, setDeleting] = useState(false);
   const { t } = useTranslation();
   const LIMIT = 50;
 
+  // Use catalog meta store (loaded once, shared with ProductForm)
+  const categories = useCatalogMetaStore((s) => s.categories);
+  const brands = useCatalogMetaStore((s) => s.brands);
+  const catalogLoaded = useCatalogMetaStore((s) => s.loaded);
+  const setStoreCategories = useCatalogMetaStore((s) => s.setCategories);
+  const setStoreBrands = useCatalogMetaStore((s) => s.setBrands);
+  const setCatalogLoaded = useCatalogMetaStore((s) => s.setLoaded);
+
+  useEffect(() => {
+    if (catalogLoaded) return;
+    let active = true;
+    Promise.all([
+      fetch('/api/categories?all=1').then((r) => r.json()),
+      fetch('/api/brands?all=1').then((r) => r.json()),
+    ])
+      .then(([cats, brs]) => {
+        if (!active) return;
+        if (Array.isArray(cats)) setStoreCategories(cats);
+        if (Array.isArray(brs)) setStoreBrands(brs);
+        setCatalogLoaded(true);
+      })
+      .catch(console.error);
+    return () => { active = false; };
+  }, [catalogLoaded, setStoreCategories, setStoreBrands, setCatalogLoaded]);
+
   const selected = useMemo(
     () =>
       selectedId ? (products.find((p) => p.id === selectedId) ?? null) : null,
     [products, selectedId],
   );
-
-  useEffect(() => {
-    fetch('/api/categories')
-      .then((r) => r.json())
-      .then((data) => {
-        if (Array.isArray(data)) setCategories(data);
-      })
-      .catch(console.error);
-
-    fetch('/api/brands')
-      .then((r) => r.json())
-      .then((data) => {
-        if (Array.isArray(data)) setBrands(data);
-      })
-      .catch(console.error);
-  }, []);
 
   async function fetchProducts(
     q: string,
@@ -199,30 +206,22 @@ export function Products() {
               wrapperClassName="flex-1"
             />
             <div className="flex gap-3 w-full sm:w-auto">
-              <select
-                className="flex h-10 w-full sm:w-45 items-center justify-between rounded-md border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-950 px-3 py-2 text-sm ring-offset-white placeholder:text-zinc-500 dark:text-zinc-400 focus:outline-none focus:ring-2 focus:ring-zinc-950 focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+              <SearchableSelect
                 value={categoryId}
-                onChange={(e) => setCategoryId(e.target.value)}
-              >
-                <option value="all">{t.common.allCategories}</option>
-                {categories.map((c) => (
-                  <option key={c.id} value={c.id}>
-                    {c.name}
-                  </option>
-                ))}
-              </select>
-              <select
-                className="flex h-10 w-full sm:w-45 items-center justify-between rounded-md border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-950 px-3 py-2 text-sm ring-offset-white placeholder:text-zinc-500 dark:text-zinc-400 focus:outline-none focus:ring-2 focus:ring-zinc-950 focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                onChange={setCategoryId}
+                options={categories}
+                allLabel={t.common.allCategories}
+                searchPlaceholder={t.common.search}
+                className="w-full sm:w-45"
+              />
+              <SearchableSelect
                 value={brandId}
-                onChange={(e) => setBrandId(e.target.value)}
-              >
-                <option value="all">{t.common.allBrands}</option>
-                {brands.map((b) => (
-                  <option key={b.id} value={b.id}>
-                    {b.name}
-                  </option>
-                ))}
-              </select>
+                onChange={setBrandId}
+                options={brands}
+                allLabel={t.common.allBrands}
+                searchPlaceholder={t.common.search}
+                className="w-full sm:w-45"
+              />
               <Button
                 variant="secondary"
                 className="h-10 whitespace-nowrap bg-white dark:bg-zinc-950"
