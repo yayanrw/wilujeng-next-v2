@@ -100,6 +100,7 @@ export function ProductForm({
   }, [catalogLoaded, setCategories, setBrands, setCatalogLoaded]);
 
   // BxGy promo state
+  const [promoEnabled, setPromoEnabled] = useState(false);
   const [promo, setPromo] = useState<BxgyPromo | null>(null);
   const [promoBuyQty, setPromoBuyQty] = useState(2);
   const [promoFreeQty, setPromoFreeQty] = useState(1);
@@ -115,6 +116,7 @@ export function ProductForm({
     if (!res.ok) return;
     const data = (await res.json()) as { promo: BxgyPromo | null };
     setPromo(data.promo);
+    setPromoEnabled(!!data.promo);
     if (data.promo) {
       setPromoBuyQty(data.promo.buyQty);
       setPromoFreeQty(data.promo.freeQty);
@@ -156,6 +158,7 @@ export function ProductForm({
       setBrandName('');
       setTiers([]);
       setPromo(null);
+      setPromoEnabled(false);
     }
   }, [initial, mode, fetchPromo]);
 
@@ -218,6 +221,7 @@ export function ProductForm({
           },
         );
         const body = (await res.json().catch(() => null)) as {
+          id?: string;
           error?: { message?: string };
         } | null;
         setPending(false);
@@ -230,6 +234,22 @@ export function ProductForm({
         if (cat) addCategory({ id: cat, name: cat });
         if (brand) addBrand({ id: brand, name: brand });
 
+        // In create mode, save promo alongside the new product if enabled
+        if (mode === 'create' && promoEnabled && body?.id) {
+          await fetch(`/api/products/${body.id}/promo`, {
+            method: 'POST',
+            headers: { 'content-type': 'application/json' },
+            body: JSON.stringify({
+              buyQty: promoBuyQty,
+              freeQty: promoFreeQty,
+              active: promoActive,
+              validFrom: promoValidFrom ? new Date(promoValidFrom).toISOString() : null,
+              validTo: promoValidTo ? new Date(promoValidTo).toISOString() : null,
+              maxMultiplierPerTx: promoMaxMultiplier ? Number(promoMaxMultiplier) : null,
+            }),
+          });
+        }
+
         if (mode === 'create') {
           setSku('');
           setName('');
@@ -240,6 +260,13 @@ export function ProductForm({
           setCategoryName('');
           setBrandName('');
           setTiers([]);
+          setPromoEnabled(false);
+          setPromoBuyQty(2);
+          setPromoFreeQty(1);
+          setPromoActive(true);
+          setPromoValidFrom('');
+          setPromoValidTo('');
+          setPromoMaxMultiplier('');
         }
 
         onSaved(true);
@@ -499,16 +526,38 @@ export function ProductForm({
         </div>
       </div>
 
-      {mode === 'edit' && (
-        <div className="rounded-xl border border-zinc-200 dark:border-zinc-800 bg-zinc-50/50 dark:bg-zinc-900/50 p-4 space-y-4">
-          <div>
-            <div className="text-sm font-semibold text-zinc-900 dark:text-zinc-100">
-              {t.products.bxgyPromo}
+      <div className="rounded-xl border border-zinc-200 dark:border-zinc-800 bg-zinc-50/50 dark:bg-zinc-900/50 p-4 space-y-4">
+          <button
+            type="button"
+            className="flex w-full items-center justify-between gap-3"
+            onClick={() => setPromoEnabled((v) => !v)}
+          >
+            <div className="text-left">
+              <div className="text-sm font-semibold text-zinc-900 dark:text-zinc-100">
+                {t.products.bxgyPromo}
+              </div>
+              <div className="text-xs text-zinc-500 dark:text-zinc-400">
+                {t.products.bxgyDesc}
+              </div>
             </div>
-            <div className="text-xs text-zinc-500 dark:text-zinc-400">
-              {t.products.bxgyDesc}
-            </div>
-          </div>
+            <span
+              role="switch"
+              aria-checked={promoEnabled}
+              className={`relative inline-flex h-5 w-9 shrink-0 rounded-full border-2 border-transparent transition-colors ${
+                promoEnabled
+                  ? 'bg-zinc-900 dark:bg-zinc-100'
+                  : 'bg-zinc-200 dark:bg-zinc-700'
+              }`}
+            >
+              <span
+                className={`pointer-events-none inline-block h-4 w-4 transform rounded-full bg-white shadow transition-transform ${
+                  promoEnabled ? 'translate-x-4' : 'translate-x-0'
+                } ${promoEnabled ? 'dark:bg-zinc-900' : ''}`}
+              />
+            </span>
+          </button>
+
+        {promoEnabled && (<>
 
           <div className="grid grid-cols-2 gap-3">
             <div>
@@ -603,67 +652,70 @@ export function ProductForm({
             </p>
           )}
 
-          <div className="flex gap-2">
-            <Button
-              type="button"
-              variant="secondary"
-              size="sm"
-              disabled={promoSaving}
-              onClick={async () => {
-                setPromoSaving(true);
-                setPromoMsg(null);
-                const res = await fetch(`/api/products/${initial!.id}/promo`, {
-                  method: 'POST',
-                  headers: { 'content-type': 'application/json' },
-                  body: JSON.stringify({
-                    buyQty: promoBuyQty,
-                    freeQty: promoFreeQty,
-                    active: promoActive,
-                    validFrom: promoValidFrom ? new Date(promoValidFrom).toISOString() : null,
-                    validTo: promoValidTo ? new Date(promoValidTo).toISOString() : null,
-                    maxMultiplierPerTx: promoMaxMultiplier ? Number(promoMaxMultiplier) : null,
-                  }),
-                });
-                setPromoSaving(false);
-                if (res.ok) {
-                  const data = (await res.json()) as { promo: BxgyPromo };
-                  setPromo(data.promo);
-                  setPromoMsg({ ok: true, text: t.products.bxgySavedSuccess });
-                } else {
-                  setPromoMsg({ ok: false, text: t.products.bxgySaveFailed });
-                }
-              }}
-            >
-              {t.products.bxgySave}
-            </Button>
-
-            {promo && (
+          {mode === 'edit' && (
+            <div className="flex gap-2">
               <Button
                 type="button"
-                variant="danger"
+                variant="secondary"
                 size="sm"
                 disabled={promoSaving}
                 onClick={async () => {
                   setPromoSaving(true);
                   setPromoMsg(null);
                   const res = await fetch(`/api/products/${initial!.id}/promo`, {
-                    method: 'DELETE',
+                    method: 'POST',
+                    headers: { 'content-type': 'application/json' },
+                    body: JSON.stringify({
+                      buyQty: promoBuyQty,
+                      freeQty: promoFreeQty,
+                      active: promoActive,
+                      validFrom: promoValidFrom ? new Date(promoValidFrom).toISOString() : null,
+                      validTo: promoValidTo ? new Date(promoValidTo).toISOString() : null,
+                      maxMultiplierPerTx: promoMaxMultiplier ? Number(promoMaxMultiplier) : null,
+                    }),
                   });
                   setPromoSaving(false);
                   if (res.ok) {
-                    setPromo(null);
-                    setPromoMsg({ ok: true, text: t.products.bxgyDeletedSuccess });
+                    const data = (await res.json()) as { promo: BxgyPromo };
+                    setPromo(data.promo);
+                    setPromoMsg({ ok: true, text: t.products.bxgySavedSuccess });
                   } else {
-                    setPromoMsg({ ok: false, text: t.products.bxgyDeleteFailed });
+                    setPromoMsg({ ok: false, text: t.products.bxgySaveFailed });
                   }
                 }}
               >
-                {t.products.bxgyDelete}
+                {t.products.bxgySave}
               </Button>
-            )}
-          </div>
-        </div>
-      )}
+
+              {promo && (
+                <Button
+                  type="button"
+                  variant="danger"
+                  size="sm"
+                  disabled={promoSaving}
+                  onClick={async () => {
+                    setPromoSaving(true);
+                    setPromoMsg(null);
+                    const res = await fetch(`/api/products/${initial!.id}/promo`, {
+                      method: 'DELETE',
+                    });
+                    setPromoSaving(false);
+                    if (res.ok) {
+                      setPromo(null);
+                      setPromoEnabled(false);
+                      setPromoMsg({ ok: true, text: t.products.bxgyDeletedSuccess });
+                    } else {
+                      setPromoMsg({ ok: false, text: t.products.bxgyDeleteFailed });
+                    }
+                  }}
+                >
+                  {t.products.bxgyDelete}
+                </Button>
+              )}
+            </div>
+          )}
+        </>)}
+      </div>
 
       <Button
         type="submit"
