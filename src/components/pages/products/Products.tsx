@@ -187,7 +187,7 @@ export function Products() {
   }
 
   return (
-    <div className="grid grid-cols-1 gap-4 lg:grid-cols-[1fr_420px] min-w-0">
+    <div className="grid grid-cols-1 gap-4 lg:grid-cols-[1fr_420px] min-w-0 overflow-x-hidden">
       <Card className="h-fit min-w-0">
         <CardHeader className="flex flex-col gap-4 pb-6">
           <div className="space-y-1.5">
@@ -205,7 +205,7 @@ export function Products() {
               onChange={(e) => setSearch(e.target.value)}
               wrapperClassName="flex-1"
             />
-            <div className="flex gap-3 w-full sm:w-auto">
+            <div className="flex flex-wrap gap-3 w-full sm:w-auto sm:flex-nowrap">
               <SearchableSelect
                 value={categoryId}
                 onChange={setCategoryId}
@@ -234,8 +234,8 @@ export function Products() {
           </div>
         </CardHeader>
         <CardContent className="p-0 min-w-0">
-          <div className="overflow-x-auto">
-            <table className="w-full text-sm">
+          <div className="w-full max-w-full overflow-x-auto" style={{ WebkitOverflowScrolling: 'touch' }}>
+            <table className="w-full min-w-max text-sm">
               <thead>
                 <tr className="border-y border-zinc-200 dark:border-zinc-800 bg-zinc-50/50 dark:bg-zinc-900/50 text-left text-zinc-500 dark:text-zinc-400">
                   <th className="py-3 px-4 font-medium">{t.products.sku}</th>
