@@ -5,7 +5,6 @@ import { useEffect, useState, useMemo } from 'react';
 import { Search, LayoutGrid, List, X, Camera } from 'lucide-react';
 
 import { Badge } from '@/components/ui/Badge';
-import { Button } from '@/components/ui/Button';
 import { Card, CardContent, CardHeader } from '@/components/ui/Card';
 import { Input } from '@/components/ui/Input';
 import { usePosStore } from '@/stores/posStore';
@@ -16,7 +15,6 @@ import { useTranslation } from '@/i18n/useTranslation';
 export function SearchPanel({
   inputRef,
   onToast,
-  refreshKey,
   onCameraClick,
   viewMode = 'grid',
   onViewModeChange,
@@ -33,6 +31,7 @@ export function SearchPanel({
   const [categories, setCategories] = useState<{ id: string; name: string }[]>(
     [],
   );
+  const [categoriesLoading, setCategoriesLoading] = useState(true);
   const { t } = useTranslation();
 
   const products = useCatalogStore((s) => s.products);
@@ -47,7 +46,8 @@ export function SearchPanel({
       .then((data) => {
         if (Array.isArray(data)) setCategories(data);
       })
-      .catch(console.error);
+      .catch(console.error)
+      .finally(() => setCategoriesLoading(false));
   }, []);
 
   // Local filtering logic
@@ -168,19 +168,27 @@ export function SearchPanel({
           >
             {t.common.allCategories}
           </button>
-          {categories.map((cat) => (
-            <button
-              key={cat.id}
-              onClick={() => setCategoryId(cat.id)}
-              className={`whitespace-nowrap rounded-full px-4 py-1.5 text-sm font-medium transition-colors ${
-                categoryId === cat.id
-                  ? 'bg-zinc-900 text-white dark:bg-zinc-100 dark:text-zinc-900'
-                  : 'bg-zinc-100 text-zinc-600 hover:bg-zinc-200 dark:bg-zinc-800 dark:text-zinc-400 dark:hover:bg-zinc-700'
-              }`}
-            >
-              {cat.name}
-            </button>
-          ))}
+          {categoriesLoading
+            ? [80, 64, 96, 72, 88].map((w, i) => (
+                <div
+                  key={i}
+                  className="h-8 shrink-0 animate-pulse rounded-full bg-zinc-100 dark:bg-zinc-800"
+                  style={{ width: w }}
+                />
+              ))
+            : categories.map((cat) => (
+                <button
+                  key={cat.id}
+                  onClick={() => setCategoryId(cat.id)}
+                  className={`whitespace-nowrap rounded-full px-4 py-1.5 text-sm font-medium transition-colors ${
+                    categoryId === cat.id
+                      ? 'bg-zinc-900 text-white dark:bg-zinc-100 dark:text-zinc-900'
+                      : 'bg-zinc-100 text-zinc-600 hover:bg-zinc-200 dark:bg-zinc-800 dark:text-zinc-400 dark:hover:bg-zinc-700'
+                  }`}
+                >
+                  {cat.name}
+                </button>
+              ))}
         </div>
       </CardHeader>
 
