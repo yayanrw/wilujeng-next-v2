@@ -81,7 +81,7 @@ export function SearchPanel({
               className="pl-9 text-base"
               placeholder={t.pos.searchPlaceholder}
               value={query}
-              onChange={(e) => setQuery(e.target.value)}
+              onChange={(e) => setQuery(e.target.value)}  
               onKeyDown={(e) => {
                 if (e.key !== 'Enter') return;
                 e.preventDefault();
@@ -194,13 +194,51 @@ export function SearchPanel({
 
       <CardContent className="flex-1 overflow-y-auto min-h-0 custom-scrollbar">
         {loading && results.length === 0 ? (
-          <div className="flex h-full items-center justify-center p-12">
-            <div className="flex flex-col items-center gap-3">
-              <div className="h-6 w-6 animate-spin rounded-full border-2 border-zinc-200 border-t-zinc-900 dark:border-zinc-800 dark:border-t-zinc-100" />
-              <div className="text-sm font-medium text-zinc-500 dark:text-zinc-400">
-                {t.pos.loadingProducts}
-              </div>
-            </div>
+          <div
+            className={
+              viewMode === 'grid'
+                ? 'grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-3 xl:grid-cols-4 pb-4'
+                : 'flex flex-col gap-2 pb-4'
+            }
+          >
+            {Array.from({ length: viewMode === 'grid' ? 8 : 6 }).map((_, i) =>
+              viewMode === 'grid' ? (
+                <div
+                  key={i}
+                  className="rounded-xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-950 flex flex-col justify-between p-4"
+                >
+                  <div className="w-full">
+                    <div className="mb-2 flex items-start justify-between gap-2">
+                      <div className="h-5 w-8 animate-pulse rounded-full bg-zinc-100 dark:bg-zinc-800" />
+                    </div>
+                    <div className="h-3.5 w-3/4 animate-pulse rounded bg-zinc-100 dark:bg-zinc-800 mb-1.5" />
+                    <div className="h-3.5 w-1/2 animate-pulse rounded bg-zinc-100 dark:bg-zinc-800 mb-1.5" />
+                    <div className="h-3 w-1/3 animate-pulse rounded bg-zinc-100 dark:bg-zinc-800" />
+                  </div>
+                  <div className="mt-4 flex w-full items-end justify-between">
+                    <div className="h-4 w-14 animate-pulse rounded bg-zinc-100 dark:bg-zinc-800" />
+                    <div className="h-6 w-6 animate-pulse rounded-full bg-zinc-100 dark:bg-zinc-800" />
+                  </div>
+                </div>
+              ) : (
+                <div
+                  key={i}
+                  className="rounded-xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-950 flex items-center justify-between p-3"
+                >
+                  <div className="flex flex-1 items-center gap-3 min-w-0">
+                    <div className="h-6 w-14 shrink-0 animate-pulse rounded-full bg-zinc-100 dark:bg-zinc-800" />
+                    <div className="flex flex-1 flex-col gap-1.5 min-w-0">
+                      <div className="h-3.5 w-3/4 animate-pulse rounded bg-zinc-100 dark:bg-zinc-800" />
+                      <div className="h-3 w-1/3 animate-pulse rounded bg-zinc-100 dark:bg-zinc-800" />
+                    </div>
+                  </div>
+                  <div className="flex shrink-0 items-center gap-4">
+                    <div className="h-4 w-16 animate-pulse rounded bg-zinc-100 dark:bg-zinc-800" />
+                    <div className="h-8 w-8 animate-pulse rounded-full bg-zinc-100 dark:bg-zinc-800" />
+                  </div>
+                </div>
+              ),
+            )}
           </div>
         ) : (
           <div
