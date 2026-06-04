@@ -17,6 +17,7 @@ import { formatIdr } from '@/utils/money';
 import { useTranslation } from '@/i18n/useTranslation';
 import { ConfirmDialog } from '@/components/ui/ConfirmDialog';
 import { useCatalogMetaStore } from '@/stores/catalogMetaStore';
+import { useCatalogMeta } from '@/hooks/useCatalogMeta';
 import { ProductDto, ProductForm } from './ProductForm';
 import { useToast } from '@/hooks/useToast';
 import { ImportProductModal } from './ImportProductModal';
@@ -40,30 +41,7 @@ export function Products() {
   const { t } = useTranslation();
   const LIMIT = 50;
 
-  // Use catalog meta store (loaded once, shared with ProductForm)
-  const categories = useCatalogMetaStore((s) => s.categories);
-  const brands = useCatalogMetaStore((s) => s.brands);
-  const catalogLoaded = useCatalogMetaStore((s) => s.loaded);
-  const setStoreCategories = useCatalogMetaStore((s) => s.setCategories);
-  const setStoreBrands = useCatalogMetaStore((s) => s.setBrands);
-  const setCatalogLoaded = useCatalogMetaStore((s) => s.setLoaded);
-
-  useEffect(() => {
-    if (catalogLoaded) return;
-    let active = true;
-    Promise.all([
-      fetch('/api/categories?all=1').then((r) => r.json()),
-      fetch('/api/brands?all=1').then((r) => r.json()),
-    ])
-      .then(([cats, brs]) => {
-        if (!active) return;
-        if (Array.isArray(cats)) setStoreCategories(cats);
-        if (Array.isArray(brs)) setStoreBrands(brs);
-        setCatalogLoaded(true);
-      })
-      .catch(console.error);
-    return () => { active = false; };
-  }, [catalogLoaded, setStoreCategories, setStoreBrands, setCatalogLoaded]);
+  const { categories, brands } = useCatalogMeta();
 
   const selected = useMemo(
     () =>
