@@ -64,6 +64,7 @@ export function ProductForm({
   const [tiers, setTiers] = useState<Array<{ minQty: number; price: number }>>(
     initial?.tiers ?? [],
   );
+  const [tierEnabled, setTierEnabled] = useState((initial?.tiers ?? []).length > 0);
   const [pending, setPending] = useState(false);
   const [scannerOpen, setScannerOpen] = useState(false);
   const skuInputRef = useRef<HTMLInputElement>(null);
@@ -121,6 +122,7 @@ export function ProductForm({
       setCategoryName(initial.category?.name ?? '');
       setBrandName(initial.brand?.name ?? '');
       setTiers(initial.tiers ?? []);
+      setTierEnabled((initial.tiers ?? []).length > 0);
       fetchPromo(initial.id);
     } else if (mode === 'create') {
       setSku('');
@@ -132,6 +134,7 @@ export function ProductForm({
       setCategoryName('');
       setBrandName('');
       setTiers([]);
+      setTierEnabled(false);
       setPromo(null);
       setPromoEnabled(false);
     }
@@ -172,7 +175,7 @@ export function ProductForm({
           buyPrice,
           stock,
           minStockThreshold,
-          tiers: tiers.filter((t) => t.minQty > 0 && t.price > 0),
+          tiers: tierEnabled ? tiers.filter((t) => t.minQty > 0 && t.price > 0) : [],
         };
 
         const cat = categoryName.trim();
@@ -235,6 +238,7 @@ export function ProductForm({
           setCategoryName('');
           setBrandName('');
           setTiers([]);
+          setTierEnabled(false);
           setPromoEnabled(false);
           setPromoBuyQty(2);
           setPromoFreeQty(1);
@@ -399,8 +403,12 @@ export function ProductForm({
       <div className="h-px w-full bg-zinc-100 dark:bg-zinc-800 my-2" />
 
       <div className="rounded-xl border border-zinc-200 dark:border-zinc-800 bg-zinc-50/50 dark:bg-zinc-900/50 p-4 space-y-4">
-        <div className="flex items-center justify-between">
-          <div>
+        <button
+          type="button"
+          className="flex w-full items-center justify-between gap-3"
+          onClick={() => setTierEnabled((v) => !v)}
+        >
+          <div className="text-left">
             <div className="text-sm font-semibold text-zinc-900 dark:text-zinc-100">
               {t.products.tierPricing}
             </div>
@@ -408,97 +416,119 @@ export function ProductForm({
               {t.products.tierDesc}
             </div>
           </div>
-          <Button
-            type="button"
-            variant="secondary"
-            size="sm"
-            className="h-8"
-            onClick={() =>
-              setTiers((t) => [...t, { minQty: 1, price: basePrice }])
-            }
+          <span
+            role="switch"
+            aria-checked={tierEnabled}
+            className={`relative inline-flex h-5 w-9 shrink-0 rounded-full border-2 border-transparent transition-colors ${
+              tierEnabled
+                ? 'bg-zinc-900 dark:bg-zinc-100'
+                : 'bg-zinc-200 dark:bg-zinc-700'
+            }`}
           >
-            <Plus className="h-4 w-4 mr-1" />
-            {t.products.addTier}
-          </Button>
-        </div>
+            <span
+              className={`pointer-events-none inline-block h-4 w-4 transform rounded-full bg-white shadow transition-transform ${
+                tierEnabled ? 'translate-x-4' : 'translate-x-0'
+              } ${tierEnabled ? 'dark:bg-zinc-900' : ''}`}
+            />
+          </span>
+        </button>
 
-        <div className="flex flex-col gap-3">
-          {tiers.map((tItem, idx) => (
-            <div
-              key={idx}
-              className="flex items-center gap-3 bg-white dark:bg-zinc-950 p-3 rounded-lg border border-zinc-200 dark:border-zinc-800 shadow-sm"
-            >
-              <div className="flex-1">
-                <label className="text-[10px] font-semibold uppercase tracking-wider text-zinc-500 dark:text-zinc-400">
-                  {t.products.minQty}
-                </label>
-                <Input
-                  className="mt-1 h-8 text-sm tabular-nums"
-                  inputMode="numeric"
-                  value={String(tItem.minQty)}
-                  onChange={(e) =>
-                    setTiers((prev) =>
-                      prev.map((x, i) =>
-                        i === idx
-                          ? {
-                              ...x,
-                              minQty:
-                                Number(e.target.value.replace(/[^0-9]/g, '')) ||
-                                0,
-                            }
-                          : x,
-                      ),
-                    )
-                  }
-                />
-              </div>
-              <div className="flex-1">
-                <label className="text-[10px] font-semibold uppercase tracking-wider text-zinc-500 dark:text-zinc-400">
-                  {t.products.tierPrice}
-                </label>
-                <div className="relative mt-1">
-                  <span className="absolute left-2.5 top-1/2 -translate-y-1/2 text-zinc-500 text-xs font-medium">
-                    Rp
-                  </span>
-                  <Input
-                    className="h-8 pl-8 text-sm tabular-nums"
-                    inputMode="numeric"
-                    value={tItem.price ? String(tItem.price) : ''}
-                    onChange={(e) =>
-                      setTiers((prev) =>
-                        prev.map((x, i) =>
-                          i === idx
-                            ? {
-                                ...x,
-                                price:
-                                  Number(
-                                    e.target.value.replace(/[^0-9]/g, ''),
-                                  ) || 0,
-                              }
-                            : x,
-                        ),
-                      )
-                    }
-                  />
-                </div>
-              </div>
-              <button
+        {tierEnabled && (
+          <>
+            <div className="flex justify-end">
+              <Button
                 type="button"
-                className="flex h-8 w-8 mt-[18px] shrink-0 items-center justify-center rounded-md border border-zinc-200 dark:border-zinc-800 text-zinc-500 hover:text-red-600 hover:border-red-200 hover:bg-red-50 dark:hover:bg-red-900/20 dark:hover:border-red-900 transition-colors"
+                variant="secondary"
+                size="sm"
+                className="h-8"
                 onClick={() =>
-                  setTiers((prev) => prev.filter((_, i) => i !== idx))
+                  setTiers((t) => [...t, { minQty: 1, price: basePrice }])
                 }
               >
-                <Trash2 className="h-3.5 w-3.5" />
-              </button>
+                <Plus className="h-4 w-4 mr-1" />
+                {t.products.addTier}
+              </Button>
             </div>
-          ))}
-          {tiers.length === 0 && (
-            <div className="text-center py-4 text-sm text-zinc-500 dark:text-zinc-400 border border-dashed border-zinc-200 dark:border-zinc-800 rounded-lg">
-              {t.products.noTier}
+
+            <div className="flex flex-col gap-3">
+              {tiers.map((tItem, idx) => (
+                <div
+                  key={idx}
+                  className="flex items-center gap-3 bg-white dark:bg-zinc-950 p-3 rounded-lg border border-zinc-200 dark:border-zinc-800 shadow-sm"
+                >
+                  <div className="flex-1">
+                    <label className="text-[10px] font-semibold uppercase tracking-wider text-zinc-500 dark:text-zinc-400">
+                      {t.products.minQty}
+                    </label>
+                    <Input
+                      className="mt-1 h-8 text-sm tabular-nums"
+                      inputMode="numeric"
+                      value={String(tItem.minQty)}
+                      onChange={(e) =>
+                        setTiers((prev) =>
+                          prev.map((x, i) =>
+                            i === idx
+                              ? {
+                                  ...x,
+                                  minQty:
+                                    Number(e.target.value.replace(/[^0-9]/g, '')) ||
+                                    0,
+                                }
+                              : x,
+                          ),
+                        )
+                      }
+                    />
+                  </div>
+                  <div className="flex-1">
+                    <label className="text-[10px] font-semibold uppercase tracking-wider text-zinc-500 dark:text-zinc-400">
+                      {t.products.tierPrice}
+                    </label>
+                    <div className="relative mt-1">
+                      <span className="absolute left-2.5 top-1/2 -translate-y-1/2 text-zinc-500 text-xs font-medium">
+                        Rp
+                      </span>
+                      <Input
+                        className="h-8 pl-8 text-sm tabular-nums"
+                        inputMode="numeric"
+                        value={tItem.price ? String(tItem.price) : ''}
+                        onChange={(e) =>
+                          setTiers((prev) =>
+                            prev.map((x, i) =>
+                              i === idx
+                                ? {
+                                    ...x,
+                                    price:
+                                      Number(
+                                        e.target.value.replace(/[^0-9]/g, ''),
+                                      ) || 0,
+                                  }
+                                : x,
+                            ),
+                          )
+                        }
+                      />
+                    </div>
+                  </div>
+                  <button
+                    type="button"
+                    className="flex h-8 w-8 mt-[18px] shrink-0 items-center justify-center rounded-md border border-zinc-200 dark:border-zinc-800 text-zinc-500 hover:text-red-600 hover:border-red-200 hover:bg-red-50 dark:hover:bg-red-900/20 dark:hover:border-red-900 transition-colors"
+                    onClick={() =>
+                      setTiers((prev) => prev.filter((_, i) => i !== idx))
+                    }
+                  >
+                    <Trash2 className="h-3.5 w-3.5" />
+                  </button>
+                </div>
+              ))}
+              {tiers.length === 0 && (
+                <div className="text-center py-4 text-sm text-zinc-500 dark:text-zinc-400 border border-dashed border-zinc-200 dark:border-zinc-800 rounded-lg">
+                  {t.products.noTier}
+                </div>
+              )}
             </div>
-          )}
-        </div>
+          </>
+        )}
       </div>
 
       <div className="rounded-xl border border-zinc-200 dark:border-zinc-800 bg-zinc-50/50 dark:bg-zinc-900/50 p-4 space-y-4">
