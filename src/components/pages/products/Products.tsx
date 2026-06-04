@@ -1,157 +1,69 @@
 'use client';
 
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useMemo, useState } from 'react';
 
-import { Plus, Pencil, ToggleRight, ToggleLeft, Trash, FileUp } from 'lucide-react';
+import { Plus, Pencil, ToggleRight, ToggleLeft, Trash } from 'lucide-react';
 
 import { Badge } from '@/components/ui/Badge';
 import { Button } from '@/components/ui/Button';
 import { Card, CardContent, CardHeader } from '@/components/ui/Card';
-import { SearchInput } from '@/components/ui/SearchInput';
-import { SearchableSelect } from '@/components/ui/SearchableSelect';
 import { TableLoading } from '@/components/ui/TableLoading';
 import { TableEmpty } from '@/components/ui/TableEmpty';
 import { LoadMoreButton } from '@/components/ui/LoadMoreButton';
-import { formatIdr } from '@/utils/money';
-
-import { useTranslation } from '@/i18n/useTranslation';
 import { ConfirmDialog } from '@/components/ui/ConfirmDialog';
-import { useCatalogMetaStore } from '@/stores/catalogMetaStore';
-import { ProductDto, ProductForm } from './ProductForm';
+import { formatIdr } from '@/utils/money';
+import { useTranslation } from '@/i18n/useTranslation';
+import { usePaginatedList } from '@/hooks/usePaginatedList';
 import { useToast } from '@/hooks/useToast';
+
+import { ProductDto, ProductForm } from './ProductForm';
+import { ProductFilters } from './ProductFilters';
 import { ImportProductModal } from './ImportProductModal';
 
 export function Products() {
-  const [search, setSearch] = useState('');
-  const [debouncedSearch, setDebouncedSearch] = useState('');
-  const [products, setProducts] = useState<ProductDto[]>([]);
-  const [selectedId, setSelectedId] = useState<string | null>(null);
-  const [mode, setMode] = useState<'create' | 'edit'>('create');
-  const [loading, setLoading] = useState(false);
-  const [page, setPage] = useState(0);
-  const [hasMore, setHasMore] = useState(true);
-  const [isImportModalOpen, setIsImportModalOpen] = useState(false);
-  const { showToast, Toast } = useToast();
   const [categoryId, setCategoryId] = useState('all');
   const [brandId, setBrandId] = useState('all');
+  const [editId, setEditId] = useState<string | null>(null);
+  const [isImportModalOpen, setIsImportModalOpen] = useState(false);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const [deleting, setDeleting] = useState(false);
+  const { showToast, Toast } = useToast();
   const { t } = useTranslation();
-  const LIMIT = 50;
 
-  // Use catalog meta store (loaded once, shared with ProductForm)
-  const categories = useCatalogMetaStore((s) => s.categories);
-  const brands = useCatalogMetaStore((s) => s.brands);
-  const catalogLoaded = useCatalogMetaStore((s) => s.loaded);
-  const setStoreCategories = useCatalogMetaStore((s) => s.setCategories);
-  const setStoreBrands = useCatalogMetaStore((s) => s.setBrands);
-  const setCatalogLoaded = useCatalogMetaStore((s) => s.setLoaded);
-
-  useEffect(() => {
-    if (catalogLoaded) return;
-    let active = true;
-    Promise.all([
-      fetch('/api/categories?all=1').then((r) => r.json()),
-      fetch('/api/brands?all=1').then((r) => r.json()),
-    ])
-      .then(([cats, brs]) => {
-        if (!active) return;
-        if (Array.isArray(cats)) setStoreCategories(cats);
-        if (Array.isArray(brs)) setStoreBrands(brs);
-        setCatalogLoaded(true);
-      })
-      .catch(console.error);
-    return () => { active = false; };
-  }, [catalogLoaded, setStoreCategories, setStoreBrands, setCatalogLoaded]);
-
-  const selected = useMemo(
-    () =>
-      selectedId ? (products.find((p) => p.id === selectedId) ?? null) : null,
-    [products, selectedId],
+  const fetchFn = useCallback(
+    async ({ search, offset, limit }: { search: string; offset: number; limit: number }) => {
+      const params = new URLSearchParams();
+      if (search) params.append('search', search);
+      if (categoryId !== 'all') params.append('categoryId', categoryId);
+      if (brandId !== 'all') params.append('brandId', brandId);
+      params.append('limit', limit.toString());
+      params.append('offset', offset.toString());
+      const res = await fetch(`/api/products?${params.toString()}`);
+      return res.json().catch(() => []) as Promise<ProductDto[]>;
+    },
+    [categoryId, brandId],
   );
 
-  async function fetchProducts(
-    q: string,
-    cat: string,
-    brnd: string,
-    p: number,
-    append = false,
-  ) {
-    setLoading(true);
-    try {
-      const params = new URLSearchParams();
-      if (q) params.append('search', q);
-      if (cat && cat !== 'all') params.append('categoryId', cat);
-      if (brnd && brnd !== 'all') params.append('brandId', brnd);
-      params.append('limit', LIMIT.toString());
-      params.append('offset', (p * LIMIT).toString());
+  const { items: products, loading, hasMore, search, setSearch, loadMore, refresh } =
+    usePaginatedList<ProductDto>({ fetchFn, limit: 50 });
 
-      const res = await fetch(`/api/products?${params.toString()}`);
-      const body = (await res.json().catch(() => [])) as ProductDto[];
-
-      setHasMore(body.length === LIMIT);
-
-      if (append) {
-        setProducts((prev) => {
-          // Filter out duplicates if any (shouldn't happen with strict offset, but good for safety)
-          const existingIds = new Set(prev.map((item) => item.id));
-          return [...prev, ...body.filter((item) => !existingIds.has(item.id))];
-        });
-      } else {
-        setProducts(body);
-      }
-    } catch (err) {
-      console.error(err);
-      if (!append) setProducts([]);
-    } finally {
-      setLoading(false);
-    }
-  }
-
-  // Debounce search input — only update debouncedSearch after 500ms of inactivity
-  useEffect(() => {
-    const id = window.setTimeout(() => setDebouncedSearch(search), 500);
-    return () => window.clearTimeout(id);
-  }, [search]);
-
-  const refresh = useCallback(async () => {
-    setPage(0);
-    await fetchProducts(debouncedSearch, categoryId, brandId, 0, false);
-  }, [debouncedSearch, categoryId, brandId]);
-
-  useEffect(() => {
-    void refresh();
-  }, [refresh]);
-
-  const loadMore = () => {
-    if (loading || !hasMore) return;
-    const nextPage = page + 1;
-    setPage(nextPage);
-    fetchProducts(debouncedSearch, categoryId, brandId, nextPage, true);
-  };
+  const selected = useMemo(
+    () => (editId ? (products.find((p) => p.id === editId) ?? null) : null),
+    [products, editId],
+  );
 
   async function handleStatusChange(id: string) {
     try {
-      const res = await fetch(`/api/products/${id}/status`, {
-        method: 'PATCH',
-      });
+      const res = await fetch(`/api/products/${id}/status`, { method: 'PATCH' });
       const body = await res.json().catch(() => ({}));
-
-      // Accept either { status: 'success' } or { updated: true } (your route.ts returns { updated: true })
       const ok = res.ok && (body.status === 'success' || body.updated === true);
-
       if (ok) {
-        // Optimistically update local state so the toggle changes immediately
-        setProducts((prev) =>
-          prev.map((p) => (p.id === id ? { ...p, isActive: !p.isActive } : p)),
-        );
         showToast(t.products.updatedSuccess);
       } else {
         showToast(t.products.saveFailed);
       }
-    } catch (err) {
-      console.error(err);
+    } catch {
       showToast(t.products.saveFailed);
     }
   }
@@ -165,20 +77,17 @@ export function Products() {
     if (!deletingId) return;
     setDeleting(true);
     try {
-      const res = await fetch(`/api/products/${deletingId}`, {
-        method: 'DELETE',
-      });
+      const res = await fetch(`/api/products/${deletingId}`, { method: 'DELETE' });
       const body = await res.json().catch(() => ({}));
       const ok = res.ok && (body.deleted === true || body.deleted === 'true');
       if (ok) {
-        setProducts((prev) => prev.filter((p) => p.id !== deletingId));
-        showToast(t.products.deletedSuccess || 'Deleted');
+        refresh();
+        showToast(t.products.deletedSuccess);
       } else {
-        showToast(t.products.deleteFailed || t.products.saveFailed);
+        showToast(t.products.deleteFailed);
       }
-    } catch (err) {
-      console.error(err);
-      showToast(t.products.deleteFailed || t.products.saveFailed);
+    } catch {
+      showToast(t.products.deleteFailed);
     } finally {
       setDeleting(false);
       setIsDeleteDialogOpen(false);
@@ -198,40 +107,15 @@ export function Products() {
               {t.products.subtitle}
             </div>
           </div>
-          <div className="flex flex-col sm:flex-row gap-3 w-full pt-2">
-            <SearchInput
-              placeholder={t.products.searchPlaceholder}
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              wrapperClassName="flex-1"
-            />
-            <div className="flex flex-wrap gap-3 w-full sm:w-auto sm:flex-nowrap">
-              <SearchableSelect
-                value={categoryId}
-                onChange={setCategoryId}
-                options={categories}
-                allLabel={t.common.allCategories}
-                searchPlaceholder={t.common.search}
-                className="w-full sm:w-45"
-              />
-              <SearchableSelect
-                value={brandId}
-                onChange={setBrandId}
-                options={brands}
-                allLabel={t.common.allBrands}
-                searchPlaceholder={t.common.search}
-                className="w-full sm:w-45"
-              />
-              <Button
-                variant="secondary"
-                className="h-10 whitespace-nowrap bg-white dark:bg-zinc-950 gap-1.5"
-                onClick={() => setIsImportModalOpen(true)}
-              >
-                <FileUp className="h-4 w-4 shrink-0" />
-                {t.products.importProducts || 'Import'}
-              </Button>
-            </div>
-          </div>
+          <ProductFilters
+            search={search}
+            onSearchChange={setSearch}
+            categoryId={categoryId}
+            onCategoryChange={setCategoryId}
+            brandId={brandId}
+            onBrandChange={setBrandId}
+            onImport={() => setIsImportModalOpen(true)}
+          />
         </CardHeader>
         <CardContent className="p-0 min-w-0">
           <div className="w-full max-w-full overflow-x-auto" style={{ WebkitOverflowScrolling: 'touch' }}>
@@ -240,18 +124,10 @@ export function Products() {
                 <tr className="border-y border-zinc-200 dark:border-zinc-800 bg-zinc-50/50 dark:bg-zinc-900/50 text-left text-zinc-500 dark:text-zinc-400">
                   <th className="py-3 px-4 font-medium">{t.products.sku}</th>
                   <th className="py-3 px-4 font-medium">{t.products.name}</th>
-                  <th className="py-3 px-4 font-medium">
-                    {t.products.price}
-                  </th>
-                  <th className="py-3 px-4 font-medium hidden sm:table-cell">
-                    {t.products.stock}
-                  </th>
-                  <th className="py-3 px-4 font-medium hidden sm:table-cell">
-                    {t.products.active}
-                  </th>
-                  <th className="py-3 px-4 font-medium text-right">
-                    {t.products.action}
-                  </th>
+                  <th className="py-3 px-4 font-medium">{t.products.price}</th>
+                  <th className="py-3 px-4 font-medium hidden sm:table-cell">{t.products.stock}</th>
+                  <th className="py-3 px-4 font-medium hidden sm:table-cell">{t.products.active}</th>
+                  <th className="py-3 px-4 font-medium text-right">{t.products.action}</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-zinc-100 dark:divide-zinc-800">
@@ -264,7 +140,7 @@ export function Products() {
                     <tr
                       key={p.id}
                       className={`group transition-colors ${
-                        p.id === selectedId
+                        p.id === editId
                           ? 'bg-zinc-50 dark:bg-zinc-900'
                           : 'hover:bg-zinc-50/50 dark:hover:bg-zinc-900/50'
                       }`}
@@ -273,10 +149,7 @@ export function Products() {
                         <button
                           type="button"
                           className="font-mono text-xs font-medium text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-100 transition-colors"
-                          onClick={() => {
-                            setSelectedId(p.id);
-                            setMode('edit');
-                          }}
+                          onClick={() => setEditId(p.id)}
                         >
                           {p.sku}
                         </button>
@@ -287,12 +160,8 @@ export function Products() {
                             <span className="truncate font-semibold text-zinc-900 dark:text-zinc-100">
                               {p.name}
                             </span>
-                            {p.minStockThreshold > 0 &&
-                            p.stock <= p.minStockThreshold ? (
-                              <Badge
-                                tone="warning"
-                                className="h-5 px-1.5 py-0 text-[10px]"
-                              >
+                            {p.minStockThreshold > 0 && p.stock <= p.minStockThreshold ? (
+                              <Badge tone="warning" className="h-5 px-1.5 py-0 text-[10px]">
                                 {t.products.lowStock}
                               </Badge>
                             ) : null}
@@ -318,10 +187,7 @@ export function Products() {
                         {formatIdr(p.basePrice)}
                       </td>
                       <td className="py-3 px-4 align-middle hidden sm:table-cell">
-                        <Badge
-                          tone={p.stock <= 0 ? 'danger' : 'neutral'}
-                          className="tabular-nums font-semibold"
-                        >
+                        <Badge tone={p.stock <= 0 ? 'danger' : 'neutral'} className="tabular-nums font-semibold">
                           {p.stock}
                         </Badge>
                       </td>
@@ -337,14 +203,8 @@ export function Products() {
                           variant="ghost"
                           className="h-8 w-8 p-0 text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-100 transition-colors"
                           size="sm"
-                          title={
-                            p.isActive
-                              ? t.products.deactivate
-                              : t.products.activate
-                          }
-                          onClick={() => {
-                            handleStatusChange(p.id);
-                          }}
+                          title={p.isActive ? t.products.deactivate : t.products.activate}
+                          onClick={() => handleStatusChange(p.id)}
                         >
                           {p.isActive ? (
                             <ToggleRight className="h-4 w-4" />
@@ -352,15 +212,11 @@ export function Products() {
                             <ToggleLeft className="h-4 w-4" />
                           )}
                         </Button>
-
                         <Button
                           variant="ghost"
                           size="sm"
                           className="h-8 w-8 p-0 text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-100 transition-colors"
-                          onClick={() => {
-                            setSelectedId(p.id);
-                            setMode('edit');
-                          }}
+                          onClick={() => setEditId(p.id)}
                           title={t.products.editProduct}
                         >
                           <Pencil className="h-4 w-4" />
@@ -397,23 +253,14 @@ export function Products() {
           <div className="flex items-center justify-between">
             <div>
               <div className="text-sm font-semibold">
-                {mode === 'create'
-                  ? t.products.newProduct
-                  : t.products.editProduct}
+                {editId ? t.products.editProduct : t.products.newProduct}
               </div>
               <div className="text-xs text-zinc-500 dark:text-zinc-400">
                 {t.common.adminOnly}
               </div>
             </div>
-            {mode === 'edit' && (
-              <Button
-                variant="secondary"
-                size="sm"
-                onClick={() => {
-                  setMode('create');
-                  setSelectedId(null);
-                }}
-              >
+            {editId && (
+              <Button variant="secondary" size="sm" onClick={() => setEditId(null)}>
                 <Plus className="h-3 w-3 mr-1" />
                 {t.products.newProduct}
               </Button>
@@ -422,19 +269,12 @@ export function Products() {
         </CardHeader>
         <CardContent>
           <ProductForm
-            mode={mode}
-            initial={mode === 'edit' ? (selected ?? undefined) : undefined}
-            onSaved={async (success, errorMsg) => {
+            mode={editId ? 'edit' : 'create'}
+            initial={editId ? (selected ?? undefined) : undefined}
+            onSaved={(success, errorMsg) => {
               if (success) {
-                await refresh();
-                if (mode === 'create') {
-                  setMode('create');
-                }
-                showToast(
-                  mode === 'create'
-                    ? t.products.createdSuccess
-                    : t.products.updatedSuccess,
-                );
+                refresh();
+                showToast(editId ? t.products.updatedSuccess : t.products.createdSuccess);
               } else {
                 showToast(errorMsg || t.products.saveFailed);
               }
@@ -442,6 +282,7 @@ export function Products() {
           />
         </CardContent>
       </Card>
+
       <ImportProductModal
         open={isImportModalOpen}
         onClose={() => setIsImportModalOpen(false)}

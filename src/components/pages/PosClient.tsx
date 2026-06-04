@@ -17,7 +17,7 @@ import { BarcodeScannerModal } from './pos/BarcodeScannerModal';
 import { CartBottomSheet } from './pos/CartBottomSheet';
 import { CartPanel } from './pos/CartPanel';
 import { CheckoutModal } from './pos/CheckoutModal';
-import { SearchPanel } from './pos/SearchPanel';
+import { ProductCatalog } from './pos/ProductCatalog';
 
 export function PosClient() {
   const inputRef = useRef<HTMLInputElement | null>(null);
@@ -258,10 +258,9 @@ export function PosClient() {
       </div>
 
       <div className="grid lg:flex-1 lg:min-h-0 grid-cols-1 gap-4 lg:grid-cols-[1fr_420px] min-w-0">
-        <SearchPanel
+        <ProductCatalog
           inputRef={inputRef}
           onToast={showToast}
-          refreshKey={refreshKey}
           onCameraClick={() => setScannerOpen(true)}
           viewMode={viewMode}
           onViewModeChange={handleViewModeChange}
