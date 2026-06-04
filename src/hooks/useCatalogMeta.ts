@@ -28,5 +28,5 @@ export function useCatalogMeta() {
     };
   }, [loaded, setCategories, setBrands, setLoaded]);
 
-  return { categories, brands };
+  return { categories, brands, loaded };
 }
