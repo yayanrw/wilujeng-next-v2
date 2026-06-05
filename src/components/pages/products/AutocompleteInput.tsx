@@ -119,10 +119,7 @@ export const AutocompleteInput = forwardRef<HTMLInputElement, AutocompleteProps>
             setIsOpen(true);
           }}
           onFocus={() => setIsOpen(true)}
-          onBlur={() => {
-            // Delay closing slightly so clicks on dropdown items can register first
-            setTimeout(() => setIsOpen(false), 200);
-          }}
+          onBlur={() => setIsOpen(false)}
           onKeyDown={handleKeyDown}
           placeholder={placeholder}
           autoComplete="off"
@@ -141,6 +138,7 @@ export const AutocompleteInput = forwardRef<HTMLInputElement, AutocompleteProps>
                         ? 'bg-zinc-100 dark:bg-zinc-700 text-zinc-900 dark:text-zinc-50'
                         : 'hover:bg-zinc-100 dark:hover:bg-zinc-800 dark:text-zinc-50'
                     }`}
+                    onMouseDown={(e) => e.preventDefault()}
                     onClick={() => selectOption(opt.name)}
                   >
                     {opt.name}
