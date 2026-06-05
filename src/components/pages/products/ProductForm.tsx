@@ -73,6 +73,9 @@ export function ProductForm({
   const categoryInputRef = useRef<HTMLInputElement>(null);
   const brandInputRef = useRef<HTMLInputElement>(null);
   const buyPriceInputRef = useRef<HTMLInputElement>(null);
+  const basePriceInputRef = useRef<HTMLInputElement>(null);
+  const stockInputRef = useRef<HTMLInputElement>(null);
+  const minStockInputRef = useRef<HTMLInputElement>(null);
   const { t } = useTranslation();
 
   const { categories, brands } = useCatalogMeta();
@@ -313,6 +316,12 @@ export function ProductForm({
           ref={nameInputRef}
           value={name}
           onChange={(e) => setName(e.target.value)}
+          onKeyDown={(e) => {
+            if (e.key === 'Enter') {
+              e.preventDefault();
+              categoryInputRef.current?.focus();
+            }
+          }}
           className="mt-1.5 font-medium"
           placeholder={t.products.productName}
         />
@@ -371,6 +380,12 @@ export function ProductForm({
               onChange={(e) =>
                 setBuyPrice(Number(e.target.value.replace(/[^0-9]/g, '')) || 0)
               }
+              onKeyDown={(e) => {
+                if (e.key === 'Enter') {
+                  e.preventDefault();
+                  basePriceInputRef.current?.focus();
+                }
+              }}
               placeholder="0"
             />
           </div>
@@ -384,12 +399,19 @@ export function ProductForm({
               Rp
             </span>
             <Input
+              ref={basePriceInputRef}
               className="pl-9 font-medium tabular-nums"
               inputMode="numeric"
               value={basePrice ? String(basePrice) : ''}
               onChange={(e) =>
                 setBasePrice(Number(e.target.value.replace(/[^0-9]/g, '')) || 0)
               }
+              onKeyDown={(e) => {
+                if (e.key === 'Enter') {
+                  e.preventDefault();
+                  stockInputRef.current?.focus();
+                }
+              }}
               placeholder="0"
             />
           </div>
@@ -402,12 +424,19 @@ export function ProductForm({
             {t.products.stock}
           </label>
           <Input
+            ref={stockInputRef}
             className="mt-1.5 font-medium tabular-nums"
             inputMode="numeric"
             value={String(stock)}
             onChange={(e) =>
               setStock(Number(e.target.value.replace(/[^0-9]/g, '')) || 0)
             }
+            onKeyDown={(e) => {
+              if (e.key === 'Enter') {
+                e.preventDefault();
+                minStockInputRef.current?.focus();
+              }
+            }}
           />
         </div>
         <div>
@@ -415,6 +444,7 @@ export function ProductForm({
             {t.products.minStock}
           </label>
           <Input
+            ref={minStockInputRef}
             className="mt-1.5 font-medium tabular-nums"
             inputMode="numeric"
             value={String(minStockThreshold)}
