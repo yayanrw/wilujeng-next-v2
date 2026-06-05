@@ -70,6 +70,9 @@ export function ProductForm({
   const [scannerOpen, setScannerOpen] = useState(false);
   const skuInputRef = useRef<HTMLInputElement>(null);
   const nameInputRef = useRef<HTMLInputElement>(null);
+  const categoryInputRef = useRef<HTMLInputElement>(null);
+  const brandInputRef = useRef<HTMLInputElement>(null);
+  const buyPriceInputRef = useRef<HTMLInputElement>(null);
   const { t } = useTranslation();
 
   const { categories, brands } = useCatalogMeta();
@@ -321,11 +324,13 @@ export function ProductForm({
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div className="space-y-1.5">
           <AutocompleteInput
+            ref={categoryInputRef}
             label={t.products.category}
             value={categoryName}
             onChange={setCategoryName}
             options={categories}
             placeholder={t.products.typeToCreate}
+            onNext={() => brandInputRef.current?.focus()}
           />
           {submitted && !categoryName.trim() && (
             <p className="text-xs text-red-500 dark:text-red-400">{t.products.categoryRequired}</p>
@@ -333,11 +338,13 @@ export function ProductForm({
         </div>
         <div className="space-y-1.5">
           <AutocompleteInput
+            ref={brandInputRef}
             label={t.products.brand}
             value={brandName}
             onChange={setBrandName}
             options={brands}
             placeholder={t.products.typeToCreate}
+            onNext={() => buyPriceInputRef.current?.focus()}
           />
           {submitted && !brandName.trim() && (
             <p className="text-xs text-red-500 dark:text-red-400">{t.products.brandRequired}</p>
@@ -357,6 +364,7 @@ export function ProductForm({
               Rp
             </span>
             <Input
+              ref={buyPriceInputRef}
               className="pl-9 font-medium tabular-nums"
               inputMode="numeric"
               value={buyPrice ? String(buyPrice) : ''}

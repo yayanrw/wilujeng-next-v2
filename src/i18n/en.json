@@ -242,6 +242,7 @@
     "bxgySaveFailed": "Failed to save promo",
     "bxgyDeleteFailed": "Failed to delete promo",
     "bxgyExample": "Example: Buy 2 get 1 free",
+    "willCreateNew": "Will be created as new",
     "skuRequired": "SKU is required",
     "nameRequired": "Name is required",
     "categoryRequired": "Category is required",
