@@ -164,7 +164,20 @@
     "scannerSwitchCamera": "Ganti kamera",
     "scannerAdded": "Ditambahkan",
     "productNotFound": "Produk tidak ditemukan",
-    "scannerOutOfStock": "Stok habis"
+    "scannerOutOfStock": "Stok habis",
+    "holdCart": "Tahan",
+    "heldTransactions": "Transaksi Ditahan",
+    "noHeldCarts": "Tidak ada transaksi yang ditahan",
+    "recallCart": "Lanjutkan",
+    "discardHold": "Buang",
+    "heldJustNow": "baru saja",
+    "heldMinutesAgo": "mnt lalu",
+    "heldHoursAgo": "jam lalu",
+    "holdCurrentAndRecall": "Tahan saat ini & lanjutkan",
+    "discardCurrentAndRecall": "Buang saat ini & lanjutkan",
+    "currentCartConflict": "Keranjang saat ini berisi item. Apa yang ingin dilakukan?",
+    "maxHoldsReached": "Batas ditahan tercapai (10). Buang satu terlebih dahulu.",
+    "staleHold": "Ditahan lebih dari 4 jam"
   },
   "products": {
     "title": "Produk",
@@ -244,7 +257,19 @@
     "bxgyDeletedSuccess": "Promo berhasil dihapus",
     "bxgySaveFailed": "Gagal menyimpan promo",
     "bxgyDeleteFailed": "Gagal menghapus promo",
-    "bxgyExample": "Contoh: Beli 2 gratis 1"
+    "bxgyExample": "Contoh: Beli 2 gratis 1",
+    "willCreateNew": "Akan dibuat sebagai baru",
+    "skuRequired": "SKU wajib diisi",
+    "nameRequired": "Nama wajib diisi",
+    "categoryRequired": "Kategori wajib diisi",
+    "brandRequired": "Merek wajib diisi",
+    "quickStockIn": "+ Stok",
+    "quickStockInTitle": "Tambah Stok Cepat",
+    "quickStockInCurrent": "Stok Saat Ini",
+    "quickStockInSuccess": "Stok berhasil ditambahkan",
+    "quickStockInFailed": "Gagal menambah stok",
+    "quickStockInSupplierPlaceholder": "Nama supplier (opsional)",
+    "quickStockInQtyRequired": "Jumlah harus lebih dari 0"
   },
   "stock": {
     "title": "Manajemen Stok",

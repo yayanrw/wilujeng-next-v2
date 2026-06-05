@@ -6,11 +6,13 @@ export function CartBottomSheet({
   open,
   total,
   onCheckout,
+  onHold,
   onClose,
 }: {
   open: boolean;
   total: number;
   onCheckout: () => void;
+  onHold?: () => void;
   onClose: () => void;
 }) {
   if (!open) return null;
@@ -29,7 +31,7 @@ export function CartBottomSheet({
         <div className="shrink-0 flex justify-center pt-3 pb-1">
           <div className="h-1 w-10 rounded-full bg-zinc-200 dark:bg-zinc-700" />
         </div>
-        <CartPanel total={total} onCheckout={onCheckout} onClose={onClose} />
+        <CartPanel total={total} onCheckout={onCheckout} onHold={onHold} onClose={onClose} />
       </div>
     </div>
   );

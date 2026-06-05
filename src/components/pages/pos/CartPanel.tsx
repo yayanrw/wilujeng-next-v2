@@ -1,6 +1,6 @@
 'use client';
 
-import { Minus, Plus, Trash2, ShoppingCart, X } from 'lucide-react';
+import { Minus, Plus, Trash2, ShoppingCart, X, PauseCircle } from 'lucide-react';
 
 import { Button } from '@/components/ui/Button';
 import { Card, CardHeader } from '@/components/ui/Card';
@@ -11,10 +11,12 @@ import { useTranslation } from '@/i18n/useTranslation';
 export function CartPanel({
   total,
   onCheckout,
+  onHold,
   onClose,
 }: {
   total: number;
   onCheckout: () => void;
+  onHold?: () => void;
   onClose?: () => void;
 }) {
   const items = usePosStore((s) => s.items);
@@ -150,6 +152,17 @@ export function CartPanel({
             {formatIdr(total)}
           </span>
         </div>
+        {onHold && (
+          <Button
+            variant="secondary"
+            className="w-full h-9 text-sm mb-2"
+            disabled={!items.length}
+            onClick={onHold}
+          >
+            <PauseCircle className="h-4 w-4" />
+            {t.pos.holdCart}
+          </Button>
+        )}
         <Button
           className="w-full h-12 text-base font-semibold shadow-sm"
           disabled={!items.length}

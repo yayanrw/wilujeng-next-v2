@@ -1,8 +1,8 @@
 'use client';
 
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef, useEffect, useCallback } from 'react';
 import Link from 'next/link';
-import { usePathname } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
 import type { ReactNode } from 'react';
 
 import * as Icons from 'lucide-react';
@@ -29,6 +29,7 @@ type NavItem = {
   label: string;
   icon: ReactNode;
   adminOnly?: boolean;
+  badge?: number;
 };
 
 export function AppShell({
@@ -45,11 +46,37 @@ export function AppShell({
   role: 'admin' | 'cashier';
 }) {
   const pathname = usePathname();
+  const router = useRouter();
   const sidebarCollapsed = useUiStore((s) => s.sidebarCollapsed);
   const toggleSidebar = useUiStore((s) => s.toggleSidebar);
   const { t } = useTranslation();
   const [profileOpen, setProfileOpen] = useState(false);
   const profileRef = useRef<HTMLDivElement>(null);
+  const [lowStockCount, setLowStockCount] = useState(0);
+
+  const fetchLowStockCount = useCallback(() => {
+    void fetch('/api/products/low-stock-count')
+      .then((r) => r.json())
+      .then((d: { count: number }) => setLowStockCount(d.count))
+      .catch(() => {});
+  }, []);
+
+  useEffect(() => {
+    fetchLowStockCount();
+    const id = setInterval(fetchLowStockCount, 60_000);
+    return () => clearInterval(id);
+  }, [fetchLowStockCount]);
+
+  // F2 — navigate to POS from any page (PosClient handles focus once there)
+  useEffect(() => {
+    const handler = (e: KeyboardEvent) => {
+      if (e.key !== 'F2' || pathname === '/pos') return;
+      e.preventDefault();
+      router.push('/pos');
+    };
+    window.addEventListener('keydown', handler);
+    return () => window.removeEventListener('keydown', handler);
+  }, [pathname, router]);
 
   useEffect(() => {
     function handleClickOutside(event: MouseEvent) {
@@ -84,6 +111,7 @@ export function AppShell({
       href: '/stock',
       label: t.nav.stock,
       icon: <Package className="h-4 w-4" />,
+      badge: lowStockCount > 0 ? lowStockCount : undefined,
     },
     {
       href: '/customers',
@@ -184,24 +212,25 @@ export function AppShell({
                       }
                     }}
                   >
-                    <div
-                      className={cn(
-                        'shrink-0',
-                        active
-                          ? ''
-                          : 'text-zinc-500 dark:text-zinc-400 group-hover:text-zinc-900 dark:group-hover:text-zinc-50',
-                      )}
-                    >
+                    <div className={cn('relative shrink-0', active ? '' : 'text-zinc-500 dark:text-zinc-400 group-hover:text-zinc-900 dark:group-hover:text-zinc-50')}>
                       {i.icon}
+                      {i.badge && sidebarCollapsed && (
+                        <span className="absolute -top-1 -right-1 flex h-2 w-2 rounded-full bg-amber-500 ring-2 ring-white dark:ring-zinc-900" />
+                      )}
                     </div>
                     <span
                       className={cn(
-                        'text-sm font-medium whitespace-nowrap transition-all duration-200',
+                        'text-sm font-medium whitespace-nowrap transition-all duration-200 flex-1',
                         sidebarCollapsed ? 'lg:hidden block' : 'block',
                       )}
                     >
                       {i.label}
                     </span>
+                    {i.badge && !sidebarCollapsed && (
+                      <span className="ml-auto text-[10px] font-bold tabular-nums bg-amber-100 text-amber-700 dark:bg-amber-900/40 dark:text-amber-400 px-1.5 py-0.5 rounded-full leading-none lg:flex hidden">
+                        {i.badge > 99 ? '99+' : i.badge}
+                      </span>
+                    )}
                   </Link>
                 );
               })}
