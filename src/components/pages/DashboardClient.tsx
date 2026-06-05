@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import Link from 'next/link';
 import {
   TrendingUp,
   ShoppingCart,
@@ -393,23 +394,27 @@ export function DashboardClient() {
                         data.lowStockItems.map((item) => (
                           <tr
                             key={item.id}
-                            className="group transition-colors hover:bg-zinc-50/50 dark:hover:bg-zinc-900/50"
+                            className="group transition-colors hover:bg-amber-50/50 dark:hover:bg-amber-900/10 cursor-pointer"
                           >
                             <td className="px-4 py-2">
-                              <div className="font-medium text-zinc-900 dark:text-zinc-100">
-                                {item.name}
-                              </div>
-                              <div className="font-mono text-xs text-zinc-500 dark:text-zinc-400">
-                                {item.sku}
-                              </div>
+                              <Link href={`/products?search=${encodeURIComponent(item.sku)}`} className="block">
+                                <div className="font-medium text-zinc-900 dark:text-zinc-100 group-hover:text-amber-700 dark:group-hover:text-amber-400 transition-colors">
+                                  {item.name}
+                                </div>
+                                <div className="font-mono text-xs text-zinc-500 dark:text-zinc-400">
+                                  {item.sku}
+                                </div>
+                              </Link>
                             </td>
                             <td className="px-4 py-2 text-right">
-                              <div className="tabular-nums font-semibold text-red-600 dark:text-red-400">
-                                {item.stock}
-                              </div>
-                              <div className="text-[10px] text-zinc-500 dark:text-zinc-400">
-                                Min: {item.minStockThreshold}
-                              </div>
+                              <Link href={`/products?search=${encodeURIComponent(item.sku)}`} className="block">
+                                <div className="tabular-nums font-semibold text-red-600 dark:text-red-400">
+                                  {item.stock}
+                                </div>
+                                <div className="text-[10px] text-zinc-500 dark:text-zinc-400">
+                                  Min: {item.minStockThreshold}
+                                </div>
+                              </Link>
                             </td>
                           </tr>
                         ))
