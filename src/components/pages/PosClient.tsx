@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useRef, useState } from 'react';
 
-import { Printer, ShoppingCart } from 'lucide-react';
+import { Printer, ShoppingCart, PauseCircle } from 'lucide-react';
 
 import { Button } from '@/components/ui/Button';
 import { usePosStore } from '@/stores/posStore';
@@ -17,6 +17,7 @@ import { BarcodeScannerModal } from './pos/BarcodeScannerModal';
 import { CartBottomSheet } from './pos/CartBottomSheet';
 import { CartPanel } from './pos/CartPanel';
 import { CheckoutModal } from './pos/CheckoutModal';
+import { HeldCartsModal } from './pos/HeldCartsModal';
 import { ProductCatalog } from './pos/ProductCatalog';
 
 export function PosClient() {
@@ -24,6 +25,7 @@ export function PosClient() {
   const [checkoutOpen, setCheckoutOpen] = useState(false);
   const [cartOpen, setCartOpen] = useState(false);
   const [scannerOpen, setScannerOpen] = useState(false);
+  const [heldCartsOpen, setHeldCartsOpen] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
   const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>('cash');
@@ -39,7 +41,9 @@ export function PosClient() {
 
   const items = usePosStore((s) => s.items);
   const customerId = usePosStore((s) => s.customerId);
+  const holds = usePosStore((s) => s.holds);
   const clear = usePosStore((s) => s.clear);
+  const holdCurrentCart = usePosStore((s) => s.holdCurrentCart);
   const addProduct = usePosStore((s) => s.addProduct);
 
   const products = useCatalogStore((s) => s.products);
@@ -49,6 +53,7 @@ export function PosClient() {
   const updateStocks = useCatalogStore((s) => s.updateStocks);
   const setLoading = useCatalogStore((s) => s.setLoading);
 
+  const customers = useCustomerStore((s) => s.customers);
   const setCustomers = useCustomerStore((s) => s.setCustomers);
   const customersLoaded = useCustomerStore((s) => s.loaded);
 
@@ -192,6 +197,15 @@ export function PosClient() {
     showToast(`${product.name} +1`);
   }
 
+  function handleHold() {
+    const customerName = customerId
+      ? customers.find((c) => c.id === customerId)?.name
+      : undefined;
+    const ok = holdCurrentCart(customerName);
+    if (!ok) showToast(t.pos.maxHoldsReached);
+    else inputRef.current?.focus();
+  }
+
   async function doCheckout() {
     if (!items.length) return;
     if (payment.status === 'debt' && !customerId) {
@@ -253,21 +267,36 @@ export function PosClient() {
     <div className="flex flex-col gap-4 pb-20 lg:pb-0 lg:h-[calc(100vh-6rem)] w-full min-w-0 overflow-x-hidden">
       <div className="flex items-center justify-between shrink-0">
         <div className="text-lg font-semibold">{t.nav.pos}</div>
-        {lastTxId ? (
-          <Button
-            variant="secondary"
-            onClick={() => {
-              window.open(
-                `/receipt/${lastTxId}`,
-                '_blank',
-                'noopener,noreferrer',
-              );
-            }}
+        <div className="flex items-center gap-2">
+          <button
+            type="button"
+            onClick={() => setHeldCartsOpen(true)}
+            className="relative flex items-center gap-1.5 rounded-lg border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-950 px-3 h-9 text-sm font-medium text-zinc-700 dark:text-zinc-300 hover:bg-zinc-50 dark:hover:bg-zinc-900 transition-colors"
           >
-            <Printer className="h-4 w-4" />
-            {t.pos.printLastReceipt}
-          </Button>
-        ) : null}
+            <PauseCircle className="h-4 w-4 text-zinc-500 dark:text-zinc-400" />
+            <span className="hidden sm:inline">{t.pos.heldTransactions}</span>
+            {holds.length > 0 && (
+              <span className="flex h-5 min-w-5 items-center justify-center rounded-full bg-amber-500 text-white text-[10px] font-bold px-1 leading-none">
+                {holds.length}
+              </span>
+            )}
+          </button>
+          {lastTxId ? (
+            <Button
+              variant="secondary"
+              onClick={() => {
+                window.open(
+                  `/receipt/${lastTxId}`,
+                  '_blank',
+                  'noopener,noreferrer',
+                );
+              }}
+            >
+              <Printer className="h-4 w-4" />
+              {t.pos.printLastReceipt}
+            </Button>
+          ) : null}
+        </div>
       </div>
 
       <div className="grid lg:flex-1 lg:min-h-0 grid-cols-1 gap-4 lg:grid-cols-[1fr_420px] min-w-0">
@@ -279,7 +308,7 @@ export function PosClient() {
           onViewModeChange={handleViewModeChange}
         />
         <div className="hidden lg:flex lg:flex-col lg:min-h-0">
-          <CartPanel total={total} onCheckout={() => setCheckoutOpen(true)} />
+          <CartPanel total={total} onCheckout={() => setCheckoutOpen(true)} onHold={handleHold} />
         </div>
       </div>
 
@@ -308,6 +337,11 @@ export function PosClient() {
 
       <Toast />
 
+      <HeldCartsModal
+        open={heldCartsOpen}
+        onClose={() => setHeldCartsOpen(false)}
+      />
+
       <BarcodeScannerModal
         open={scannerOpen}
         onScan={handleBarcodeScan}
@@ -325,6 +359,10 @@ export function PosClient() {
         onCheckout={() => {
           setCartOpen(false);
           setCheckoutOpen(true);
+        }}
+        onHold={() => {
+          handleHold();
+          setCartOpen(false);
         }}
       />
 

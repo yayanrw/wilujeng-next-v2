@@ -161,7 +161,20 @@
     "scannerSwitchCamera": "Switch camera",
     "scannerAdded": "Added",
     "productNotFound": "Product not found",
-    "scannerOutOfStock": "Out of stock"
+    "scannerOutOfStock": "Out of stock",
+    "holdCart": "Hold",
+    "heldTransactions": "Held Transactions",
+    "noHeldCarts": "No held transactions",
+    "recallCart": "Recall",
+    "discardHold": "Discard",
+    "heldJustNow": "just now",
+    "heldMinutesAgo": "m ago",
+    "heldHoursAgo": "h ago",
+    "holdCurrentAndRecall": "Hold current & recall",
+    "discardCurrentAndRecall": "Discard current & recall",
+    "currentCartConflict": "Current cart has items. What do you want to do?",
+    "maxHoldsReached": "Maximum holds reached (10). Discard one first.",
+    "staleHold": "Held over 4h ago"
   },
   "products": {
     "title": "Products",
