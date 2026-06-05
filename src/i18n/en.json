@@ -259,7 +259,14 @@
     "skuRequired": "SKU is required",
     "nameRequired": "Name is required",
     "categoryRequired": "Category is required",
-    "brandRequired": "Brand is required"
+    "brandRequired": "Brand is required",
+    "quickStockIn": "+ Stock",
+    "quickStockInTitle": "Quick Stock In",
+    "quickStockInCurrent": "Current Stock",
+    "quickStockInSuccess": "Stock added successfully",
+    "quickStockInFailed": "Failed to add stock",
+    "quickStockInSupplierPlaceholder": "Optional supplier name",
+    "quickStockInQtyRequired": "Quantity must be greater than 0"
   },
   "stock": {
     "title": "Stock Management",

@@ -262,7 +262,14 @@
     "skuRequired": "SKU wajib diisi",
     "nameRequired": "Nama wajib diisi",
     "categoryRequired": "Kategori wajib diisi",
-    "brandRequired": "Merek wajib diisi"
+    "brandRequired": "Merek wajib diisi",
+    "quickStockIn": "+ Stok",
+    "quickStockInTitle": "Tambah Stok Cepat",
+    "quickStockInCurrent": "Stok Saat Ini",
+    "quickStockInSuccess": "Stok berhasil ditambahkan",
+    "quickStockInFailed": "Gagal menambah stok",
+    "quickStockInSupplierPlaceholder": "Nama supplier (opsional)",
+    "quickStockInQtyRequired": "Jumlah harus lebih dari 0"
   },
   "stock": {
     "title": "Manajemen Stok",

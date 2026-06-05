@@ -279,6 +279,10 @@ export function Products() {
                 showToast(errorMsg || t.products.saveFailed);
               }
             }}
+            onStockAdded={() => {
+              refresh();
+              showToast(t.products.quickStockInSuccess);
+            }}
           />
         </CardContent>
       </Card>
