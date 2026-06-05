@@ -66,6 +66,7 @@ export function ProductForm({
   );
   const [tierEnabled, setTierEnabled] = useState((initial?.tiers ?? []).length > 0);
   const [pending, setPending] = useState(false);
+  const [submitted, setSubmitted] = useState(false);
   const [scannerOpen, setScannerOpen] = useState(false);
   const skuInputRef = useRef<HTMLInputElement>(null);
   const nameInputRef = useRef<HTMLInputElement>(null);
@@ -138,9 +139,13 @@ export function ProductForm({
       setPromo(null);
       setPromoEnabled(false);
     }
+    setSubmitted(false);
   }, [initial, mode, fetchPromo]);
 
-  const canSave = useMemo(() => sku.trim() && name.trim(), [sku, name]);
+  const canSave = useMemo(
+    () => sku.trim() && name.trim() && categoryName.trim() && brandName.trim(),
+    [sku, name, categoryName, brandName],
+  );
 
   const generateSku = () => {
     // Generate a random 8-character alphanumeric SKU
@@ -165,6 +170,7 @@ export function ProductForm({
       className="flex flex-col gap-3"
       onSubmit={async (e) => {
         e.preventDefault();
+        setSubmitted(true);
         if (!canSave) return;
         setPending(true);
 
@@ -246,6 +252,7 @@ export function ProductForm({
           setPromoValidFrom('');
           setPromoValidTo('');
           setPromoMaxMultiplier('');
+          setSubmitted(false);
         }
 
         onSaved(true);
@@ -291,6 +298,9 @@ export function ProductForm({
             <Dices className="h-4 w-4 text-zinc-500 dark:text-zinc-400" />
           </Button>
         </div>
+        {submitted && !sku.trim() && (
+          <p className="mt-1 text-xs text-red-500 dark:text-red-400">{t.products.skuRequired}</p>
+        )}
       </div>
       <div>
         <label className="text-xs font-semibold uppercase tracking-wider text-zinc-500 dark:text-zinc-400">
@@ -303,6 +313,9 @@ export function ProductForm({
           className="mt-1.5 font-medium"
           placeholder={t.products.productName}
         />
+        {submitted && !name.trim() && (
+          <p className="mt-1 text-xs text-red-500 dark:text-red-400">{t.products.nameRequired}</p>
+        )}
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -314,6 +327,9 @@ export function ProductForm({
             options={categories}
             placeholder={t.products.typeToCreate}
           />
+          {submitted && !categoryName.trim() && (
+            <p className="text-xs text-red-500 dark:text-red-400">{t.products.categoryRequired}</p>
+          )}
         </div>
         <div className="space-y-1.5">
           <AutocompleteInput
@@ -323,6 +339,9 @@ export function ProductForm({
             options={brands}
             placeholder={t.products.typeToCreate}
           />
+          {submitted && !brandName.trim() && (
+            <p className="text-xs text-red-500 dark:text-red-400">{t.products.brandRequired}</p>
+          )}
         </div>
       </div>
 

@@ -241,7 +241,11 @@
     "bxgyDeletedSuccess": "Promo deleted successfully",
     "bxgySaveFailed": "Failed to save promo",
     "bxgyDeleteFailed": "Failed to delete promo",
-    "bxgyExample": "Example: Buy 2 get 1 free"
+    "bxgyExample": "Example: Buy 2 get 1 free",
+    "skuRequired": "SKU is required",
+    "nameRequired": "Name is required",
+    "categoryRequired": "Category is required",
+    "brandRequired": "Brand is required"
   },
   "stock": {
     "title": "Stock Management",
