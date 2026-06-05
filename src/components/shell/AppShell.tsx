@@ -2,7 +2,7 @@
 
 import { useState, useRef, useEffect, useCallback } from 'react';
 import Link from 'next/link';
-import { usePathname } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
 import type { ReactNode } from 'react';
 
 import * as Icons from 'lucide-react';
@@ -46,6 +46,7 @@ export function AppShell({
   role: 'admin' | 'cashier';
 }) {
   const pathname = usePathname();
+  const router = useRouter();
   const sidebarCollapsed = useUiStore((s) => s.sidebarCollapsed);
   const toggleSidebar = useUiStore((s) => s.toggleSidebar);
   const { t } = useTranslation();
@@ -65,6 +66,17 @@ export function AppShell({
     const id = setInterval(fetchLowStockCount, 60_000);
     return () => clearInterval(id);
   }, [fetchLowStockCount]);
+
+  // F2 — navigate to POS from any page (PosClient handles focus once there)
+  useEffect(() => {
+    const handler = (e: KeyboardEvent) => {
+      if (e.key !== 'F2' || pathname === '/pos') return;
+      e.preventDefault();
+      router.push('/pos');
+    };
+    window.addEventListener('keydown', handler);
+    return () => window.removeEventListener('keydown', handler);
+  }, [pathname, router]);
 
   useEffect(() => {
     function handleClickOutside(event: MouseEvent) {

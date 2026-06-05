@@ -121,6 +121,19 @@ export function PosClient() {
     inputRef.current?.focus();
   }, []);
 
+  // F2 — refocus the SKU input when already on POS page
+  useEffect(() => {
+    const handler = (e: KeyboardEvent) => {
+      if (e.key !== 'F2') return;
+      if (checkoutOpen || scannerOpen || cartOpen) return;
+      e.preventDefault();
+      inputRef.current?.focus();
+      inputRef.current?.select();
+    };
+    window.addEventListener('keydown', handler);
+    return () => window.removeEventListener('keydown', handler);
+  }, [checkoutOpen, scannerOpen, cartOpen]);
+
   useEffect(() => {
     const mq = window.matchMedia('(max-width: 1023px)');
     setIsMobile(mq.matches);

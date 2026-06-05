@@ -40,7 +40,7 @@ export function ProductSearchBar({
             onEnter(query);
           }}
         />
-        {query && (
+        {query ? (
           <button
             type="button"
             onClick={() => {
@@ -52,6 +52,10 @@ export function ProductSearchBar({
           >
             <X className="h-4 w-4" />
           </button>
+        ) : (
+          <kbd className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none text-[10px] font-mono text-zinc-400 dark:text-zinc-500 border border-zinc-200 dark:border-zinc-700 px-1 py-0.5 rounded">
+            F2
+          </kbd>
         )}
       </div>
       <div className="flex shrink-0 items-center gap-1">
