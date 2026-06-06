@@ -247,6 +247,7 @@ export async function POST(req: Request) {
           qty: i.qty,
           priceAtTransaction: i.unitPrice,
           subtotal: i.subtotal,
+          unitBuyPrice: i.buyPrice,
         })),
       );
 

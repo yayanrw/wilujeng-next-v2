@@ -36,6 +36,13 @@
       "when": 1776099195731,
       "tag": "0004_slippery_hellcat",
       "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "7",
+      "when": 1780717210662,
+      "tag": "0005_flippant_wonder_man",
+      "breakpoints": true
     }
   ]
 }

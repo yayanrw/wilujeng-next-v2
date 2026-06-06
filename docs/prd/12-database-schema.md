@@ -99,6 +99,7 @@ product_id UUID FK→products(id)
 qty INT NOT NULL CHECK(>0)
 price_at_transaction INT NOT NULL CHECK(>=0)
 subtotal INT NOT NULL CHECK(>=0)
+unit_buy_price INT NULL  -- snapshot HPP saat checkout (COGS historis stabil); NULL utk data pra-migrasi yang sudah di-freeze ke products.buy_price
 ```
 
 ### stock_logs

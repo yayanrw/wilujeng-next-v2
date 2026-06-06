@@ -175,6 +175,7 @@ export const transactionItems = pgTable('transaction_items', {
   qty: integer('qty').notNull(),
   priceAtTransaction: integer('price_at_transaction').notNull(),
   subtotal: integer('subtotal').notNull(),
+  unitBuyPrice: integer('unit_buy_price'),
 });
 
 export const stockLogs = pgTable('stock_logs', {
