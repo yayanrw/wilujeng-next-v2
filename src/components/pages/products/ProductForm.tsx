@@ -6,8 +6,8 @@ import { Plus, Trash2, Dices, Camera, PackagePlus } from 'lucide-react';
 
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
-
-import { AutocompleteInput } from './AutocompleteInput';
+import { Textarea } from '@/components/ui/Textarea';
+import { AutocompleteInput } from '@/components/ui/AutocompleteInput';
 import { BarcodeScannerModal } from '../pos/BarcodeScannerModal';
 import { QuickStockInModal } from './QuickStockInModal';
 import { useTranslation } from '@/i18n/useTranslation';
@@ -81,9 +81,10 @@ export function ProductForm({
   const minStockInputRef = useRef<HTMLInputElement>(null);
   const { t } = useTranslation();
 
-  const { categories, brands } = useCatalogMeta();
+  const { categories, brands, suppliers } = useCatalogMeta();
   const addCategory = useCatalogMetaStore((s) => s.addCategory);
   const addBrand = useCatalogMetaStore((s) => s.addBrand);
+  const addSupplier = useCatalogMetaStore((s) => s.addSupplier);
 
   // BxGy promo state
   const [promoEnabled, setPromoEnabled] = useState(false);
@@ -259,6 +260,9 @@ export function ProductForm({
             onSaved(false, t.products.initialStockFailed);
             return;
           }
+          if (initialStockSupplier.trim()) {
+            addSupplier({ id: initialStockSupplier.trim(), name: initialStockSupplier.trim() });
+          }
         }
 
         // In create mode, save promo alongside the new product if enabled
@@ -383,6 +387,8 @@ export function ProductForm({
             options={categories}
             placeholder={t.products.typeToCreate}
             onNext={() => brandInputRef.current?.focus()}
+            noMatchText={t.products.noMatches}
+            createHintText={t.products.willCreateNew}
           />
           {submitted && !categoryName.trim() && (
             <p className="text-xs text-red-500 dark:text-red-400">{t.products.categoryRequired}</p>
@@ -397,6 +403,8 @@ export function ProductForm({
             options={brands}
             placeholder={t.products.typeToCreate}
             onNext={() => basePriceInputRef.current?.focus()}
+            noMatchText={t.products.noMatches}
+            createHintText={t.products.willCreateNew}
           />
           {submitted && !brandName.trim() && (
             <p className="text-xs text-red-500 dark:text-red-400">{t.products.brandRequired}</p>
@@ -571,39 +579,37 @@ export function ProductForm({
                 </div>
               </div>
               <div>
-                <label className="text-[10px] font-semibold uppercase tracking-wider text-zinc-500 dark:text-zinc-400">
-                  {t.stock.supplier}
-                </label>
-                <Input
-                  className="mt-1 h-8 text-sm"
+                <AutocompleteInput
+                  label={t.stock.supplier}
                   value={initialStockSupplier}
-                  onChange={(e) => setInitialStockSupplier(e.target.value)}
+                  onChange={setInitialStockSupplier}
+                  options={suppliers}
                   placeholder={t.products.quickStockInSupplierPlaceholder}
+                  noMatchText={t.products.noMatches}
                 />
               </div>
-              <div className="grid grid-cols-2 gap-3">
-                <div>
-                  <label className="text-[10px] font-semibold uppercase tracking-wider text-zinc-500 dark:text-zinc-400">
-                    {t.stock.expiryDate}
-                  </label>
-                  <Input
-                    type="date"
-                    className="mt-1 h-8 text-sm"
-                    value={initialStockExpiry}
-                    onChange={(e) => setInitialStockExpiry(e.target.value)}
-                  />
-                </div>
-                <div>
-                  <label className="text-[10px] font-semibold uppercase tracking-wider text-zinc-500 dark:text-zinc-400">
-                    {t.stock.notes}
-                  </label>
-                  <Input
-                    className="mt-1 h-8 text-sm"
-                    value={initialStockNote}
-                    onChange={(e) => setInitialStockNote(e.target.value)}
-                    placeholder="—"
-                  />
-                </div>
+              <div>
+                <label className="text-[10px] font-semibold uppercase tracking-wider text-zinc-500 dark:text-zinc-400">
+                  {t.stock.expiryDate}
+                </label>
+                <Input
+                  type="date"
+                  className="mt-1 h-8 text-sm"
+                  value={initialStockExpiry}
+                  onChange={(e) => setInitialStockExpiry(e.target.value)}
+                />
+              </div>
+              <div>
+                <label className="text-[10px] font-semibold uppercase tracking-wider text-zinc-500 dark:text-zinc-400">
+                  {t.stock.notes}
+                </label>
+                <Textarea
+                  className="mt-1 text-sm"
+                  value={initialStockNote}
+                  onChange={(e) => setInitialStockNote(e.target.value)}
+                  placeholder="—"
+                  rows={3}
+                />
               </div>
             </div>
           )}
