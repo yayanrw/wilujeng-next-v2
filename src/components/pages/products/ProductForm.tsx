@@ -80,6 +80,20 @@ export function ProductForm({
   const brandInputRef = useRef<HTMLInputElement>(null);
   const basePriceInputRef = useRef<HTMLInputElement>(null);
   const minStockInputRef = useRef<HTMLInputElement>(null);
+
+  // Stok Awal refs
+  const initialStockQtyRef = useRef<HTMLInputElement>(null);
+  const initialStockBuyPriceRef = useRef<HTMLInputElement>(null);
+  const initialStockSupplierRef = useRef<HTMLInputElement>(null);
+  const initialStockExpiryRef = useRef<HTMLInputElement>(null);
+  const initialStockNoteRef = useRef<HTMLTextAreaElement>(null);
+
+  // BxGy refs
+  const promoBuyQtyRef = useRef<HTMLInputElement>(null);
+  const promoFreeQtyRef = useRef<HTMLInputElement>(null);
+  const promoValidFromRef = useRef<HTMLInputElement>(null);
+  const promoValidToRef = useRef<HTMLInputElement>(null);
+  const promoMaxMultiplierRef = useRef<HTMLInputElement>(null);
   const { t } = useTranslation();
   const { showToast, Toast } = useToast();
 
@@ -180,6 +194,15 @@ export function ProductForm({
     }
     setSubmitted(false);
   }, [initial, mode, fetchPromo]);
+
+  // Auto-focus first field when toggling sections open
+  useEffect(() => {
+    if (initialStockEnabled) setTimeout(() => initialStockQtyRef.current?.focus(), 0);
+  }, [initialStockEnabled]);
+
+  useEffect(() => {
+    if (promoEnabled) setTimeout(() => promoBuyQtyRef.current?.focus(), 0);
+  }, [promoEnabled]);
 
   const canSave = useMemo(
     () => sku.trim() && name.trim() && categoryName.trim() && brandName.trim(),
@@ -512,6 +535,14 @@ export function ProductForm({
                 Number(e.target.value.replace(/[^0-9]/g, '')) || 0,
               )
             }
+            onKeyDown={(e) => {
+              if (e.key === 'Enter') {
+                e.preventDefault();
+                if (mode === 'create' && initialStockEnabled) {
+                  initialStockQtyRef.current?.focus();
+                }
+              }
+            }}
           />
         </div>
       </div>
@@ -571,12 +602,16 @@ export function ProductForm({
                     {t.stock.qty}
                   </label>
                   <Input
+                    ref={initialStockQtyRef}
                     className="mt-1 h-8 text-sm tabular-nums"
                     inputMode="numeric"
                     value={String(initialStockQty)}
                     onChange={(e) =>
                       setInitialStockQty(Number(e.target.value.replace(/[^0-9]/g, '')) || 0)
                     }
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter') { e.preventDefault(); initialStockBuyPriceRef.current?.focus(); }
+                    }}
                   />
                 </div>
                 <div>
@@ -588,6 +623,7 @@ export function ProductForm({
                       Rp
                     </span>
                     <Input
+                      ref={initialStockBuyPriceRef}
                       className="h-8 pl-8 text-sm tabular-nums"
                       inputMode="numeric"
                       value={initialStockBuyPrice ? String(initialStockBuyPrice) : ''}
@@ -595,18 +631,24 @@ export function ProductForm({
                         setInitialStockBuyPrice(Number(e.target.value.replace(/[^0-9]/g, '')) || 0)
                       }
                       placeholder="0"
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter') { e.preventDefault(); initialStockSupplierRef.current?.focus(); }
+                      }}
                     />
                   </div>
                 </div>
               </div>
               <div>
                 <AutocompleteInput
+                  ref={initialStockSupplierRef}
                   label={t.stock.supplier}
                   value={initialStockSupplier}
                   onChange={setInitialStockSupplier}
                   options={suppliers}
                   placeholder={t.products.quickStockInSupplierPlaceholder}
                   noMatchText={t.products.noMatches}
+                  createHintText={t.products.willCreateNew}
+                  onNext={() => initialStockExpiryRef.current?.focus()}
                 />
               </div>
               <div>
@@ -614,10 +656,14 @@ export function ProductForm({
                   {t.stock.expiryDate}
                 </label>
                 <Input
+                  ref={initialStockExpiryRef}
                   type="date"
                   className="mt-1 h-8 text-sm"
                   value={initialStockExpiry}
                   onChange={(e) => setInitialStockExpiry(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter') { e.preventDefault(); initialStockNoteRef.current?.focus(); }
+                  }}
                 />
               </div>
               <div>
@@ -625,6 +671,7 @@ export function ProductForm({
                   {t.stock.notes}
                 </label>
                 <Textarea
+                  ref={initialStockNoteRef}
                   className="mt-1 text-sm"
                   value={initialStockNote}
                   onChange={(e) => setInitialStockNote(e.target.value)}
@@ -805,12 +852,16 @@ export function ProductForm({
                 {t.products.bxgyBuyQty}
               </label>
               <Input
+                ref={promoBuyQtyRef}
                 className="mt-1 h-8 text-sm tabular-nums"
                 inputMode="numeric"
                 value={String(promoBuyQty)}
                 onChange={(e) =>
                   setPromoBuyQty(Number(e.target.value.replace(/[^0-9]/g, '')) || 1)
                 }
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter') { e.preventDefault(); promoFreeQtyRef.current?.focus(); }
+                }}
               />
             </div>
             <div>
@@ -818,12 +869,16 @@ export function ProductForm({
                 {t.products.bxgyFreeQty}
               </label>
               <Input
+                ref={promoFreeQtyRef}
                 className="mt-1 h-8 text-sm tabular-nums"
                 inputMode="numeric"
                 value={String(promoFreeQty)}
                 onChange={(e) =>
                   setPromoFreeQty(Number(e.target.value.replace(/[^0-9]/g, '')) || 1)
                 }
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter') { e.preventDefault(); promoValidFromRef.current?.focus(); }
+                }}
               />
             </div>
           </div>
@@ -834,10 +889,14 @@ export function ProductForm({
                 {t.products.bxgyValidFrom}
               </label>
               <Input
+                ref={promoValidFromRef}
                 type="datetime-local"
                 className="mt-1 h-8 text-sm"
                 value={promoValidFrom}
                 onChange={(e) => setPromoValidFrom(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter') { e.preventDefault(); promoValidToRef.current?.focus(); }
+                }}
               />
             </div>
             <div>
@@ -845,10 +904,14 @@ export function ProductForm({
                 {t.products.bxgyValidTo}
               </label>
               <Input
+                ref={promoValidToRef}
                 type="datetime-local"
                 className="mt-1 h-8 text-sm"
                 value={promoValidTo}
                 onChange={(e) => setPromoValidTo(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter') { e.preventDefault(); promoMaxMultiplierRef.current?.focus(); }
+                }}
               />
             </div>
           </div>
@@ -858,6 +921,7 @@ export function ProductForm({
               {t.products.bxgyMaxMultiplier}
             </label>
             <Input
+              ref={promoMaxMultiplierRef}
               className="mt-1 h-8 text-sm tabular-nums"
               inputMode="numeric"
               placeholder="—"
