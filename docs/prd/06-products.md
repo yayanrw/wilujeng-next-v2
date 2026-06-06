@@ -6,6 +6,9 @@
 - Dropdown filter: Kategori, Merk
 - Kolom "Action": edit (pensil), toggle aktif/nonaktif, delete (sampah — admin only)
 - Tombol **"Import Products"**: modal upload `.xlsx` untuk bulk upsert berdasarkan SKU (tidak mengubah tiering)
+  - Kolom wajib: `SKU`, `Name`, `Base Price`; opsional: `Buy Price`, `Stock`, `Min Stock`, `Category`, `Brand`, `id`
+  - Produk **baru** dengan `Stock > 0`: insert produk (`averageCost = buyPrice`) + otomatis buat `stock_logs` tipe `in` (audit trail stok awal)
+  - Produk **lama** (match by `id` atau SKU): update langsung termasuk `averageCost = buyPrice`; tidak membuat `stock_logs`
 - Cache: Upstash Redis dengan Pattern Matching invalidation
 
 ## Tambah/Edit Produk
