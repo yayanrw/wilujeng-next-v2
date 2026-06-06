@@ -2,6 +2,41 @@
 
 import { useMemo, useState, useEffect, useCallback, useRef } from 'react';
 
+function playSuccessSound() {
+  try {
+    const ctx = new AudioContext();
+    const gain = ctx.createGain();
+    gain.connect(ctx.destination);
+    gain.gain.setValueAtTime(0.25, ctx.currentTime);
+    gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.5);
+    [523, 659, 784].forEach((freq, i) => {
+      const osc = ctx.createOscillator();
+      osc.connect(gain);
+      osc.type = 'sine';
+      osc.frequency.setValueAtTime(freq, ctx.currentTime + i * 0.1);
+      osc.start(ctx.currentTime + i * 0.1);
+      osc.stop(ctx.currentTime + i * 0.1 + 0.18);
+    });
+  } catch { /* silently ignore if AudioContext unavailable */ }
+}
+
+function playFailSound() {
+  try {
+    const ctx = new AudioContext();
+    const gain = ctx.createGain();
+    gain.connect(ctx.destination);
+    gain.gain.setValueAtTime(0.25, ctx.currentTime);
+    gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.4);
+    const osc = ctx.createOscillator();
+    osc.connect(gain);
+    osc.type = 'sawtooth';
+    osc.frequency.setValueAtTime(220, ctx.currentTime);
+    osc.frequency.exponentialRampToValueAtTime(110, ctx.currentTime + 0.35);
+    osc.start(ctx.currentTime);
+    osc.stop(ctx.currentTime + 0.4);
+  } catch { /* silently ignore if AudioContext unavailable */ }
+}
+
 import { Plus, Trash2, Dices, Camera, PackagePlus, Info, X } from 'lucide-react';
 
 import { Button } from '@/components/ui/Button';
@@ -311,6 +346,7 @@ export function ProductForm({
         } | null;
         setPending(false);
         if (!res.ok) {
+          playFailSound();
           onSaved(false, body?.error?.message ?? 'Save failed');
           return;
         }
@@ -334,6 +370,7 @@ export function ProductForm({
             }),
           });
           if (!stockRes.ok) {
+            playFailSound();
             onSaved(false, t.products.initialStockFailed);
             return;
           }
@@ -385,6 +422,7 @@ export function ProductForm({
           setSubmitted(false);
         }
 
+        playSuccessSound();
         onSaved(true);
         skuInputRef.current?.focus();
         formRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
