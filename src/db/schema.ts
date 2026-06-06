@@ -105,6 +105,7 @@ export const products = pgTable(
     brandId: uuid('brand_id'),
     basePrice: integer('base_price').notNull(),
     buyPrice: integer('buy_price').notNull(),
+    averageCost: integer('average_cost').notNull().default(0),
     stock: integer('stock').notNull().default(0),
     minStockThreshold: integer('min_stock_threshold').notNull().default(0),
     isActive: boolean('is_active').notNull().default(true),

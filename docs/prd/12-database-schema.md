@@ -32,7 +32,8 @@ name TEXT NOT NULL
 category_id UUID FK→categories(id)
 brand_id UUID FK→brands(id)
 base_price INT NOT NULL CHECK(>=0)
-buy_price INT NOT NULL CHECK(>=0)
+buy_price INT NOT NULL CHECK(>=0)        -- harga beli terakhir (referensi/pre-fill)
+average_cost INT NOT NULL DEFAULT 0      -- HPP rata-rata bergerak (moving average cost)
 stock INT NOT NULL CHECK(>=0)
 min_stock_threshold INT NOT NULL DEFAULT 0 CHECK(>=0)
 is_active BOOLEAN NOT NULL DEFAULT true
