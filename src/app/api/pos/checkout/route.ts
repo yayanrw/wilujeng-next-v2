@@ -51,6 +51,7 @@ export async function POST(req: Request) {
           sku: products.sku,
           basePrice: products.basePrice,
           buyPrice: products.buyPrice,
+          averageCost: products.averageCost,
           stock: products.stock,
         })
         .from(products)
@@ -148,6 +149,7 @@ export async function POST(req: Request) {
           qty,
           tiers: tiersByProduct.get(p.id) ?? [],
         });
+        const costSnapshot = p.averageCost > 0 ? p.averageCost : p.buyPrice;
         lineItems.push({
           productId: p.id,
           sku: p.sku,
@@ -155,7 +157,7 @@ export async function POST(req: Request) {
           qty,
           unitPrice,
           subtotal: unitPrice * qty,
-          buyPrice: p.buyPrice,
+          buyPrice: costSnapshot,
           stock: p.stock,
           isFree: false,
         });
@@ -169,7 +171,7 @@ export async function POST(req: Request) {
             qty: freeQty,
             unitPrice: 0,
             subtotal: 0,
-            buyPrice: p.buyPrice,
+            buyPrice: costSnapshot,
             stock: p.stock,
             isFree: true,
           });
@@ -247,6 +249,7 @@ export async function POST(req: Request) {
           qty: i.qty,
           priceAtTransaction: i.unitPrice,
           subtotal: i.subtotal,
+          unitBuyPrice: i.buyPrice,
         })),
       );
 

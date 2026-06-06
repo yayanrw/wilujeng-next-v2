@@ -63,11 +63,21 @@ export async function POST(req: Request) {
     const prevStock = product.stock;
     const nextStock = prevStock + parsed.data.qty;
 
+    const prevAverage = product.averageCost;
+    const nextAverage =
+      prevStock <= 0
+        ? parsed.data.unitBuyPrice
+        : Math.round(
+            (prevStock * prevAverage + parsed.data.qty * parsed.data.unitBuyPrice) /
+              nextStock,
+          );
+
     await tx
       .update(products)
       .set({
         stock: nextStock,
         buyPrice: parsed.data.unitBuyPrice,
+        averageCost: nextAverage,
         updatedAt: new Date(),
       })
       .where(eq(products.id, parsed.data.productId));
@@ -87,7 +97,7 @@ export async function POST(req: Request) {
       })
       .returning();
 
-    return { prevStock, nextStock, logId: log?.id ?? null, supplierId };
+    return { prevStock, nextStock, averageCost: nextAverage, logId: log?.id ?? null, supplierId };
   });
 
   await invalidateCachePattern('products:catalog:*');

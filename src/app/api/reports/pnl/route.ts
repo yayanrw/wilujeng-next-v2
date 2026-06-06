@@ -29,7 +29,7 @@ export async function GET(req: Request) {
   const [row] = await db
     .select({
       sales: sql<number>`coalesce(sum(${transactions.totalAmount}), 0)`,
-      cogs: sql<number>`coalesce(sum(${transactionItems.qty} * ${products.buyPrice}), 0)`,
+      cogs: sql<number>`coalesce(sum(${transactionItems.qty} * coalesce(${transactionItems.unitBuyPrice}, ${products.buyPrice})), 0)`,
     })
     .from(transactions)
     .leftJoin(transactionItems, eq(transactionItems.transactionId, transactions.id))

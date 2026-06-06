@@ -266,7 +266,12 @@
     "quickStockInSuccess": "Stock added successfully",
     "quickStockInFailed": "Failed to add stock",
     "quickStockInSupplierPlaceholder": "Optional supplier name",
-    "quickStockInQtyRequired": "Quantity must be greater than 0"
+    "quickStockInQtyRequired": "Quantity must be greater than 0",
+    "averageCost": "Avg. Cost (HPP)",
+    "stockReadOnly": "Updated via Stock menu only",
+    "initialStock": "Initial Stock (Optional)",
+    "initialStockDesc": "Add opening stock when creating this product",
+    "initialStockFailed": "Product created, but failed to add initial stock"
   },
   "stock": {
     "title": "Stock Management",
@@ -317,7 +322,10 @@
     "outTypeReturn": "Customer Return (Return)",
     "originTransaction": "Origin Transaction (Required for Return)",
     "returnReason": "Return Reason",
-    "returnReasonPlaceholder": "Example: Defective item, Wrong purchase..."
+    "returnReasonPlaceholder": "Example: Defective item, Wrong purchase...",
+    "stockUpdated": "Stock updated",
+    "requestFailed": "Request failed",
+    "errorOccurred": "An error occurred, please try again"
   },
   "customers": {
     "title": "Customers",

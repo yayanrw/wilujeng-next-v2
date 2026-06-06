@@ -2,7 +2,7 @@ import * as xlsx from 'xlsx';
 import { eq } from 'drizzle-orm';
 
 import { db } from '@/db';
-import { brands, categories, products } from '@/db/schema';
+import { brands, categories, products, stockLogs } from '@/db/schema';
 import { badRequest, json, requireApiRole } from '@/server/api-helpers';
 import { invalidateCachePattern } from '@/lib/redis';
 
@@ -150,38 +150,65 @@ export async function POST(req: Request) {
               brandId,
               basePrice,
               buyPrice,
+              averageCost: buyPrice,
               stock,
               minStockThreshold,
               updatedAt: new Date(),
             })
             .where(eq(products.id, rowId));
         } else {
-          // No id — insert new product; on SKU conflict update non-tiering fields
-          await db
-            .insert(products)
-            .values({
-              sku,
-              name,
-              categoryId,
-              brandId,
-              basePrice,
-              buyPrice,
-              stock,
-              minStockThreshold,
-            })
-            .onConflictDoUpdate({
-              target: products.sku,
-              set: {
+          // No id — check if SKU already exists
+          const existingBySku = await db.query.products.findFirst({
+            where: (t, { eq: eq2 }) => eq2(t.sku, sku),
+          });
+
+          if (existingBySku) {
+            // SKU conflict — update, no stock_log (admin override)
+            await db
+              .update(products)
+              .set({
                 name,
                 categoryId,
                 brandId,
                 basePrice,
                 buyPrice,
+                averageCost: buyPrice,
                 stock,
                 minStockThreshold,
                 updatedAt: new Date(),
-              },
+              })
+              .where(eq(products.sku, sku));
+          } else {
+            // New product — insert then create stock_log if stock > 0
+            await db.transaction(async (tx) => {
+              const [inserted] = await tx
+                .insert(products)
+                .values({
+                  sku,
+                  name,
+                  categoryId,
+                  brandId,
+                  basePrice,
+                  buyPrice,
+                  averageCost: buyPrice,
+                  stock,
+                  minStockThreshold,
+                })
+                .returning();
+
+              if (stock > 0 && inserted) {
+                await tx.insert(stockLogs).values({
+                  productId: inserted.id,
+                  type: 'in',
+                  qty: stock,
+                  prevStock: 0,
+                  nextStock: stock,
+                  unitBuyPrice: buyPrice,
+                  note: 'Import awal',
+                });
+              }
             });
+          }
         }
 
         successCount++;

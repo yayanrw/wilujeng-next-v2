@@ -269,7 +269,12 @@
     "quickStockInSuccess": "Stok berhasil ditambahkan",
     "quickStockInFailed": "Gagal menambah stok",
     "quickStockInSupplierPlaceholder": "Nama supplier (opsional)",
-    "quickStockInQtyRequired": "Jumlah harus lebih dari 0"
+    "quickStockInQtyRequired": "Jumlah harus lebih dari 0",
+    "averageCost": "HPP Rata-rata",
+    "stockReadOnly": "Hanya dapat diubah lewat menu Stok",
+    "initialStock": "Stok Awal (Opsional)",
+    "initialStockDesc": "Tambahkan stok awal saat membuat produk ini",
+    "initialStockFailed": "Produk berhasil dibuat, tapi gagal menambahkan stok awal"
   },
   "stock": {
     "title": "Manajemen Stok",
@@ -320,7 +325,10 @@
     "outTypeReturn": "Retur Pelanggan (Return)",
     "originTransaction": "Transaksi Asal (Wajib untuk Retur)",
     "returnReason": "Alasan Retur",
-    "returnReasonPlaceholder": "Contoh: Barang cacat, Salah beli..."
+    "returnReasonPlaceholder": "Contoh: Barang cacat, Salah beli...",
+    "stockUpdated": "Stok diperbarui",
+    "requestFailed": "Permintaan gagal",
+    "errorOccurred": "Terjadi kesalahan, silakan coba lagi"
   },
   "customers": {
     "title": "Pelanggan",
