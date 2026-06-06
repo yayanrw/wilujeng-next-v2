@@ -257,6 +257,7 @@
     "bxgyExample": "Example: Buy 2 get 1 free",
     "willCreateNew": "Will be created as new",
     "skuRequired": "SKU is required",
+    "skuAlreadyExists": "SKU already exists",
     "nameRequired": "Name is required",
     "categoryRequired": "Category is required",
     "brandRequired": "Brand is required",

@@ -11,6 +11,7 @@ import { AutocompleteInput } from '@/components/ui/AutocompleteInput';
 import { BarcodeScannerModal } from '../pos/BarcodeScannerModal';
 import { QuickStockInModal } from './QuickStockInModal';
 import { useTranslation } from '@/i18n/useTranslation';
+import { useToast } from '@/hooks/useToast';
 import { useCatalogMetaStore } from '@/stores/catalogMetaStore';
 import { useCatalogMeta } from '@/hooks/useCatalogMeta';
 
@@ -80,6 +81,20 @@ export function ProductForm({
   const basePriceInputRef = useRef<HTMLInputElement>(null);
   const minStockInputRef = useRef<HTMLInputElement>(null);
   const { t } = useTranslation();
+  const { showToast, Toast } = useToast();
+
+  const checkSku = useCallback(async (skuValue: string): Promise<boolean> => {
+    if (!skuValue.trim()) return false;
+    const res = await fetch(`/api/products?exactSku=${encodeURIComponent(skuValue.trim())}`);
+    if (!res.ok) return false;
+    const data = (await res.json()) as Array<{ id: string; name: string }>;
+    if (data.length > 0) {
+      showToast(`${t.products.skuAlreadyExists} · ${data[0].name}`);
+      setSku('');
+      return true;
+    }
+    return false;
+  }, [showToast, t]);
 
   const { categories, brands, suppliers } = useCatalogMeta();
   const addCategory = useCatalogMetaStore((s) => s.addCategory);
@@ -324,7 +339,13 @@ export function ProductForm({
             onKeyDown={(e) => {
               if (e.key === 'Enter') {
                 e.preventDefault();
-                nameInputRef.current?.focus();
+                if (mode === 'create') {
+                  checkSku(sku).then((exists) => {
+                    if (!exists) nameInputRef.current?.focus();
+                  });
+                } else {
+                  nameInputRef.current?.focus();
+                }
               }
             }}
             className="flex-1 font-mono text-sm"
@@ -949,6 +970,11 @@ export function ProductForm({
         onScan={(code) => {
           setSku(code);
           setScannerOpen(false);
+          if (mode === 'create') {
+            checkSku(code).then((exists) => {
+              if (!exists) nameInputRef.current?.focus();
+            });
+          }
         }}
         onClose={() => setScannerOpen(false)}
         scanIntervalMs={0}
@@ -968,6 +994,8 @@ export function ProductForm({
           onClose={() => setQuickStockInOpen(false)}
         />
       )}
+
+      <Toast />
     </form>
   );
 }
