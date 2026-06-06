@@ -373,6 +373,7 @@ export function ProductForm({
 
         onSaved(true);
         skuInputRef.current?.focus();
+        formRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
       }}
     >
       <div>
