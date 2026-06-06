@@ -74,6 +74,7 @@ export function ProductForm({
   const [submitted, setSubmitted] = useState(false);
   const [scannerOpen, setScannerOpen] = useState(false);
   const [quickStockInOpen, setQuickStockInOpen] = useState(false);
+  const formRef = useRef<HTMLFormElement>(null);
   const skuInputRef = useRef<HTMLInputElement>(null);
   const nameInputRef = useRef<HTMLInputElement>(null);
   const categoryInputRef = useRef<HTMLInputElement>(null);
@@ -229,7 +230,14 @@ export function ProductForm({
 
   return (
     <form
+      ref={formRef}
       className="flex flex-col gap-3"
+      onKeyDown={(e) => {
+        if (e.shiftKey && e.key === 'Enter') {
+          e.preventDefault();
+          formRef.current?.requestSubmit();
+        }
+      }}
       onSubmit={async (e) => {
         e.preventDefault();
         setSubmitted(true);
