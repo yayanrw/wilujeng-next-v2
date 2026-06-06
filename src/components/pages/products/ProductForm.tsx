@@ -2,7 +2,42 @@
 
 import { useMemo, useState, useEffect, useCallback, useRef } from 'react';
 
-import { Plus, Trash2, Dices, Camera, PackagePlus } from 'lucide-react';
+function playSuccessSound() {
+  try {
+    const ctx = new AudioContext();
+    const gain = ctx.createGain();
+    gain.connect(ctx.destination);
+    gain.gain.setValueAtTime(0.25, ctx.currentTime);
+    gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.5);
+    [523, 659, 784].forEach((freq, i) => {
+      const osc = ctx.createOscillator();
+      osc.connect(gain);
+      osc.type = 'sine';
+      osc.frequency.setValueAtTime(freq, ctx.currentTime + i * 0.1);
+      osc.start(ctx.currentTime + i * 0.1);
+      osc.stop(ctx.currentTime + i * 0.1 + 0.18);
+    });
+  } catch { /* silently ignore if AudioContext unavailable */ }
+}
+
+function playFailSound() {
+  try {
+    const ctx = new AudioContext();
+    const gain = ctx.createGain();
+    gain.connect(ctx.destination);
+    gain.gain.setValueAtTime(0.25, ctx.currentTime);
+    gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.4);
+    const osc = ctx.createOscillator();
+    osc.connect(gain);
+    osc.type = 'sawtooth';
+    osc.frequency.setValueAtTime(220, ctx.currentTime);
+    osc.frequency.exponentialRampToValueAtTime(110, ctx.currentTime + 0.35);
+    osc.start(ctx.currentTime);
+    osc.stop(ctx.currentTime + 0.4);
+  } catch { /* silently ignore if AudioContext unavailable */ }
+}
+
+import { Plus, Trash2, Dices, Camera, PackagePlus, Info, X } from 'lucide-react';
 
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
@@ -74,6 +109,8 @@ export function ProductForm({
   const [submitted, setSubmitted] = useState(false);
   const [scannerOpen, setScannerOpen] = useState(false);
   const [quickStockInOpen, setQuickStockInOpen] = useState(false);
+  const [shortcutsOpen, setShortcutsOpen] = useState(false);
+  const formRef = useRef<HTMLFormElement>(null);
   const skuInputRef = useRef<HTMLInputElement>(null);
   const nameInputRef = useRef<HTMLInputElement>(null);
   const categoryInputRef = useRef<HTMLInputElement>(null);
@@ -94,6 +131,7 @@ export function ProductForm({
   const promoValidFromRef = useRef<HTMLInputElement>(null);
   const promoValidToRef = useRef<HTMLInputElement>(null);
   const promoMaxMultiplierRef = useRef<HTMLInputElement>(null);
+  const tierAddButtonRef = useRef<HTMLButtonElement>(null);
   const { t } = useTranslation();
   const { showToast, Toast } = useToast();
 
@@ -204,6 +242,10 @@ export function ProductForm({
     if (promoEnabled) setTimeout(() => promoBuyQtyRef.current?.focus(), 0);
   }, [promoEnabled]);
 
+  useEffect(() => {
+    if (tierEnabled) setTimeout(() => tierAddButtonRef.current?.focus(), 0);
+  }, [tierEnabled]);
+
   const canSave = useMemo(
     () => sku.trim() && name.trim() && categoryName.trim() && brandName.trim(),
     [sku, name, categoryName, brandName],
@@ -229,11 +271,43 @@ export function ProductForm({
 
   return (
     <form
+      ref={formRef}
       className="flex flex-col gap-3"
+      onKeyDown={(e) => {
+        if (e.shiftKey && e.key === 'Enter') {
+          e.preventDefault();
+          formRef.current?.requestSubmit();
+        }
+        if (e.altKey && e.key === '1' && mode === 'create') {
+          e.preventDefault();
+          setInitialStockEnabled((v) => !v);
+        }
+        if (e.altKey && e.key === '2') {
+          e.preventDefault();
+          setTierEnabled((v) => !v);
+        }
+        if (e.altKey && e.key === '3') {
+          e.preventDefault();
+          setPromoEnabled((v) => !v);
+        }
+      }}
       onSubmit={async (e) => {
         e.preventDefault();
         setSubmitted(true);
         if (!canSave) return;
+
+        // Stok Awal section validation
+        if (initialStockEnabled && initialStockQty < 1) return;
+        if (initialStockEnabled && initialStockNote.length > 200) return;
+
+        // BxGy promo section validation
+        if (promoEnabled) {
+          if (promoBuyQty < 1 || promoFreeQty < 1) return;
+          const maxMulNum = promoMaxMultiplier !== '' ? Number(promoMaxMultiplier) : null;
+          if (maxMulNum !== null && maxMulNum < 1) return;
+          if (promoValidFrom && promoValidTo && new Date(promoValidTo) <= new Date(promoValidFrom)) return;
+        }
+
         setPending(true);
 
         const payload: Record<string, unknown> = {
@@ -272,6 +346,7 @@ export function ProductForm({
         } | null;
         setPending(false);
         if (!res.ok) {
+          playFailSound();
           onSaved(false, body?.error?.message ?? 'Save failed');
           return;
         }
@@ -295,6 +370,7 @@ export function ProductForm({
             }),
           });
           if (!stockRes.ok) {
+            playFailSound();
             onSaved(false, t.products.initialStockFailed);
             return;
           }
@@ -346,10 +422,57 @@ export function ProductForm({
           setSubmitted(false);
         }
 
+        playSuccessSound();
         onSaved(true);
         skuInputRef.current?.focus();
+        formRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
       }}
     >
+      <div className="flex justify-end">
+        <div className="relative">
+          <button
+            type="button"
+            onClick={() => setShortcutsOpen((v) => !v)}
+            className="flex items-center gap-1 rounded-md px-1.5 py-1 text-xs text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-300 hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors"
+            title={t.products.keyboardShortcuts}
+          >
+            <Info className="h-3.5 w-3.5" />
+          </button>
+          {shortcutsOpen && (
+            <div className="absolute right-0 top-8 z-50 w-64 rounded-xl border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-950 shadow-xl p-3 animate-in fade-in slide-in-from-top-2 duration-150">
+              <div className="flex items-center justify-between mb-2.5">
+                <span className="text-[11px] font-semibold uppercase tracking-wider text-zinc-500 dark:text-zinc-400">
+                  {t.products.keyboardShortcuts}
+                </span>
+                <button
+                  type="button"
+                  onClick={() => setShortcutsOpen(false)}
+                  className="text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-300 transition-colors"
+                >
+                  <X className="h-3.5 w-3.5" />
+                </button>
+              </div>
+              <div className="space-y-1.5 text-xs">
+                {([
+                  ['Enter', t.products.shortcutNextField],
+                  ['⇧ Enter', t.products.shortcutSubmit],
+                  ['⌥ 1', t.products.shortcutAlt1],
+                  ['⌥ 2', t.products.shortcutAlt2],
+                  ['⌥ 3', t.products.shortcutAlt3],
+                ] as [string, string][]).map(([key, desc]) => (
+                  <div key={key} className="flex items-center justify-between gap-2">
+                    <span className="text-zinc-500 dark:text-zinc-400 truncate">{desc}</span>
+                    <kbd className="shrink-0 inline-flex items-center rounded border border-zinc-200 dark:border-zinc-700 bg-zinc-50 dark:bg-zinc-900 px-1.5 py-0.5 font-mono text-[10px] text-zinc-600 dark:text-zinc-300">
+                      {key}
+                    </kbd>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+        </div>
+      </div>
+
       <div>
         <label className="text-xs font-semibold uppercase tracking-wider text-zinc-500 dark:text-zinc-400">
           {t.products.sku}
@@ -570,8 +693,9 @@ export function ProductForm({
             onClick={() => setInitialStockEnabled((v) => !v)}
           >
             <div className="text-left">
-              <div className="text-sm font-semibold text-zinc-900 dark:text-zinc-100">
+              <div className="flex items-center gap-1.5 text-sm font-semibold text-zinc-900 dark:text-zinc-100">
                 {t.products.initialStock}
+                <kbd className="inline-flex items-center rounded border border-zinc-300 dark:border-zinc-600 px-1 py-0.5 text-[10px] font-mono text-zinc-400 dark:text-zinc-500">⌥1</kbd>
               </div>
               <div className="text-xs text-zinc-500 dark:text-zinc-400">
                 {t.products.initialStockDesc}
@@ -605,7 +729,8 @@ export function ProductForm({
                     ref={initialStockQtyRef}
                     className="mt-1 h-8 text-sm tabular-nums"
                     inputMode="numeric"
-                    value={String(initialStockQty)}
+                    value={initialStockQty > 0 ? String(initialStockQty) : ''}
+                    placeholder="1"
                     onChange={(e) =>
                       setInitialStockQty(Number(e.target.value.replace(/[^0-9]/g, '')) || 0)
                     }
@@ -613,6 +738,9 @@ export function ProductForm({
                       if (e.key === 'Enter') { e.preventDefault(); initialStockBuyPriceRef.current?.focus(); }
                     }}
                   />
+                  {submitted && initialStockQty < 1 && (
+                    <p className="mt-1 text-xs text-red-500 dark:text-red-400">{t.stock.qtyMin1}</p>
+                  )}
                 </div>
                 <div>
                   <label className="text-[10px] font-semibold uppercase tracking-wider text-zinc-500 dark:text-zinc-400">
@@ -678,6 +806,14 @@ export function ProductForm({
                   placeholder="—"
                   rows={3}
                 />
+                <div className="flex justify-between mt-1">
+                  {submitted && initialStockNote.length > 200 ? (
+                    <p className="text-xs text-red-500 dark:text-red-400">{t.stock.noteTooLong}</p>
+                  ) : <span />}
+                  <span className={`text-[10px] tabular-nums ${initialStockNote.length > 200 ? 'text-red-500 dark:text-red-400' : 'text-zinc-400 dark:text-zinc-500'}`}>
+                    {initialStockNote.length}/200
+                  </span>
+                </div>
               </div>
             </div>
           )}
@@ -691,8 +827,9 @@ export function ProductForm({
           onClick={() => setTierEnabled((v) => !v)}
         >
           <div className="text-left">
-            <div className="text-sm font-semibold text-zinc-900 dark:text-zinc-100">
+            <div className="flex items-center gap-1.5 text-sm font-semibold text-zinc-900 dark:text-zinc-100">
               {t.products.tierPricing}
+              <kbd className="inline-flex items-center rounded border border-zinc-300 dark:border-zinc-600 px-1 py-0.5 text-[10px] font-mono text-zinc-400 dark:text-zinc-500">⌥2</kbd>
             </div>
             <div className="text-xs text-zinc-500 dark:text-zinc-400">
               {t.products.tierDesc}
@@ -719,6 +856,7 @@ export function ProductForm({
           <>
             <div className="flex justify-end">
               <Button
+                ref={tierAddButtonRef}
                 type="button"
                 variant="secondary"
                 size="sm"
@@ -820,8 +958,9 @@ export function ProductForm({
             onClick={() => setPromoEnabled((v) => !v)}
           >
             <div className="text-left">
-              <div className="text-sm font-semibold text-zinc-900 dark:text-zinc-100">
+              <div className="flex items-center gap-1.5 text-sm font-semibold text-zinc-900 dark:text-zinc-100">
                 {t.products.bxgyPromo}
+                <kbd className="inline-flex items-center rounded border border-zinc-300 dark:border-zinc-600 px-1 py-0.5 text-[10px] font-mono text-zinc-400 dark:text-zinc-500">⌥3</kbd>
               </div>
               <div className="text-xs text-zinc-500 dark:text-zinc-400">
                 {t.products.bxgyDesc}
@@ -863,6 +1002,9 @@ export function ProductForm({
                   if (e.key === 'Enter') { e.preventDefault(); promoFreeQtyRef.current?.focus(); }
                 }}
               />
+              {submitted && promoBuyQty < 1 && (
+                <p className="mt-0.5 text-xs text-red-500 dark:text-red-400">{t.products.bxgyBuyQtyRequired}</p>
+              )}
             </div>
             <div>
               <label className="text-[10px] font-semibold uppercase tracking-wider text-zinc-500 dark:text-zinc-400">
@@ -880,6 +1022,9 @@ export function ProductForm({
                   if (e.key === 'Enter') { e.preventDefault(); promoValidFromRef.current?.focus(); }
                 }}
               />
+              {submitted && promoFreeQty < 1 && (
+                <p className="mt-0.5 text-xs text-red-500 dark:text-red-400">{t.products.bxgyFreeQtyRequired}</p>
+              )}
             </div>
           </div>
 
@@ -915,6 +1060,9 @@ export function ProductForm({
               />
             </div>
           </div>
+          {submitted && promoValidFrom && promoValidTo && new Date(promoValidTo) <= new Date(promoValidFrom) && (
+            <p className="text-xs text-red-500 dark:text-red-400">{t.products.bxgyValidToAfterFrom}</p>
+          )}
 
           <div>
             <label className="text-[10px] font-semibold uppercase tracking-wider text-zinc-500 dark:text-zinc-400">
@@ -930,6 +1078,9 @@ export function ProductForm({
                 setPromoMaxMultiplier(e.target.value.replace(/[^0-9]/g, ''))
               }
             />
+            {submitted && promoMaxMultiplier !== '' && Number(promoMaxMultiplier) < 1 && (
+              <p className="mt-0.5 text-xs text-red-500 dark:text-red-400">{t.products.bxgyMaxMultiplierMin}</p>
+            )}
           </div>
 
           <div className="flex items-center gap-2">
