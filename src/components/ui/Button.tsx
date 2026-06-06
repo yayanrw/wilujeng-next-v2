@@ -1,6 +1,7 @@
 "use client";
 
 import type { ButtonHTMLAttributes } from "react";
+import { forwardRef } from "react";
 
 import { cn } from "@/lib/cn";
 
@@ -22,17 +23,13 @@ const sizeClass: Record<Size, string> = {
   lg: "h-11 px-5 text-base",
 };
 
-export function Button({
-  className,
-  variant = "primary",
-  size = "md",
-  ...props
-}: ButtonHTMLAttributes<HTMLButtonElement> & {
-  variant?: Variant;
-  size?: Size;
-}) {
+export const Button = forwardRef<
+  HTMLButtonElement,
+  ButtonHTMLAttributes<HTMLButtonElement> & { variant?: Variant; size?: Size }
+>(function Button({ className, variant = "primary", size = "md", ...props }, ref) {
   return (
     <button
+      ref={ref}
       className={cn(
         "inline-flex items-center justify-center gap-2 rounded-md font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 disabled:pointer-events-none disabled:opacity-50",
         variantClass[variant],
@@ -42,5 +39,4 @@ export function Button({
       {...props}
     />
   );
-}
-
+});

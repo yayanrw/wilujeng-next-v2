@@ -95,6 +95,7 @@ export function ProductForm({
   const promoValidFromRef = useRef<HTMLInputElement>(null);
   const promoValidToRef = useRef<HTMLInputElement>(null);
   const promoMaxMultiplierRef = useRef<HTMLInputElement>(null);
+  const tierAddButtonRef = useRef<HTMLButtonElement>(null);
   const { t } = useTranslation();
   const { showToast, Toast } = useToast();
 
@@ -205,6 +206,10 @@ export function ProductForm({
     if (promoEnabled) setTimeout(() => promoBuyQtyRef.current?.focus(), 0);
   }, [promoEnabled]);
 
+  useEffect(() => {
+    if (tierEnabled) setTimeout(() => tierAddButtonRef.current?.focus(), 0);
+  }, [tierEnabled]);
+
   const canSave = useMemo(
     () => sku.trim() && name.trim() && categoryName.trim() && brandName.trim(),
     [sku, name, categoryName, brandName],
@@ -236,6 +241,18 @@ export function ProductForm({
         if (e.shiftKey && e.key === 'Enter') {
           e.preventDefault();
           formRef.current?.requestSubmit();
+        }
+        if (e.altKey && e.key === '1' && mode === 'create') {
+          e.preventDefault();
+          setInitialStockEnabled((v) => !v);
+        }
+        if (e.altKey && e.key === '2') {
+          e.preventDefault();
+          setTierEnabled((v) => !v);
+        }
+        if (e.altKey && e.key === '3') {
+          e.preventDefault();
+          setPromoEnabled((v) => !v);
         }
       }}
       onSubmit={async (e) => {
@@ -578,8 +595,9 @@ export function ProductForm({
             onClick={() => setInitialStockEnabled((v) => !v)}
           >
             <div className="text-left">
-              <div className="text-sm font-semibold text-zinc-900 dark:text-zinc-100">
+              <div className="flex items-center gap-1.5 text-sm font-semibold text-zinc-900 dark:text-zinc-100">
                 {t.products.initialStock}
+                <kbd className="inline-flex items-center rounded border border-zinc-300 dark:border-zinc-600 px-1 py-0.5 text-[10px] font-mono text-zinc-400 dark:text-zinc-500">⌥1</kbd>
               </div>
               <div className="text-xs text-zinc-500 dark:text-zinc-400">
                 {t.products.initialStockDesc}
@@ -699,8 +717,9 @@ export function ProductForm({
           onClick={() => setTierEnabled((v) => !v)}
         >
           <div className="text-left">
-            <div className="text-sm font-semibold text-zinc-900 dark:text-zinc-100">
+            <div className="flex items-center gap-1.5 text-sm font-semibold text-zinc-900 dark:text-zinc-100">
               {t.products.tierPricing}
+              <kbd className="inline-flex items-center rounded border border-zinc-300 dark:border-zinc-600 px-1 py-0.5 text-[10px] font-mono text-zinc-400 dark:text-zinc-500">⌥2</kbd>
             </div>
             <div className="text-xs text-zinc-500 dark:text-zinc-400">
               {t.products.tierDesc}
@@ -727,6 +746,7 @@ export function ProductForm({
           <>
             <div className="flex justify-end">
               <Button
+                ref={tierAddButtonRef}
                 type="button"
                 variant="secondary"
                 size="sm"
@@ -828,8 +848,9 @@ export function ProductForm({
             onClick={() => setPromoEnabled((v) => !v)}
           >
             <div className="text-left">
-              <div className="text-sm font-semibold text-zinc-900 dark:text-zinc-100">
+              <div className="flex items-center gap-1.5 text-sm font-semibold text-zinc-900 dark:text-zinc-100">
                 {t.products.bxgyPromo}
+                <kbd className="inline-flex items-center rounded border border-zinc-300 dark:border-zinc-600 px-1 py-0.5 text-[10px] font-mono text-zinc-400 dark:text-zinc-500">⌥3</kbd>
               </div>
               <div className="text-xs text-zinc-500 dark:text-zinc-400">
                 {t.products.bxgyDesc}
