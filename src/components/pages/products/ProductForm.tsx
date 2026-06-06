@@ -631,7 +631,8 @@ export function ProductForm({
                     ref={initialStockQtyRef}
                     className="mt-1 h-8 text-sm tabular-nums"
                     inputMode="numeric"
-                    value={String(initialStockQty)}
+                    value={initialStockQty > 0 ? String(initialStockQty) : ''}
+                    placeholder="1"
                     onChange={(e) =>
                       setInitialStockQty(Number(e.target.value.replace(/[^0-9]/g, '')) || 0)
                     }
