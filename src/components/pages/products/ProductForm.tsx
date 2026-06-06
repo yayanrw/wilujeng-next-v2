@@ -2,7 +2,7 @@
 
 import { useMemo, useState, useEffect, useCallback, useRef } from 'react';
 
-import { Plus, Trash2, Dices, Camera, PackagePlus } from 'lucide-react';
+import { Plus, Trash2, Dices, Camera, PackagePlus, Info, X } from 'lucide-react';
 
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
@@ -74,6 +74,7 @@ export function ProductForm({
   const [submitted, setSubmitted] = useState(false);
   const [scannerOpen, setScannerOpen] = useState(false);
   const [quickStockInOpen, setQuickStockInOpen] = useState(false);
+  const [shortcutsOpen, setShortcutsOpen] = useState(false);
   const formRef = useRef<HTMLFormElement>(null);
   const skuInputRef = useRef<HTMLInputElement>(null);
   const nameInputRef = useRef<HTMLInputElement>(null);
@@ -376,6 +377,51 @@ export function ProductForm({
         formRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
       }}
     >
+      <div className="flex justify-end">
+        <div className="relative">
+          <button
+            type="button"
+            onClick={() => setShortcutsOpen((v) => !v)}
+            className="flex items-center gap-1 rounded-md px-1.5 py-1 text-xs text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-300 hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors"
+            title={t.products.keyboardShortcuts}
+          >
+            <Info className="h-3.5 w-3.5" />
+          </button>
+          {shortcutsOpen && (
+            <div className="absolute right-0 top-8 z-50 w-64 rounded-xl border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-950 shadow-xl p-3 animate-in fade-in slide-in-from-top-2 duration-150">
+              <div className="flex items-center justify-between mb-2.5">
+                <span className="text-[11px] font-semibold uppercase tracking-wider text-zinc-500 dark:text-zinc-400">
+                  {t.products.keyboardShortcuts}
+                </span>
+                <button
+                  type="button"
+                  onClick={() => setShortcutsOpen(false)}
+                  className="text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-300 transition-colors"
+                >
+                  <X className="h-3.5 w-3.5" />
+                </button>
+              </div>
+              <div className="space-y-1.5 text-xs">
+                {([
+                  ['Enter', t.products.shortcutNextField],
+                  ['⇧ Enter', t.products.shortcutSubmit],
+                  ['⌥ 1', t.products.shortcutAlt1],
+                  ['⌥ 2', t.products.shortcutAlt2],
+                  ['⌥ 3', t.products.shortcutAlt3],
+                ] as [string, string][]).map(([key, desc]) => (
+                  <div key={key} className="flex items-center justify-between gap-2">
+                    <span className="text-zinc-500 dark:text-zinc-400 truncate">{desc}</span>
+                    <kbd className="shrink-0 inline-flex items-center rounded border border-zinc-200 dark:border-zinc-700 bg-zinc-50 dark:bg-zinc-900 px-1.5 py-0.5 font-mono text-[10px] text-zinc-600 dark:text-zinc-300">
+                      {key}
+                    </kbd>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+        </div>
+      </div>
+
       <div>
         <label className="text-xs font-semibold uppercase tracking-wider text-zinc-500 dark:text-zinc-400">
           {t.products.sku}

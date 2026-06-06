@@ -274,7 +274,13 @@
     "stockReadOnly": "Hanya dapat diubah lewat menu Stok",
     "initialStock": "Stok Awal",
     "initialStockDesc": "Tambahkan stok awal saat membuat produk ini",
-    "initialStockFailed": "Produk berhasil dibuat, tapi gagal menambahkan stok awal"
+    "initialStockFailed": "Produk berhasil dibuat, tapi gagal menambahkan stok awal",
+    "keyboardShortcuts": "Pintasan Keyboard",
+    "shortcutNextField": "Pindah ke field berikutnya",
+    "shortcutSubmit": "Simpan form",
+    "shortcutAlt1": "Toggle Stok Awal (buat baru)",
+    "shortcutAlt2": "Toggle Harga Grosir",
+    "shortcutAlt3": "Toggle Promo BxGy"
   },
   "stock": {
     "title": "Manajemen Stok",

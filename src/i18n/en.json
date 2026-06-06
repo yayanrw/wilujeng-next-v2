@@ -272,7 +272,13 @@
     "stockReadOnly": "Updated via Stock menu only",
     "initialStock": "Initial Stock",
     "initialStockDesc": "Add opening stock when creating this product",
-    "initialStockFailed": "Product created, but failed to add initial stock"
+    "initialStockFailed": "Product created, but failed to add initial stock",
+    "keyboardShortcuts": "Keyboard Shortcuts",
+    "shortcutNextField": "Move to next field",
+    "shortcutSubmit": "Submit form",
+    "shortcutAlt1": "Toggle Initial Stock (create only)",
+    "shortcutAlt2": "Toggle Tier Pricing",
+    "shortcutAlt3": "Toggle BxGy Promo"
   },
   "stock": {
     "title": "Stock Management",
