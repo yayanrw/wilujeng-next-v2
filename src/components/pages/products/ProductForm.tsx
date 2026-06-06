@@ -6,8 +6,8 @@ import { Plus, Trash2, Dices, Camera, PackagePlus } from 'lucide-react';
 
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
-
-import { AutocompleteInput } from './AutocompleteInput';
+import { Textarea } from '@/components/ui/Textarea';
+import { AutocompleteInput } from '@/components/ui/AutocompleteInput';
 import { BarcodeScannerModal } from '../pos/BarcodeScannerModal';
 import { QuickStockInModal } from './QuickStockInModal';
 import { useTranslation } from '@/i18n/useTranslation';
@@ -77,15 +77,14 @@ export function ProductForm({
   const nameInputRef = useRef<HTMLInputElement>(null);
   const categoryInputRef = useRef<HTMLInputElement>(null);
   const brandInputRef = useRef<HTMLInputElement>(null);
-  const buyPriceInputRef = useRef<HTMLInputElement>(null);
   const basePriceInputRef = useRef<HTMLInputElement>(null);
-  const stockInputRef = useRef<HTMLInputElement>(null);
   const minStockInputRef = useRef<HTMLInputElement>(null);
   const { t } = useTranslation();
 
-  const { categories, brands } = useCatalogMeta();
+  const { categories, brands, suppliers } = useCatalogMeta();
   const addCategory = useCatalogMetaStore((s) => s.addCategory);
   const addBrand = useCatalogMetaStore((s) => s.addBrand);
+  const addSupplier = useCatalogMetaStore((s) => s.addSupplier);
 
   // BxGy promo state
   const [promoEnabled, setPromoEnabled] = useState(false);
@@ -205,8 +204,8 @@ export function ProductForm({
           basePrice,
           minStockThreshold,
           tiers: tierEnabled ? tiers.filter((t) => t.minQty > 0 && t.price > 0) : [],
-          // buyPrice and stock are managed via Stock menu only (edit mode)
-          ...(mode === 'create' ? { buyPrice, stock } : {}),
+          // buyPrice and stock are always 0 at creation; Stok Awal section triggers Stock In
+          ...(mode === 'create' ? { buyPrice: 0, stock: 0 } : {}),
         };
 
         const cat = categoryName.trim();
@@ -260,6 +259,9 @@ export function ProductForm({
           if (!stockRes.ok) {
             onSaved(false, t.products.initialStockFailed);
             return;
+          }
+          if (initialStockSupplier.trim()) {
+            addSupplier({ id: initialStockSupplier.trim(), name: initialStockSupplier.trim() });
           }
         }
 
@@ -385,6 +387,8 @@ export function ProductForm({
             options={categories}
             placeholder={t.products.typeToCreate}
             onNext={() => brandInputRef.current?.focus()}
+            noMatchText={t.products.noMatches}
+            createHintText={t.products.willCreateNew}
           />
           {submitted && !categoryName.trim() && (
             <p className="text-xs text-red-500 dark:text-red-400">{t.products.categoryRequired}</p>
@@ -398,7 +402,9 @@ export function ProductForm({
             onChange={setBrandName}
             options={brands}
             placeholder={t.products.typeToCreate}
-            onNext={() => buyPriceInputRef.current?.focus()}
+            onNext={() => basePriceInputRef.current?.focus()}
+            noMatchText={t.products.noMatches}
+            createHintText={t.products.willCreateNew}
           />
           {submitted && !brandName.trim() && (
             <p className="text-xs text-red-500 dark:text-red-400">{t.products.brandRequired}</p>
@@ -408,40 +414,18 @@ export function ProductForm({
 
       <div className="h-px w-full bg-zinc-100 dark:bg-zinc-800 my-2" />
 
-      <div className="grid grid-cols-2 gap-4">
-        <div>
-          <label className="text-xs font-semibold uppercase tracking-wider text-zinc-500 dark:text-zinc-400">
-            {t.products.buyPrice}
-          </label>
-          {mode === 'edit' ? (
+      <div className={`grid ${mode === 'edit' ? 'grid-cols-2' : 'grid-cols-1'} gap-4`}>
+        {mode === 'edit' && (
+          <div>
+            <label className="text-xs font-semibold uppercase tracking-wider text-zinc-500 dark:text-zinc-400">
+              {t.products.buyPrice}
+            </label>
             <div className="flex items-center gap-1 mt-1.5 rounded-md border border-zinc-200 dark:border-zinc-800 bg-zinc-100/50 dark:bg-zinc-900/50 px-3 py-2 text-sm font-medium tabular-nums text-zinc-700 dark:text-zinc-300">
               <span className="text-zinc-400 dark:text-zinc-500 text-sm">Rp</span>
               {(initial?.buyPrice ?? 0).toLocaleString('id-ID')}
             </div>
-          ) : (
-            <div className="relative mt-1.5">
-              <span className="absolute left-3 top-1/2 -translate-y-1/2 text-zinc-500 text-sm font-medium">
-                Rp
-              </span>
-              <Input
-                ref={buyPriceInputRef}
-                className="pl-9 font-medium tabular-nums"
-                inputMode="numeric"
-                value={buyPrice ? String(buyPrice) : ''}
-                onChange={(e) =>
-                  setBuyPrice(Number(e.target.value.replace(/[^0-9]/g, '')) || 0)
-                }
-                onKeyDown={(e) => {
-                  if (e.key === 'Enter') {
-                    e.preventDefault();
-                    basePriceInputRef.current?.focus();
-                  }
-                }}
-                placeholder="0"
-              />
-            </div>
-          )}
-        </div>
+          </div>
+        )}
         <div>
           <label className="text-xs font-semibold uppercase tracking-wider text-zinc-500 dark:text-zinc-400">
             {t.products.basePrice}
@@ -461,8 +445,7 @@ export function ProductForm({
               onKeyDown={(e) => {
                 if (e.key === 'Enter') {
                   e.preventDefault();
-                  if (mode === 'create') stockInputRef.current?.focus();
-                  else minStockInputRef.current?.focus();
+                  minStockInputRef.current?.focus();
                 }
               }}
               placeholder="0"
@@ -483,33 +466,17 @@ export function ProductForm({
         </div>
       )}
 
-      <div className="grid grid-cols-2 gap-4">
-        <div>
-          <label className="text-xs font-semibold uppercase tracking-wider text-zinc-500 dark:text-zinc-400">
-            {t.products.stock}
-          </label>
-          {mode === 'edit' ? (
+      <div className={`grid ${mode === 'edit' ? 'grid-cols-2' : 'grid-cols-1'} gap-4`}>
+        {mode === 'edit' && (
+          <div>
+            <label className="text-xs font-semibold uppercase tracking-wider text-zinc-500 dark:text-zinc-400">
+              {t.products.stock}
+            </label>
             <div className="mt-1.5 rounded-md border border-zinc-200 dark:border-zinc-800 bg-zinc-100/50 dark:bg-zinc-900/50 px-3 py-2 text-sm font-medium tabular-nums text-zinc-700 dark:text-zinc-300">
               {initial?.stock ?? 0}
             </div>
-          ) : (
-            <Input
-              ref={stockInputRef}
-              className="mt-1.5 font-medium tabular-nums"
-              inputMode="numeric"
-              value={String(stock)}
-              onChange={(e) =>
-                setStock(Number(e.target.value.replace(/[^0-9]/g, '')) || 0)
-              }
-              onKeyDown={(e) => {
-                if (e.key === 'Enter') {
-                  e.preventDefault();
-                  minStockInputRef.current?.focus();
-                }
-              }}
-            />
-          )}
-        </div>
+          </div>
+        )}
         <div>
           <label className="text-xs font-semibold uppercase tracking-wider text-zinc-500 dark:text-zinc-400">
             {t.products.minStock}
@@ -542,6 +509,112 @@ export function ProductForm({
       )}
 
       <div className="h-px w-full bg-zinc-100 dark:bg-zinc-800 my-2" />
+
+      {mode === 'create' && (
+        <div className="rounded-xl border border-zinc-200 dark:border-zinc-800 bg-zinc-50/50 dark:bg-zinc-900/50 p-4 space-y-4">
+          <button
+            type="button"
+            className="flex w-full items-center justify-between gap-3"
+            onClick={() => setInitialStockEnabled((v) => !v)}
+          >
+            <div className="text-left">
+              <div className="text-sm font-semibold text-zinc-900 dark:text-zinc-100">
+                {t.products.initialStock}
+              </div>
+              <div className="text-xs text-zinc-500 dark:text-zinc-400">
+                {t.products.initialStockDesc}
+              </div>
+            </div>
+            <span
+              role="switch"
+              aria-checked={initialStockEnabled}
+              className={`relative inline-flex h-5 w-9 shrink-0 rounded-full border-2 border-transparent transition-colors ${
+                initialStockEnabled
+                  ? 'bg-zinc-900 dark:bg-zinc-100'
+                  : 'bg-zinc-200 dark:bg-zinc-700'
+              }`}
+            >
+              <span
+                className={`pointer-events-none inline-block h-4 w-4 transform rounded-full bg-white shadow transition-transform ${
+                  initialStockEnabled ? 'translate-x-4' : 'translate-x-0'
+                } ${initialStockEnabled ? 'dark:bg-zinc-900' : ''}`}
+              />
+            </span>
+          </button>
+
+          {initialStockEnabled && (
+            <div className="flex flex-col gap-3">
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="text-[10px] font-semibold uppercase tracking-wider text-zinc-500 dark:text-zinc-400">
+                    {t.stock.qty}
+                  </label>
+                  <Input
+                    className="mt-1 h-8 text-sm tabular-nums"
+                    inputMode="numeric"
+                    value={String(initialStockQty)}
+                    onChange={(e) =>
+                      setInitialStockQty(Number(e.target.value.replace(/[^0-9]/g, '')) || 0)
+                    }
+                  />
+                </div>
+                <div>
+                  <label className="text-[10px] font-semibold uppercase tracking-wider text-zinc-500 dark:text-zinc-400">
+                    {t.products.buyPrice}
+                  </label>
+                  <div className="relative mt-1">
+                    <span className="absolute left-2.5 top-1/2 -translate-y-1/2 text-zinc-500 text-xs font-medium">
+                      Rp
+                    </span>
+                    <Input
+                      className="h-8 pl-8 text-sm tabular-nums"
+                      inputMode="numeric"
+                      value={initialStockBuyPrice ? String(initialStockBuyPrice) : ''}
+                      onChange={(e) =>
+                        setInitialStockBuyPrice(Number(e.target.value.replace(/[^0-9]/g, '')) || 0)
+                      }
+                      placeholder="0"
+                    />
+                  </div>
+                </div>
+              </div>
+              <div>
+                <AutocompleteInput
+                  label={t.stock.supplier}
+                  value={initialStockSupplier}
+                  onChange={setInitialStockSupplier}
+                  options={suppliers}
+                  placeholder={t.products.quickStockInSupplierPlaceholder}
+                  noMatchText={t.products.noMatches}
+                />
+              </div>
+              <div>
+                <label className="text-[10px] font-semibold uppercase tracking-wider text-zinc-500 dark:text-zinc-400">
+                  {t.stock.expiryDate}
+                </label>
+                <Input
+                  type="date"
+                  className="mt-1 h-8 text-sm"
+                  value={initialStockExpiry}
+                  onChange={(e) => setInitialStockExpiry(e.target.value)}
+                />
+              </div>
+              <div>
+                <label className="text-[10px] font-semibold uppercase tracking-wider text-zinc-500 dark:text-zinc-400">
+                  {t.stock.notes}
+                </label>
+                <Textarea
+                  className="mt-1 text-sm"
+                  value={initialStockNote}
+                  onChange={(e) => setInitialStockNote(e.target.value)}
+                  placeholder="—"
+                  rows={3}
+                />
+              </div>
+            </div>
+          )}
+        </div>
+      )}
 
       <div className="rounded-xl border border-zinc-200 dark:border-zinc-800 bg-zinc-50/50 dark:bg-zinc-900/50 p-4 space-y-4">
         <button
@@ -862,114 +935,6 @@ export function ProductForm({
           )}
         </>)}
       </div>
-
-      {mode === 'create' && (
-        <div className="rounded-xl border border-zinc-200 dark:border-zinc-800 bg-zinc-50/50 dark:bg-zinc-900/50 p-4 space-y-4">
-          <button
-            type="button"
-            className="flex w-full items-center justify-between gap-3"
-            onClick={() => setInitialStockEnabled((v) => !v)}
-          >
-            <div className="text-left">
-              <div className="text-sm font-semibold text-zinc-900 dark:text-zinc-100">
-                {t.products.initialStock}
-              </div>
-              <div className="text-xs text-zinc-500 dark:text-zinc-400">
-                {t.products.initialStockDesc}
-              </div>
-            </div>
-            <span
-              role="switch"
-              aria-checked={initialStockEnabled}
-              className={`relative inline-flex h-5 w-9 shrink-0 rounded-full border-2 border-transparent transition-colors ${
-                initialStockEnabled
-                  ? 'bg-zinc-900 dark:bg-zinc-100'
-                  : 'bg-zinc-200 dark:bg-zinc-700'
-              }`}
-            >
-              <span
-                className={`pointer-events-none inline-block h-4 w-4 transform rounded-full bg-white shadow transition-transform ${
-                  initialStockEnabled ? 'translate-x-4' : 'translate-x-0'
-                } ${initialStockEnabled ? 'dark:bg-zinc-900' : ''}`}
-              />
-            </span>
-          </button>
-
-          {initialStockEnabled && (
-            <div className="flex flex-col gap-3">
-              <div className="grid grid-cols-2 gap-3">
-                <div>
-                  <label className="text-[10px] font-semibold uppercase tracking-wider text-zinc-500 dark:text-zinc-400">
-                    {t.stock.qty}
-                  </label>
-                  <Input
-                    className="mt-1 h-8 text-sm tabular-nums"
-                    inputMode="numeric"
-                    value={String(initialStockQty)}
-                    onChange={(e) =>
-                      setInitialStockQty(Number(e.target.value.replace(/[^0-9]/g, '')) || 0)
-                    }
-                  />
-                </div>
-                <div>
-                  <label className="text-[10px] font-semibold uppercase tracking-wider text-zinc-500 dark:text-zinc-400">
-                    {t.products.buyPrice}
-                  </label>
-                  <div className="relative mt-1">
-                    <span className="absolute left-2.5 top-1/2 -translate-y-1/2 text-zinc-500 text-xs font-medium">
-                      Rp
-                    </span>
-                    <Input
-                      className="h-8 pl-8 text-sm tabular-nums"
-                      inputMode="numeric"
-                      value={initialStockBuyPrice ? String(initialStockBuyPrice) : ''}
-                      onChange={(e) =>
-                        setInitialStockBuyPrice(Number(e.target.value.replace(/[^0-9]/g, '')) || 0)
-                      }
-                      placeholder="0"
-                    />
-                  </div>
-                </div>
-              </div>
-              <div>
-                <label className="text-[10px] font-semibold uppercase tracking-wider text-zinc-500 dark:text-zinc-400">
-                  {t.stock.supplier}
-                </label>
-                <Input
-                  className="mt-1 h-8 text-sm"
-                  value={initialStockSupplier}
-                  onChange={(e) => setInitialStockSupplier(e.target.value)}
-                  placeholder={t.products.quickStockInSupplierPlaceholder}
-                />
-              </div>
-              <div className="grid grid-cols-2 gap-3">
-                <div>
-                  <label className="text-[10px] font-semibold uppercase tracking-wider text-zinc-500 dark:text-zinc-400">
-                    {t.stock.expiryDate}
-                  </label>
-                  <Input
-                    type="date"
-                    className="mt-1 h-8 text-sm"
-                    value={initialStockExpiry}
-                    onChange={(e) => setInitialStockExpiry(e.target.value)}
-                  />
-                </div>
-                <div>
-                  <label className="text-[10px] font-semibold uppercase tracking-wider text-zinc-500 dark:text-zinc-400">
-                    {t.stock.notes}
-                  </label>
-                  <Input
-                    className="mt-1 h-8 text-sm"
-                    value={initialStockNote}
-                    onChange={(e) => setInitialStockNote(e.target.value)}
-                    placeholder="—"
-                  />
-                </div>
-              </div>
-            </div>
-          )}
-        </div>
-      )}
 
       <Button
         type="submit"

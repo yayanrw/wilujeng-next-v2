@@ -269,7 +269,7 @@
     "quickStockInQtyRequired": "Quantity must be greater than 0",
     "averageCost": "Avg. Cost (HPP)",
     "stockReadOnly": "Updated via Stock menu only",
-    "initialStock": "Initial Stock (Optional)",
+    "initialStock": "Initial Stock",
     "initialStockDesc": "Add opening stock when creating this product",
     "initialStockFailed": "Product created, but failed to add initial stock"
   },

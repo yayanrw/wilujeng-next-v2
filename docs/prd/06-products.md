@@ -17,10 +17,10 @@
 |---|---|---|---|
 | Nama | Input | Input | Wajib |
 | SKU/Barcode | Input | Input | Wajib, unique. Tombol Dices untuk generate `SKU-XXXXXXXX` |
-| Harga Beli | Input | **Read-only** | Diisi awal saat create; selanjutnya hanya berubah lewat Stock In |
+| Harga Beli | — | **Read-only** | Hanya berubah lewat Stock In; diisi via section Stok Awal saat create |
 | HPP Rata-rata (`averageCost`) | — | **Read-only** | Dihitung otomatis dari Moving Average Cost tiap Stock In |
 | Harga Jual Dasar | Input | Input | Wajib, ≥ 0 |
-| Stok | Input | **Read-only** | Hanya dapat diubah lewat menu Stok (In/Out/Opname) |
+| Stok | — | **Read-only** | Hanya dapat diubah lewat menu Stok (In/Out/Opname) |
 | Min Stock Threshold | Input | Input | Default 0 |
 | Kategori | Autocomplete + Type to Create | Autocomplete + Type to Create | — |
 | Merk | Autocomplete + Type to Create | Autocomplete + Type to Create | — |

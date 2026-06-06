@@ -5,7 +5,11 @@ import { PackagePlus, X } from 'lucide-react';
 
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
+import { Textarea } from '@/components/ui/Textarea';
+import { AutocompleteInput } from '@/components/ui/AutocompleteInput';
 import { useTranslation } from '@/i18n/useTranslation';
+import { useCatalogMeta } from '@/hooks/useCatalogMeta';
+import { useCatalogMetaStore } from '@/stores/catalogMetaStore';
 
 export function QuickStockInModal({
   open,
@@ -25,6 +29,8 @@ export function QuickStockInModal({
   onClose: () => void;
 }) {
   const { t } = useTranslation();
+  const { suppliers } = useCatalogMeta();
+  const addSupplier = useCatalogMetaStore((s) => s.addSupplier);
   const [qty, setQty] = useState(1);
   const [unitBuyPrice, setUnitBuyPrice] = useState(currentBuyPrice);
   const [supplierName, setSupplierName] = useState('');
@@ -71,6 +77,9 @@ export function QuickStockInModal({
         const body = await res.json().catch(() => null) as { error?: { message?: string } } | null;
         setError(body?.error?.message ?? t.products.quickStockInFailed);
         return;
+      }
+      if (supplierName.trim()) {
+        addSupplier({ id: supplierName.trim(), name: supplierName.trim() });
       }
       onSuccess();
     } catch {
@@ -156,14 +165,13 @@ export function QuickStockInModal({
           </div>
 
           <div>
-            <label className="text-xs font-semibold uppercase tracking-wider text-zinc-500 dark:text-zinc-400">
-              {t.stock.supplier}
-            </label>
-            <Input
-              className="mt-1.5"
+            <AutocompleteInput
+              label={t.stock.supplier}
               value={supplierName}
-              onChange={(e) => setSupplierName(e.target.value)}
+              onChange={setSupplierName}
+              options={suppliers}
               placeholder={t.products.quickStockInSupplierPlaceholder}
+              noMatchText={t.products.noMatches}
             />
           </div>
 
@@ -183,11 +191,12 @@ export function QuickStockInModal({
             <label className="text-xs font-semibold uppercase tracking-wider text-zinc-500 dark:text-zinc-400">
               {t.stock.notes}
             </label>
-            <Input
+            <Textarea
               className="mt-1.5"
               value={note}
               onChange={(e) => setNote(e.target.value)}
               placeholder={t.stock.optionalRemarks}
+              rows={3}
             />
           </div>
 
