@@ -27,7 +27,7 @@
 
 ## API
 
-- `POST /api/stock/in` → `{product_id, qty, unit_buy_price, supplier_id?, supplier_name?, expiry_date?, note?}` → `200 {next_stock, supplier_id}`
+- `POST /api/stock/in` → `{product_id, qty, unit_buy_price, supplier_id?, supplier_name?, expiry_date?, note?}` → `200 {prev_stock, next_stock, average_cost, supplier_id}` — `average_cost` adalah HPP rata-rata baru hasil moving average
 - `POST /api/stock/out` → `{product_id, qty, note}` → `200 {next_stock}`
 - `POST /api/stock/opname` → `{product_id, qty, note?}` → `200 {prev_stock, next_stock}`
 

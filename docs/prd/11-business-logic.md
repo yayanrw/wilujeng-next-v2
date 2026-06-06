@@ -51,3 +51,15 @@ qty=5 → multiplier=floor(5/2)=2 (capped 2) → free=2 → total qty=7, subtota
 - Tidak boleh negatif; tolak transaksi jika stok kurang
 - Semua mutasi (IN/OUT/OPNAME/RETURN) tercatat di `stock_logs`
 - Atomik: transaksi & mutasi stok dalam satu DB transaction
+
+## HPP Rata-rata (Moving Average Cost)
+
+`products.average_cost` menyimpan HPP rata-rata bergerak, di-update tiap Stock In:
+
+```
+next_average = round((prev_stock × prev_average + qty × unit_buy_price) / (prev_stock + qty))
+```
+
+- Jika `prev_stock ≤ 0` → `next_average = unit_buy_price` (produk kosong, HPP = harga beli baru)
+- `products.buy_price` tetap diisi dengan `unit_buy_price` terakhir (referensi/pre-fill form)
+- Checkout memakai `average_cost` sebagai snapshot COGS (lihat STEP 5)
