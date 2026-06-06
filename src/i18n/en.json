@@ -317,7 +317,10 @@
     "outTypeReturn": "Customer Return (Return)",
     "originTransaction": "Origin Transaction (Required for Return)",
     "returnReason": "Return Reason",
-    "returnReasonPlaceholder": "Example: Defective item, Wrong purchase..."
+    "returnReasonPlaceholder": "Example: Defective item, Wrong purchase...",
+    "stockUpdated": "Stock updated",
+    "requestFailed": "Request failed",
+    "errorOccurred": "An error occurred, please try again"
   },
   "customers": {
     "title": "Customers",

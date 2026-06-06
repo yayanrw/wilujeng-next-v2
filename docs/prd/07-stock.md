@@ -4,7 +4,7 @@
 
 - Histori perubahan stok: Opname, In, Out
 - Paginasi Load More
-- Filter: rentang tanggal, Product Picker (autocomplete)
+- Filter: rentang tanggal, Product Picker (autocomplete); diterapkan saat tombol Apply Filter atau saat tab Logs dibuka
 - Kolom: nama produk, tipe, qty, prev/next stock, tanggal, aksi (modal detail)
 
 ## Stock Masuk (IN)

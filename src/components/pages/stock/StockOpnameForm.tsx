@@ -1,32 +1,38 @@
 'use client';
 
+import { useState } from 'react';
+
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
 import { ProductPicker } from '@/components/shared/ProductPicker';
 import { useTranslation } from '@/i18n/useTranslation';
-
-interface StockOpnameFormProps {
-  productId: string | null;
-  onProductChange: (id: string | null) => void;
-  qty: number;
-  onQtyChange: (qty: number) => void;
-  note: string;
-  onNoteChange: (note: string) => void;
-  onSubmit: () => void;
-  pending: boolean;
-}
+import type { StockSubmitFn } from '@/hooks/useStockSubmit';
 
 export function StockOpnameForm({
-  productId,
-  onProductChange,
-  qty,
-  onQtyChange,
-  note,
-  onNoteChange,
-  onSubmit,
+  submit,
   pending,
-}: StockOpnameFormProps) {
+}: {
+  submit: StockSubmitFn;
+  pending: boolean;
+}) {
   const { t } = useTranslation();
+
+  const [productId, setProductId] = useState<string | null>(null);
+  const [qty, setQty] = useState(1);
+  const [note, setNote] = useState('');
+
+  async function handleSubmit() {
+    if (!productId) return;
+    const ok = await submit('/api/stock/opname', {
+      productId,
+      qty,
+      note: note.trim() || undefined,
+    });
+    if (!ok) return;
+    setProductId(null);
+    setQty(1);
+    setNote('');
+  }
 
   return (
     <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
@@ -35,7 +41,7 @@ export function StockOpnameForm({
           {t.stock.targetProduct}
         </label>
         <div className="mt-1.5">
-          <ProductPicker value={productId} onChange={onProductChange} />
+          <ProductPicker value={productId} onChange={setProductId} />
         </div>
       </div>
 
@@ -48,7 +54,7 @@ export function StockOpnameForm({
           inputMode="numeric"
           value={String(qty)}
           onChange={(e) =>
-            onQtyChange(Number(e.target.value.replace(/[^0-9]/g, '')) || 0)
+            setQty(Number(e.target.value.replace(/[^0-9]/g, '')) || 0)
           }
         />
       </div>
@@ -60,7 +66,7 @@ export function StockOpnameForm({
         <Input
           className="mt-1.5"
           value={note}
-          onChange={(e) => onNoteChange(e.target.value)}
+          onChange={(e) => setNote(e.target.value)}
           placeholder={t.stock.optionalRemarks}
         />
       </div>
@@ -68,7 +74,7 @@ export function StockOpnameForm({
       <Button
         className="mt-8 h-12 w-full text-base font-semibold shadow-sm md:col-span-2"
         disabled={pending || !productId || qty < 0}
-        onClick={onSubmit}
+        onClick={handleSubmit}
       >
         {pending ? t.stock.submitting : t.stock.submit}
       </Button>

@@ -320,7 +320,10 @@
     "outTypeReturn": "Retur Pelanggan (Return)",
     "originTransaction": "Transaksi Asal (Wajib untuk Retur)",
     "returnReason": "Alasan Retur",
-    "returnReasonPlaceholder": "Contoh: Barang cacat, Salah beli..."
+    "returnReasonPlaceholder": "Contoh: Barang cacat, Salah beli...",
+    "stockUpdated": "Stok diperbarui",
+    "requestFailed": "Permintaan gagal",
+    "errorOccurred": "Terjadi kesalahan, silakan coba lagi"
   },
   "customers": {
     "title": "Pelanggan",

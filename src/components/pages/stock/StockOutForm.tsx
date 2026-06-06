@@ -1,45 +1,52 @@
 'use client';
 
+import { useState } from 'react';
+
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
 import { ProductPicker } from '@/components/shared/ProductPicker';
 import { TransactionPicker } from '@/components/shared/TransactionPicker';
 import { useTranslation } from '@/i18n/useTranslation';
-
-interface StockOutFormProps {
-  productId: string | null;
-  onProductChange: (id: string | null) => void;
-  qty: number;
-  onQtyChange: (qty: number) => void;
-  outType: 'out' | 'return';
-  onOutTypeChange: (type: 'out' | 'return') => void;
-  transactionId: string | null;
-  onTransactionIdChange: (id: string | null) => void;
-  returnReason: string;
-  onReturnReasonChange: (reason: string) => void;
-  note: string;
-  onNoteChange: (note: string) => void;
-  onSubmit: () => void;
-  pending: boolean;
-}
+import type { StockSubmitFn } from '@/hooks/useStockSubmit';
 
 export function StockOutForm({
-  productId,
-  onProductChange,
-  qty,
-  onQtyChange,
-  outType,
-  onOutTypeChange,
-  transactionId,
-  onTransactionIdChange,
-  returnReason,
-  onReturnReasonChange,
-  note,
-  onNoteChange,
-  onSubmit,
+  submit,
   pending,
-}: StockOutFormProps) {
+}: {
+  submit: StockSubmitFn;
+  pending: boolean;
+}) {
   const { t } = useTranslation();
+
+  const [productId, setProductId] = useState<string | null>(null);
+  const [qty, setQty] = useState(1);
+  const [outType, setOutType] = useState<'out' | 'return'>('out');
+  const [transactionId, setTransactionId] = useState<string | null>(null);
+  const [returnReason, setReturnReason] = useState('');
+  const [note, setNote] = useState('');
+
+  function reset() {
+    setProductId(null);
+    setQty(1);
+    setOutType('out');
+    setTransactionId(null);
+    setReturnReason('');
+    setNote('');
+  }
+
+  async function handleSubmit() {
+    if (!productId) return;
+    const isReturn = outType === 'return';
+    const ok = await submit('/api/stock/out', {
+      productId,
+      qty,
+      type: outType,
+      note: note.trim() || undefined,
+      transactionId: isReturn ? transactionId || undefined : undefined,
+      returnReason: isReturn ? returnReason.trim() || undefined : undefined,
+    });
+    if (ok) reset();
+  }
 
   return (
     <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
@@ -48,7 +55,7 @@ export function StockOutForm({
           {t.stock.targetProduct}
         </label>
         <div className="mt-1.5">
-          <ProductPicker value={productId} onChange={onProductChange} />
+          <ProductPicker value={productId} onChange={setProductId} />
         </div>
       </div>
 
@@ -61,7 +68,7 @@ export function StockOutForm({
           inputMode="numeric"
           value={String(qty)}
           onChange={(e) =>
-            onQtyChange(Number(e.target.value.replace(/[^0-9]/g, '')) || 0)
+            setQty(Number(e.target.value.replace(/[^0-9]/g, '')) || 0)
           }
         />
       </div>
@@ -77,12 +84,10 @@ export function StockOutForm({
               name="outType"
               value="out"
               checked={outType === 'out'}
-              onChange={() => onOutTypeChange('out')}
+              onChange={() => setOutType('out')}
               className="h-4 w-4 accent-zinc-900"
             />
-            <span className="text-sm font-medium">
-              {t.stock.outTypeDamaged}
-            </span>
+            <span className="text-sm font-medium">{t.stock.outTypeDamaged}</span>
           </label>
           <label className="flex items-center gap-2 cursor-pointer">
             <input
@@ -90,12 +95,10 @@ export function StockOutForm({
               name="outType"
               value="return"
               checked={outType === 'return'}
-              onChange={() => onOutTypeChange('return')}
+              onChange={() => setOutType('return')}
               className="h-4 w-4 accent-zinc-900"
             />
-            <span className="text-sm font-medium">
-              {t.stock.outTypeReturn}
-            </span>
+            <span className="text-sm font-medium">{t.stock.outTypeReturn}</span>
           </label>
         </div>
       </div>
@@ -109,7 +112,7 @@ export function StockOutForm({
             <div className="mt-1.5">
               <TransactionPicker
                 value={transactionId}
-                onChange={onTransactionIdChange}
+                onChange={setTransactionId}
               />
             </div>
           </div>
@@ -120,7 +123,7 @@ export function StockOutForm({
             <Input
               className="mt-1.5"
               value={returnReason}
-              onChange={(e) => onReturnReasonChange(e.target.value)}
+              onChange={(e) => setReturnReason(e.target.value)}
               placeholder={t.stock.returnReasonPlaceholder}
             />
           </div>
@@ -134,7 +137,7 @@ export function StockOutForm({
         <Input
           className="mt-1.5"
           value={note}
-          onChange={(e) => onNoteChange(e.target.value)}
+          onChange={(e) => setNote(e.target.value)}
           placeholder={t.stock.optionalRemarks}
         />
       </div>
@@ -142,7 +145,7 @@ export function StockOutForm({
       <Button
         className="mt-8 h-12 w-full text-base font-semibold shadow-sm md:col-span-2"
         disabled={pending || !productId || qty < 1}
-        onClick={onSubmit}
+        onClick={handleSubmit}
       >
         {pending ? t.stock.submitting : t.stock.submit}
       </Button>
