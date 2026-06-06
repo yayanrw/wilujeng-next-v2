@@ -266,7 +266,9 @@
     "quickStockInSuccess": "Stock added successfully",
     "quickStockInFailed": "Failed to add stock",
     "quickStockInSupplierPlaceholder": "Optional supplier name",
-    "quickStockInQtyRequired": "Quantity must be greater than 0"
+    "quickStockInQtyRequired": "Quantity must be greater than 0",
+    "averageCost": "Avg. Cost (HPP)",
+    "stockReadOnly": "Updated via Stock menu only"
   },
   "stock": {
     "title": "Stock Management",

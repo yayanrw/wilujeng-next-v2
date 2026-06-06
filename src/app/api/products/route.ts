@@ -60,6 +60,7 @@ export async function GET(req: Request) {
       name: products.name,
       basePrice: products.basePrice,
       buyPrice: products.buyPrice,
+      averageCost: products.averageCost,
       stock: products.stock,
       minStockThreshold: products.minStockThreshold,
       category: { id: categories.id, name: categories.name },

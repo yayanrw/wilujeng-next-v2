@@ -30,6 +30,7 @@ export type ProductDto = {
   name: string;
   basePrice: number;
   buyPrice: number;
+  averageCost: number;
   stock: number;
   minStockThreshold: number;
   category: { id: string; name: string } | null;
@@ -188,10 +189,10 @@ export function ProductForm({
           sku: sku.trim(),
           name: name.trim(),
           basePrice,
-          buyPrice,
-          stock,
           minStockThreshold,
           tiers: tierEnabled ? tiers.filter((t) => t.minQty > 0 && t.price > 0) : [],
+          // buyPrice and stock are managed via Stock menu only (edit mode)
+          ...(mode === 'create' ? { buyPrice, stock } : {}),
         };
 
         const cat = categoryName.trim();
@@ -372,27 +373,34 @@ export function ProductForm({
           <label className="text-xs font-semibold uppercase tracking-wider text-zinc-500 dark:text-zinc-400">
             {t.products.buyPrice}
           </label>
-          <div className="relative mt-1.5">
-            <span className="absolute left-3 top-1/2 -translate-y-1/2 text-zinc-500 text-sm font-medium">
-              Rp
-            </span>
-            <Input
-              ref={buyPriceInputRef}
-              className="pl-9 font-medium tabular-nums"
-              inputMode="numeric"
-              value={buyPrice ? String(buyPrice) : ''}
-              onChange={(e) =>
-                setBuyPrice(Number(e.target.value.replace(/[^0-9]/g, '')) || 0)
-              }
-              onKeyDown={(e) => {
-                if (e.key === 'Enter') {
-                  e.preventDefault();
-                  basePriceInputRef.current?.focus();
+          {mode === 'edit' ? (
+            <div className="flex items-center gap-1 mt-1.5 rounded-md border border-zinc-200 dark:border-zinc-800 bg-zinc-100/50 dark:bg-zinc-900/50 px-3 py-2 text-sm font-medium tabular-nums text-zinc-700 dark:text-zinc-300">
+              <span className="text-zinc-400 dark:text-zinc-500 text-sm">Rp</span>
+              {(initial?.buyPrice ?? 0).toLocaleString('id-ID')}
+            </div>
+          ) : (
+            <div className="relative mt-1.5">
+              <span className="absolute left-3 top-1/2 -translate-y-1/2 text-zinc-500 text-sm font-medium">
+                Rp
+              </span>
+              <Input
+                ref={buyPriceInputRef}
+                className="pl-9 font-medium tabular-nums"
+                inputMode="numeric"
+                value={buyPrice ? String(buyPrice) : ''}
+                onChange={(e) =>
+                  setBuyPrice(Number(e.target.value.replace(/[^0-9]/g, '')) || 0)
                 }
-              }}
-              placeholder="0"
-            />
-          </div>
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter') {
+                    e.preventDefault();
+                    basePriceInputRef.current?.focus();
+                  }
+                }}
+                placeholder="0"
+              />
+            </div>
+          )}
         </div>
         <div>
           <label className="text-xs font-semibold uppercase tracking-wider text-zinc-500 dark:text-zinc-400">
@@ -413,7 +421,8 @@ export function ProductForm({
               onKeyDown={(e) => {
                 if (e.key === 'Enter') {
                   e.preventDefault();
-                  stockInputRef.current?.focus();
+                  if (mode === 'create') stockInputRef.current?.focus();
+                  else minStockInputRef.current?.focus();
                 }
               }}
               placeholder="0"
@@ -422,26 +431,44 @@ export function ProductForm({
         </div>
       </div>
 
+      {mode === 'edit' && (
+        <div>
+          <label className="text-xs font-semibold uppercase tracking-wider text-zinc-500 dark:text-zinc-400">
+            {t.products.averageCost}
+          </label>
+          <div className="flex items-center gap-1 mt-1.5 rounded-md border border-zinc-200 dark:border-zinc-800 bg-zinc-100/50 dark:bg-zinc-900/50 px-3 py-2 text-sm font-medium tabular-nums text-zinc-700 dark:text-zinc-300">
+            <span className="text-zinc-400 dark:text-zinc-500 text-sm">Rp</span>
+            {(initial?.averageCost ?? 0).toLocaleString('id-ID')}
+          </div>
+        </div>
+      )}
+
       <div className="grid grid-cols-2 gap-4">
         <div>
           <label className="text-xs font-semibold uppercase tracking-wider text-zinc-500 dark:text-zinc-400">
             {t.products.stock}
           </label>
-          <Input
-            ref={stockInputRef}
-            className="mt-1.5 font-medium tabular-nums"
-            inputMode="numeric"
-            value={String(stock)}
-            onChange={(e) =>
-              setStock(Number(e.target.value.replace(/[^0-9]/g, '')) || 0)
-            }
-            onKeyDown={(e) => {
-              if (e.key === 'Enter') {
-                e.preventDefault();
-                minStockInputRef.current?.focus();
+          {mode === 'edit' ? (
+            <div className="mt-1.5 rounded-md border border-zinc-200 dark:border-zinc-800 bg-zinc-100/50 dark:bg-zinc-900/50 px-3 py-2 text-sm font-medium tabular-nums text-zinc-700 dark:text-zinc-300">
+              {initial?.stock ?? 0}
+            </div>
+          ) : (
+            <Input
+              ref={stockInputRef}
+              className="mt-1.5 font-medium tabular-nums"
+              inputMode="numeric"
+              value={String(stock)}
+              onChange={(e) =>
+                setStock(Number(e.target.value.replace(/[^0-9]/g, '')) || 0)
               }
-            }}
-          />
+              onKeyDown={(e) => {
+                if (e.key === 'Enter') {
+                  e.preventDefault();
+                  minStockInputRef.current?.focus();
+                }
+              }}
+            />
+          )}
         </div>
         <div>
           <label className="text-xs font-semibold uppercase tracking-wider text-zinc-500 dark:text-zinc-400">

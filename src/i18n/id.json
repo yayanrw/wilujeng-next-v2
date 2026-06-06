@@ -269,7 +269,9 @@
     "quickStockInSuccess": "Stok berhasil ditambahkan",
     "quickStockInFailed": "Gagal menambah stok",
     "quickStockInSupplierPlaceholder": "Nama supplier (opsional)",
-    "quickStockInQtyRequired": "Jumlah harus lebih dari 0"
+    "quickStockInQtyRequired": "Jumlah harus lebih dari 0",
+    "averageCost": "HPP Rata-rata",
+    "stockReadOnly": "Hanya dapat diubah lewat menu Stok"
   },
   "stock": {
     "title": "Manajemen Stok",
