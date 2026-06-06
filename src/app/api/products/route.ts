@@ -29,6 +29,17 @@ export async function GET(req: Request) {
   const search = nonEmpty(searchParams.get('search'));
   const categoryId = nonEmpty(searchParams.get('categoryId'));
   const brandId = nonEmpty(searchParams.get('brandId'));
+  const exactSku = nonEmpty(searchParams.get('exactSku'));
+
+  // Fast path: exact SKU lookup for duplicate checking — no cache, minimal columns
+  if (exactSku) {
+    const row = await db
+      .select({ id: products.id, sku: products.sku, name: products.name })
+      .from(products)
+      .where(and(eq(products.sku, exactSku), eq(products.isDeleted, false)))
+      .limit(1);
+    return json(row);
+  }
 
   // Pagination
   const limitParam = parseInt(searchParams.get('limit') || '50', 10);

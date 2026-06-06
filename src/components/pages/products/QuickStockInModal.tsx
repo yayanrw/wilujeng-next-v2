@@ -172,6 +172,7 @@ export function QuickStockInModal({
               options={suppliers}
               placeholder={t.products.quickStockInSupplierPlaceholder}
               noMatchText={t.products.noMatches}
+              createHintText={t.products.willCreateNew}
             />
           </div>
 
