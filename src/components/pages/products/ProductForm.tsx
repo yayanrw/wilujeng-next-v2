@@ -77,9 +77,7 @@ export function ProductForm({
   const nameInputRef = useRef<HTMLInputElement>(null);
   const categoryInputRef = useRef<HTMLInputElement>(null);
   const brandInputRef = useRef<HTMLInputElement>(null);
-  const buyPriceInputRef = useRef<HTMLInputElement>(null);
   const basePriceInputRef = useRef<HTMLInputElement>(null);
-  const stockInputRef = useRef<HTMLInputElement>(null);
   const minStockInputRef = useRef<HTMLInputElement>(null);
   const { t } = useTranslation();
 
@@ -205,8 +203,8 @@ export function ProductForm({
           basePrice,
           minStockThreshold,
           tiers: tierEnabled ? tiers.filter((t) => t.minQty > 0 && t.price > 0) : [],
-          // buyPrice and stock are managed via Stock menu only (edit mode)
-          ...(mode === 'create' ? { buyPrice, stock } : {}),
+          // buyPrice and stock are always 0 at creation; Stok Awal section triggers Stock In
+          ...(mode === 'create' ? { buyPrice: 0, stock: 0 } : {}),
         };
 
         const cat = categoryName.trim();
@@ -398,7 +396,7 @@ export function ProductForm({
             onChange={setBrandName}
             options={brands}
             placeholder={t.products.typeToCreate}
-            onNext={() => buyPriceInputRef.current?.focus()}
+            onNext={() => basePriceInputRef.current?.focus()}
           />
           {submitted && !brandName.trim() && (
             <p className="text-xs text-red-500 dark:text-red-400">{t.products.brandRequired}</p>
@@ -408,40 +406,18 @@ export function ProductForm({
 
       <div className="h-px w-full bg-zinc-100 dark:bg-zinc-800 my-2" />
 
-      <div className="grid grid-cols-2 gap-4">
-        <div>
-          <label className="text-xs font-semibold uppercase tracking-wider text-zinc-500 dark:text-zinc-400">
-            {t.products.buyPrice}
-          </label>
-          {mode === 'edit' ? (
+      <div className={`grid ${mode === 'edit' ? 'grid-cols-2' : 'grid-cols-1'} gap-4`}>
+        {mode === 'edit' && (
+          <div>
+            <label className="text-xs font-semibold uppercase tracking-wider text-zinc-500 dark:text-zinc-400">
+              {t.products.buyPrice}
+            </label>
             <div className="flex items-center gap-1 mt-1.5 rounded-md border border-zinc-200 dark:border-zinc-800 bg-zinc-100/50 dark:bg-zinc-900/50 px-3 py-2 text-sm font-medium tabular-nums text-zinc-700 dark:text-zinc-300">
               <span className="text-zinc-400 dark:text-zinc-500 text-sm">Rp</span>
               {(initial?.buyPrice ?? 0).toLocaleString('id-ID')}
             </div>
-          ) : (
-            <div className="relative mt-1.5">
-              <span className="absolute left-3 top-1/2 -translate-y-1/2 text-zinc-500 text-sm font-medium">
-                Rp
-              </span>
-              <Input
-                ref={buyPriceInputRef}
-                className="pl-9 font-medium tabular-nums"
-                inputMode="numeric"
-                value={buyPrice ? String(buyPrice) : ''}
-                onChange={(e) =>
-                  setBuyPrice(Number(e.target.value.replace(/[^0-9]/g, '')) || 0)
-                }
-                onKeyDown={(e) => {
-                  if (e.key === 'Enter') {
-                    e.preventDefault();
-                    basePriceInputRef.current?.focus();
-                  }
-                }}
-                placeholder="0"
-              />
-            </div>
-          )}
-        </div>
+          </div>
+        )}
         <div>
           <label className="text-xs font-semibold uppercase tracking-wider text-zinc-500 dark:text-zinc-400">
             {t.products.basePrice}
@@ -461,8 +437,7 @@ export function ProductForm({
               onKeyDown={(e) => {
                 if (e.key === 'Enter') {
                   e.preventDefault();
-                  if (mode === 'create') stockInputRef.current?.focus();
-                  else minStockInputRef.current?.focus();
+                  minStockInputRef.current?.focus();
                 }
               }}
               placeholder="0"
@@ -483,33 +458,17 @@ export function ProductForm({
         </div>
       )}
 
-      <div className="grid grid-cols-2 gap-4">
-        <div>
-          <label className="text-xs font-semibold uppercase tracking-wider text-zinc-500 dark:text-zinc-400">
-            {t.products.stock}
-          </label>
-          {mode === 'edit' ? (
+      <div className={`grid ${mode === 'edit' ? 'grid-cols-2' : 'grid-cols-1'} gap-4`}>
+        {mode === 'edit' && (
+          <div>
+            <label className="text-xs font-semibold uppercase tracking-wider text-zinc-500 dark:text-zinc-400">
+              {t.products.stock}
+            </label>
             <div className="mt-1.5 rounded-md border border-zinc-200 dark:border-zinc-800 bg-zinc-100/50 dark:bg-zinc-900/50 px-3 py-2 text-sm font-medium tabular-nums text-zinc-700 dark:text-zinc-300">
               {initial?.stock ?? 0}
             </div>
-          ) : (
-            <Input
-              ref={stockInputRef}
-              className="mt-1.5 font-medium tabular-nums"
-              inputMode="numeric"
-              value={String(stock)}
-              onChange={(e) =>
-                setStock(Number(e.target.value.replace(/[^0-9]/g, '')) || 0)
-              }
-              onKeyDown={(e) => {
-                if (e.key === 'Enter') {
-                  e.preventDefault();
-                  minStockInputRef.current?.focus();
-                }
-              }}
-            />
-          )}
-        </div>
+          </div>
+        )}
         <div>
           <label className="text-xs font-semibold uppercase tracking-wider text-zinc-500 dark:text-zinc-400">
             {t.products.minStock}
