@@ -50,7 +50,7 @@ export async function GET(req: Request) {
     .select({
       date: sql<string>`to_char(${transactions.createdAt}, ${sql.raw(`'${groupByFormat}'`)})`,
       sales: sql<number>`coalesce(sum(${transactionItems.subtotal}), 0)`,
-      cogs: sql<number>`coalesce(sum(${transactionItems.qty} * ${products.buyPrice}), 0)`,
+      cogs: sql<number>`coalesce(sum(${transactionItems.qty} * coalesce(${transactionItems.unitBuyPrice}, ${products.buyPrice})), 0)`,
     })
     .from(transactions)
     .innerJoin(
@@ -82,7 +82,7 @@ export async function GET(req: Request) {
     .select({
       total: sql<number>`coalesce(sum(${transactionItems.subtotal}), 0)`,
       count: sql<number>`count(DISTINCT ${transactions.id})`,
-      cogs: sql<number>`coalesce(sum(${transactionItems.qty} * ${products.buyPrice}), 0)`,
+      cogs: sql<number>`coalesce(sum(${transactionItems.qty} * coalesce(${transactionItems.unitBuyPrice}, ${products.buyPrice})), 0)`,
     })
     .from(transactions)
     .leftJoin(

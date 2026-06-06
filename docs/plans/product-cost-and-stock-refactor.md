@@ -219,7 +219,7 @@ LAPIS 3 — UX Form Product
 ## 6. Status Pengerjaan
 
 - [x] STEP 1 — Snapshot cost saat checkout (migrasi `0005_flippant_wonder_man.sql`)
-- [ ] STEP 2 — Laporan pakai snapshot cost
+- [x] STEP 2 — Laporan pakai snapshot cost (PNL + 2 query dashboard)
 - [ ] STEP 3 — Kolom averageCost + migrasi + backfill
 - [ ] STEP 4 — Stock In moving average
 - [ ] STEP 5 — Checkout snapshot pakai averageCost

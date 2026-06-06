@@ -20,7 +20,7 @@
 
 ## Laporan Laba Rugi
 
-- Formula: Total Penjualan − HPP (`buy_price × qty terjual`)
+- Formula: Total Penjualan − HPP (`coalesce(transaction_items.unit_buy_price, products.buy_price) × qty terjual`) — pakai snapshot HPP saat transaksi agar profit historis stabil; fallback ke `products.buy_price` untuk transaksi pra-snapshot
 - Summary Cards: Total Sales, COGS, Gross Profit
 
 ## Laporan Pemasok
