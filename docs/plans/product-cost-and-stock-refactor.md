@@ -224,5 +224,5 @@ LAPIS 3 — UX Form Product
 - [x] STEP 4 — Stock In moving average
 - [x] STEP 5 — Checkout snapshot pakai averageCost
 - [x] STEP 6 — ProductForm edit read-only + averageCost
-- [ ] STEP 7 — ProductForm create section Stok Awal
+- [x] STEP 7 — ProductForm create section Stok Awal
 - [ ] STEP 8 — Import konsisten

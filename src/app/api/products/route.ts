@@ -131,7 +131,7 @@ const CreateSchema = z.object({
   brandId: z.string().uuid().optional(),
   brandName: z.string().min(1).max(80).optional(),
   basePrice: z.number().int().min(0),
-  buyPrice: z.number().int().min(0),
+  buyPrice: z.number().int().min(0).optional().default(0),
   stock: z.number().int().min(0).optional().default(0),
   minStockThreshold: z.number().int().min(0).optional().default(0),
   tiers: z.array(TierSchema).optional().default([]),

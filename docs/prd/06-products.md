@@ -24,6 +24,7 @@
 
 - **Multi-Tier Pricing:** Form dinamis `{min_qty > 0, price > 0}`; unique per `min_qty`
 - **`+ Stock` button** (edit mode): shortcut Stock In langsung dari form produk
+- **Section "Stok Awal (Opsional)"** (create mode): collapsible, fields: qty, harga beli, supplier, tgl expired, catatan. Jika diisi → `POST /api/products` (stock=0) lalu `POST /api/stock/in` otomatis sehingga stok awal terekam di `stock_logs` dan `averageCost` terisi.
 - Auto-reset form + Toast sukses/gagal setelah save
 
 ## Soft Delete & Status

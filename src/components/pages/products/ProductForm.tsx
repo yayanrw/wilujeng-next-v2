@@ -99,6 +99,14 @@ export function ProductForm({
   const [promoSaving, setPromoSaving] = useState(false);
   const [promoMsg, setPromoMsg] = useState<{ ok: boolean; text: string } | null>(null);
 
+  // Initial stock section (create mode only)
+  const [initialStockEnabled, setInitialStockEnabled] = useState(false);
+  const [initialStockQty, setInitialStockQty] = useState(1);
+  const [initialStockBuyPrice, setInitialStockBuyPrice] = useState(0);
+  const [initialStockSupplier, setInitialStockSupplier] = useState('');
+  const [initialStockExpiry, setInitialStockExpiry] = useState('');
+  const [initialStockNote, setInitialStockNote] = useState('');
+
   const fetchPromo = useCallback(async (productId: string) => {
     const res = await fetch(`/api/products/${productId}/promo`);
     if (!res.ok) return;
@@ -149,6 +157,12 @@ export function ProductForm({
       setTierEnabled(false);
       setPromo(null);
       setPromoEnabled(false);
+      setInitialStockEnabled(false);
+      setInitialStockQty(1);
+      setInitialStockBuyPrice(0);
+      setInitialStockSupplier('');
+      setInitialStockExpiry('');
+      setInitialStockNote('');
     }
     setSubmitted(false);
   }, [initial, mode, fetchPromo]);
@@ -229,6 +243,26 @@ export function ProductForm({
         if (cat) addCategory({ id: cat, name: cat });
         if (brand) addBrand({ id: brand, name: brand });
 
+        // In create mode, add initial stock if enabled
+        if (mode === 'create' && initialStockEnabled && initialStockQty > 0 && body?.id) {
+          const stockRes = await fetch('/api/stock/in', {
+            method: 'POST',
+            headers: { 'content-type': 'application/json' },
+            body: JSON.stringify({
+              productId: body.id,
+              qty: initialStockQty,
+              unitBuyPrice: initialStockBuyPrice,
+              ...(initialStockSupplier.trim() ? { supplierName: initialStockSupplier.trim() } : {}),
+              ...(initialStockExpiry ? { expiryDate: initialStockExpiry } : {}),
+              ...(initialStockNote.trim() ? { note: initialStockNote.trim() } : {}),
+            }),
+          });
+          if (!stockRes.ok) {
+            onSaved(false, t.products.initialStockFailed);
+            return;
+          }
+        }
+
         // In create mode, save promo alongside the new product if enabled
         if (mode === 'create' && promoEnabled && body?.id) {
           await fetch(`/api/products/${body.id}/promo`, {
@@ -263,6 +297,12 @@ export function ProductForm({
           setPromoValidFrom('');
           setPromoValidTo('');
           setPromoMaxMultiplier('');
+          setInitialStockEnabled(false);
+          setInitialStockQty(1);
+          setInitialStockBuyPrice(0);
+          setInitialStockSupplier('');
+          setInitialStockExpiry('');
+          setInitialStockNote('');
           setSubmitted(false);
         }
 
@@ -822,6 +862,114 @@ export function ProductForm({
           )}
         </>)}
       </div>
+
+      {mode === 'create' && (
+        <div className="rounded-xl border border-zinc-200 dark:border-zinc-800 bg-zinc-50/50 dark:bg-zinc-900/50 p-4 space-y-4">
+          <button
+            type="button"
+            className="flex w-full items-center justify-between gap-3"
+            onClick={() => setInitialStockEnabled((v) => !v)}
+          >
+            <div className="text-left">
+              <div className="text-sm font-semibold text-zinc-900 dark:text-zinc-100">
+                {t.products.initialStock}
+              </div>
+              <div className="text-xs text-zinc-500 dark:text-zinc-400">
+                {t.products.initialStockDesc}
+              </div>
+            </div>
+            <span
+              role="switch"
+              aria-checked={initialStockEnabled}
+              className={`relative inline-flex h-5 w-9 shrink-0 rounded-full border-2 border-transparent transition-colors ${
+                initialStockEnabled
+                  ? 'bg-zinc-900 dark:bg-zinc-100'
+                  : 'bg-zinc-200 dark:bg-zinc-700'
+              }`}
+            >
+              <span
+                className={`pointer-events-none inline-block h-4 w-4 transform rounded-full bg-white shadow transition-transform ${
+                  initialStockEnabled ? 'translate-x-4' : 'translate-x-0'
+                } ${initialStockEnabled ? 'dark:bg-zinc-900' : ''}`}
+              />
+            </span>
+          </button>
+
+          {initialStockEnabled && (
+            <div className="flex flex-col gap-3">
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="text-[10px] font-semibold uppercase tracking-wider text-zinc-500 dark:text-zinc-400">
+                    {t.stock.qty}
+                  </label>
+                  <Input
+                    className="mt-1 h-8 text-sm tabular-nums"
+                    inputMode="numeric"
+                    value={String(initialStockQty)}
+                    onChange={(e) =>
+                      setInitialStockQty(Number(e.target.value.replace(/[^0-9]/g, '')) || 0)
+                    }
+                  />
+                </div>
+                <div>
+                  <label className="text-[10px] font-semibold uppercase tracking-wider text-zinc-500 dark:text-zinc-400">
+                    {t.products.buyPrice}
+                  </label>
+                  <div className="relative mt-1">
+                    <span className="absolute left-2.5 top-1/2 -translate-y-1/2 text-zinc-500 text-xs font-medium">
+                      Rp
+                    </span>
+                    <Input
+                      className="h-8 pl-8 text-sm tabular-nums"
+                      inputMode="numeric"
+                      value={initialStockBuyPrice ? String(initialStockBuyPrice) : ''}
+                      onChange={(e) =>
+                        setInitialStockBuyPrice(Number(e.target.value.replace(/[^0-9]/g, '')) || 0)
+                      }
+                      placeholder="0"
+                    />
+                  </div>
+                </div>
+              </div>
+              <div>
+                <label className="text-[10px] font-semibold uppercase tracking-wider text-zinc-500 dark:text-zinc-400">
+                  {t.stock.supplier}
+                </label>
+                <Input
+                  className="mt-1 h-8 text-sm"
+                  value={initialStockSupplier}
+                  onChange={(e) => setInitialStockSupplier(e.target.value)}
+                  placeholder={t.products.quickStockInSupplierPlaceholder}
+                />
+              </div>
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="text-[10px] font-semibold uppercase tracking-wider text-zinc-500 dark:text-zinc-400">
+                    {t.stock.expiryDate}
+                  </label>
+                  <Input
+                    type="date"
+                    className="mt-1 h-8 text-sm"
+                    value={initialStockExpiry}
+                    onChange={(e) => setInitialStockExpiry(e.target.value)}
+                  />
+                </div>
+                <div>
+                  <label className="text-[10px] font-semibold uppercase tracking-wider text-zinc-500 dark:text-zinc-400">
+                    {t.stock.notes}
+                  </label>
+                  <Input
+                    className="mt-1 h-8 text-sm"
+                    value={initialStockNote}
+                    onChange={(e) => setInitialStockNote(e.target.value)}
+                    placeholder="—"
+                  />
+                </div>
+              </div>
+            </div>
+          )}
+        </div>
+      )}
 
       <Button
         type="submit"
