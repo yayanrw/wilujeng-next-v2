@@ -260,6 +260,19 @@ export function ProductForm({
         e.preventDefault();
         setSubmitted(true);
         if (!canSave) return;
+
+        // Stok Awal section validation
+        if (initialStockEnabled && initialStockQty < 1) return;
+        if (initialStockEnabled && initialStockNote.length > 200) return;
+
+        // BxGy promo section validation
+        if (promoEnabled) {
+          if (promoBuyQty < 1 || promoFreeQty < 1) return;
+          const maxMulNum = promoMaxMultiplier !== '' ? Number(promoMaxMultiplier) : null;
+          if (maxMulNum !== null && maxMulNum < 1) return;
+          if (promoValidFrom && promoValidTo && new Date(promoValidTo) <= new Date(promoValidFrom)) return;
+        }
+
         setPending(true);
 
         const payload: Record<string, unknown> = {
@@ -687,6 +700,9 @@ export function ProductForm({
                       if (e.key === 'Enter') { e.preventDefault(); initialStockBuyPriceRef.current?.focus(); }
                     }}
                   />
+                  {submitted && initialStockQty < 1 && (
+                    <p className="mt-1 text-xs text-red-500 dark:text-red-400">{t.stock.qtyMin1}</p>
+                  )}
                 </div>
                 <div>
                   <label className="text-[10px] font-semibold uppercase tracking-wider text-zinc-500 dark:text-zinc-400">
@@ -752,6 +768,14 @@ export function ProductForm({
                   placeholder="—"
                   rows={3}
                 />
+                <div className="flex justify-between mt-1">
+                  {submitted && initialStockNote.length > 200 ? (
+                    <p className="text-xs text-red-500 dark:text-red-400">{t.stock.noteTooLong}</p>
+                  ) : <span />}
+                  <span className={`text-[10px] tabular-nums ${initialStockNote.length > 200 ? 'text-red-500 dark:text-red-400' : 'text-zinc-400 dark:text-zinc-500'}`}>
+                    {initialStockNote.length}/200
+                  </span>
+                </div>
               </div>
             </div>
           )}
@@ -940,6 +964,9 @@ export function ProductForm({
                   if (e.key === 'Enter') { e.preventDefault(); promoFreeQtyRef.current?.focus(); }
                 }}
               />
+              {submitted && promoBuyQty < 1 && (
+                <p className="mt-0.5 text-xs text-red-500 dark:text-red-400">{t.products.bxgyBuyQtyRequired}</p>
+              )}
             </div>
             <div>
               <label className="text-[10px] font-semibold uppercase tracking-wider text-zinc-500 dark:text-zinc-400">
@@ -957,6 +984,9 @@ export function ProductForm({
                   if (e.key === 'Enter') { e.preventDefault(); promoValidFromRef.current?.focus(); }
                 }}
               />
+              {submitted && promoFreeQty < 1 && (
+                <p className="mt-0.5 text-xs text-red-500 dark:text-red-400">{t.products.bxgyFreeQtyRequired}</p>
+              )}
             </div>
           </div>
 
@@ -992,6 +1022,9 @@ export function ProductForm({
               />
             </div>
           </div>
+          {submitted && promoValidFrom && promoValidTo && new Date(promoValidTo) <= new Date(promoValidFrom) && (
+            <p className="text-xs text-red-500 dark:text-red-400">{t.products.bxgyValidToAfterFrom}</p>
+          )}
 
           <div>
             <label className="text-[10px] font-semibold uppercase tracking-wider text-zinc-500 dark:text-zinc-400">
@@ -1007,6 +1040,9 @@ export function ProductForm({
                 setPromoMaxMultiplier(e.target.value.replace(/[^0-9]/g, ''))
               }
             />
+            {submitted && promoMaxMultiplier !== '' && Number(promoMaxMultiplier) < 1 && (
+              <p className="mt-0.5 text-xs text-red-500 dark:text-red-400">{t.products.bxgyMaxMultiplierMin}</p>
+            )}
           </div>
 
           <div className="flex items-center gap-2">

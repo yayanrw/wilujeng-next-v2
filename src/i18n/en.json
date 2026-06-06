@@ -273,6 +273,10 @@
     "initialStock": "Initial Stock",
     "initialStockDesc": "Add opening stock when creating this product",
     "initialStockFailed": "Product created, but failed to add initial stock",
+    "bxgyBuyQtyRequired": "Buy quantity must be at least 1",
+    "bxgyFreeQtyRequired": "Free quantity must be at least 1",
+    "bxgyMaxMultiplierMin": "Max multiplier must be at least 1",
+    "bxgyValidToAfterFrom": "End date must be after start date",
     "keyboardShortcuts": "Keyboard Shortcuts",
     "shortcutNextField": "Move to next field",
     "shortcutSubmit": "Submit form",
@@ -332,7 +336,9 @@
     "returnReasonPlaceholder": "Example: Defective item, Wrong purchase...",
     "stockUpdated": "Stock updated",
     "requestFailed": "Request failed",
-    "errorOccurred": "An error occurred, please try again"
+    "errorOccurred": "An error occurred, please try again",
+    "qtyMin1": "Quantity must be at least 1",
+    "noteTooLong": "Note must be 200 characters or less"
   },
   "customers": {
     "title": "Customers",
