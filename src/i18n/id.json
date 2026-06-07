@@ -291,7 +291,9 @@
     "shortcutSubmit": "Simpan form",
     "shortcutAlt1": "Toggle Stok Awal (buat baru)",
     "shortcutAlt2": "Toggle Harga Grosir",
-    "shortcutAlt3": "Toggle Promo BxGy"
+    "shortcutAlt3": "Toggle Promo BxGy",
+    "productsLoaded": "produk dimuat",
+    "noProductsInFilter": "Tidak ada produk yang sesuai filter ini."
   },
   "stock": {
     "title": "Manajemen Stok",

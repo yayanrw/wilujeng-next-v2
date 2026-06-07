@@ -289,7 +289,9 @@
     "shortcutSubmit": "Submit form",
     "shortcutAlt1": "Toggle Initial Stock (create only)",
     "shortcutAlt2": "Toggle Tier Pricing",
-    "shortcutAlt3": "Toggle BxGy Promo"
+    "shortcutAlt3": "Toggle BxGy Promo",
+    "productsLoaded": "products loaded",
+    "noProductsInFilter": "No products match this filter."
   },
   "stock": {
     "title": "Stock Management",
