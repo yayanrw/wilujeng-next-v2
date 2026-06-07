@@ -2,7 +2,7 @@
 
 import { useCallback, useMemo, useState } from 'react';
 
-import { Plus, Pencil, ToggleRight, ToggleLeft, Trash, PackagePlus, MoreHorizontal } from 'lucide-react';
+import { Plus, Pencil, ToggleRight, ToggleLeft, Trash, PackagePlus, MoreHorizontal, Loader2 } from 'lucide-react';
 
 import { Badge } from '@/components/ui/Badge';
 import { Button } from '@/components/ui/Button';
@@ -139,6 +139,16 @@ export function Products({
           />
         </CardHeader>
         <CardContent className="p-0 min-w-0">
+          <div className="relative">
+            {/* Stale-data overlay: shown when re-fetching while old rows are still visible */}
+            {loading && products.length > 0 && (
+              <div className="absolute inset-0 z-10 flex items-center justify-center rounded-b-xl bg-white/70 dark:bg-zinc-950/70 backdrop-blur-[1px]">
+                <div className="flex items-center gap-2 rounded-full border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 px-3 py-1.5 shadow-md text-xs font-medium text-zinc-600 dark:text-zinc-400">
+                  <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                  {t.products.loading}
+                </div>
+              </div>
+            )}
           <div className="w-full max-w-full overflow-x-auto" style={{ WebkitOverflowScrolling: 'touch' }}>
             <table className="w-full min-w-max text-sm">
               <thead>
@@ -328,6 +338,7 @@ export function Products({
               </tbody>
             </table>
           </div>
+          </div>{/* end relative wrapper */}
 
           <LoadMoreButton
             onClick={loadMore}

@@ -31,6 +31,8 @@ export function usePaginatedList<T>({
 
   const debounceTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const isMountedRef = useRef(true);
+  const searchRef = useRef(search);
+  searchRef.current = search;
 
   useEffect(() => {
     return () => {
@@ -38,7 +40,7 @@ export function usePaginatedList<T>({
     };
   }, []);
 
-  const fetch = useCallback(
+  const doFetch = useCallback(
     async (searchValue: string, newOffset: number = 0) => {
       setLoading(true);
       try {
@@ -67,31 +69,43 @@ export function usePaginatedList<T>({
     [fetchFn, limit],
   );
 
-  // Handle search with debounce
+  // Always up-to-date ref so effects don't need doFetch in their deps
+  const doFetchRef = useRef(doFetch);
+  doFetchRef.current = doFetch;
+
+  // Search changes: debounced — does NOT clear existing items (avoids flicker while typing)
   useEffect(() => {
-    if (debounceTimeoutRef.current) {
-      clearTimeout(debounceTimeoutRef.current);
-    }
-
+    if (debounceTimeoutRef.current) clearTimeout(debounceTimeoutRef.current);
     debounceTimeoutRef.current = setTimeout(() => {
-      fetch(search, 0);
+      doFetchRef.current(search, 0);
     }, debounceMs);
-
     return () => {
-      if (debounceTimeoutRef.current) {
-        clearTimeout(debounceTimeoutRef.current);
-      }
+      if (debounceTimeoutRef.current) clearTimeout(debounceTimeoutRef.current);
     };
-  }, [search, fetch, debounceMs]);
+  }, [search, debounceMs]);
+
+  // fetchFn changes (filter changes): immediate, no debounce, clears stale items first.
+  // Skip on initial mount — the search effect above handles the first load.
+  const isFirstRender = useRef(true);
+  useEffect(() => {
+    if (isFirstRender.current) {
+      isFirstRender.current = false;
+      // Return cleanup that resets the flag so React StrictMode double-invoke is handled correctly
+      return () => { isFirstRender.current = true; };
+    }
+    if (debounceTimeoutRef.current) clearTimeout(debounceTimeoutRef.current);
+    setItems([]);
+    doFetchRef.current(searchRef.current, 0);
+  }, [doFetch]);
 
   const loadMore = useCallback(() => {
-    fetch(search, offset);
-  }, [fetch, search, offset]);
+    doFetch(search, offset);
+  }, [doFetch, search, offset]);
 
   const refresh = useCallback(() => {
     setOffset(0);
-    fetch(search, 0);
-  }, [fetch, search]);
+    doFetch(search, 0);
+  }, [doFetch, search]);
 
   return {
     items,
