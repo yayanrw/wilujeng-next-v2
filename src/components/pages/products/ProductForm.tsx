@@ -37,14 +37,13 @@ function playFailSound() {
   } catch { /* silently ignore if AudioContext unavailable */ }
 }
 
-import { Plus, Trash2, Dices, Camera, PackagePlus, Info, X } from 'lucide-react';
+import { Plus, Trash2, Dices, Camera, Info, X } from 'lucide-react';
 
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
 import { Textarea } from '@/components/ui/Textarea';
 import { AutocompleteInput } from '@/components/ui/AutocompleteInput';
 import { BarcodeScannerModal } from '../pos/BarcodeScannerModal';
-import { QuickStockInModal } from './QuickStockInModal';
 import { useTranslation } from '@/i18n/useTranslation';
 import { useToast } from '@/hooks/useToast';
 import { useCatalogMetaStore } from '@/stores/catalogMetaStore';
@@ -80,12 +79,10 @@ export function ProductForm({
   mode,
   initial,
   onSaved,
-  onStockAdded,
 }: {
   mode: 'create' | 'edit';
   initial?: ProductDto;
   onSaved: (success: boolean, errorMsg?: string) => void;
-  onStockAdded?: () => void;
 }) {
   const missingEdit = mode === 'edit' && !initial;
 
@@ -108,7 +105,6 @@ export function ProductForm({
   const [pending, setPending] = useState(false);
   const [submitted, setSubmitted] = useState(false);
   const [scannerOpen, setScannerOpen] = useState(false);
-  const [quickStockInOpen, setQuickStockInOpen] = useState(false);
   const [shortcutsOpen, setShortcutsOpen] = useState(false);
   const formRef = useRef<HTMLFormElement>(null);
   const skuInputRef = useRef<HTMLInputElement>(null);
@@ -270,6 +266,7 @@ export function ProductForm({
   }
 
   return (
+    <>
     <form
       ref={formRef}
       className="flex flex-col gap-3"
@@ -669,19 +666,6 @@ export function ProductForm({
           />
         </div>
       </div>
-
-      {mode === 'edit' && initial && (
-        <Button
-          type="button"
-          variant="secondary"
-          size="sm"
-          className="w-full"
-          onClick={() => setQuickStockInOpen(true)}
-        >
-          <PackagePlus className="h-4 w-4" />
-          {t.products.quickStockIn}
-        </Button>
-      )}
 
       <div className="h-px w-full bg-zinc-100 dark:bg-zinc-800 my-2" />
 
@@ -1180,37 +1164,24 @@ export function ProductForm({
         {pending ? t.common.saving : t.products.saveProduct}
       </Button>
 
-      <BarcodeScannerModal
-        open={scannerOpen}
-        onScan={(code) => {
-          setSku(code);
-          setScannerOpen(false);
-          if (mode === 'create') {
-            checkSku(code).then((exists) => {
-              if (!exists) nameInputRef.current?.focus();
-            });
-          }
-        }}
-        onClose={() => setScannerOpen(false)}
-        scanIntervalMs={0}
-      />
-
-      {mode === 'edit' && initial && (
-        <QuickStockInModal
-          open={quickStockInOpen}
-          productId={initial.id}
-          productName={initial.name}
-          currentStock={stock}
-          currentBuyPrice={buyPrice}
-          onSuccess={() => {
-            setQuickStockInOpen(false);
-            onStockAdded?.();
-          }}
-          onClose={() => setQuickStockInOpen(false)}
-        />
-      )}
-
-      <Toast />
     </form>
+
+    <BarcodeScannerModal
+      open={scannerOpen}
+      onScan={(code) => {
+        setSku(code);
+        setScannerOpen(false);
+        if (mode === 'create') {
+          checkSku(code).then((exists) => {
+            if (!exists) nameInputRef.current?.focus();
+          });
+        }
+      }}
+      onClose={() => setScannerOpen(false)}
+      scanIntervalMs={0}
+    />
+
+    <Toast />
+    </>
   );
 }
