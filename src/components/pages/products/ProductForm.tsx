@@ -269,7 +269,7 @@ export function ProductForm({
     <>
     <form
       ref={formRef}
-      className="flex flex-col gap-3"
+      className={`flex flex-col gap-3 transition-opacity duration-150${pending ? ' opacity-60 pointer-events-none' : ''}`}
       onKeyDown={(e) => {
         if (e.shiftKey && e.key === 'Enter') {
           e.preventDefault();
@@ -425,6 +425,11 @@ export function ProductForm({
         formRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
       }}
     >
+      {/* Loading progress bar — always reserves h-1 space, animates when pending */}
+      <div className="h-1 w-full overflow-hidden rounded-full bg-zinc-100 dark:bg-zinc-800" style={{ opacity: pending ? 1 : 0 }}>
+        <div className="h-full w-2/5 rounded-full bg-zinc-900 dark:bg-zinc-100 [animation:bar-slide_1.5s_ease-in-out_infinite]" />
+      </div>
+
       <div className="flex justify-end">
         <div className="relative">
           <button
