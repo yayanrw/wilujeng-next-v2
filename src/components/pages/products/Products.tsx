@@ -21,7 +21,13 @@ import { ProductFilters } from './ProductFilters';
 import { ImportProductModal } from './ImportProductModal';
 import { QuickStockInModal } from './QuickStockInModal';
 
-export function Products() {
+export function Products({
+  statFilter,
+  onProductChanged,
+}: {
+  statFilter?: string;
+  onProductChanged?: () => void;
+}) {
   const [categoryId, setCategoryId] = useState('all');
   const [brandId, setBrandId] = useState('all');
   const [editId, setEditId] = useState<string | null>(null);
@@ -39,12 +45,13 @@ export function Products() {
       if (search) params.append('search', search);
       if (categoryId !== 'all') params.append('categoryId', categoryId);
       if (brandId !== 'all') params.append('brandId', brandId);
+      if (statFilter) params.append('filter', statFilter);
       params.append('limit', limit.toString());
       params.append('offset', offset.toString());
       const res = await fetch(`/api/products?${params.toString()}`);
       return res.json().catch(() => []) as Promise<ProductDto[]>;
     },
-    [categoryId, brandId],
+    [categoryId, brandId, statFilter],
   );
 
   const { items: products, loading, hasMore, search, setSearch, loadMore, refresh } =
@@ -61,6 +68,8 @@ export function Products() {
       const body = await res.json().catch(() => ({}));
       const ok = res.ok && (body.status === 'success' || body.updated === true);
       if (ok) {
+        refresh();
+        onProductChanged?.();
         showToast(t.products.updatedSuccess);
       } else {
         showToast(t.products.saveFailed);
@@ -84,6 +93,7 @@ export function Products() {
       const ok = res.ok && (body.deleted === true || body.deleted === 'true');
       if (ok) {
         refresh();
+        onProductChanged?.();
         showToast(t.products.deletedSuccess);
       } else {
         showToast(t.products.deleteFailed);
@@ -286,6 +296,7 @@ export function Products() {
             onSaved={(success, errorMsg) => {
               if (success) {
                 refresh();
+                onProductChanged?.();
                 showToast(editId ? t.products.updatedSuccess : t.products.createdSuccess);
               } else {
                 showToast(errorMsg || t.products.saveFailed);
@@ -305,6 +316,7 @@ export function Products() {
           onSuccess={() => {
             setQuickStockInProduct(null);
             refresh();
+            onProductChanged?.();
             showToast(t.products.quickStockInSuccess);
           }}
           onClose={() => setQuickStockInProduct(null)}
