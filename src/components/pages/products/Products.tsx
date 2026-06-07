@@ -2,7 +2,7 @@
 
 import { useCallback, useMemo, useState } from 'react';
 
-import { Plus, Pencil, ToggleRight, ToggleLeft, Trash, PackagePlus } from 'lucide-react';
+import { Plus, Pencil, ToggleRight, ToggleLeft, Trash, PackagePlus, MoreHorizontal, Loader2 } from 'lucide-react';
 
 import { Badge } from '@/components/ui/Badge';
 import { Button } from '@/components/ui/Button';
@@ -36,6 +36,7 @@ export function Products({
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const [deleting, setDeleting] = useState(false);
   const [quickStockInProduct, setQuickStockInProduct] = useState<ProductDto | null>(null);
+  const [actionMenuId, setActionMenuId] = useState<string | null>(null);
   const { showToast, Toast } = useToast();
   const { t } = useTranslation();
 
@@ -62,7 +63,7 @@ export function Products({
     [products, editId],
   );
 
-  async function handleStatusChange(id: string) {
+  const handleStatusChange = useCallback(async (id: string) => {
     try {
       const res = await fetch(`/api/products/${id}/status`, { method: 'PATCH' });
       const body = await res.json().catch(() => ({}));
@@ -77,7 +78,7 @@ export function Products({
     } catch {
       showToast(t.products.saveFailed);
     }
-  }
+  }, [refresh, onProductChanged, showToast, t]);
 
   function openDeleteDialog(id: string) {
     setDeletingId(id);
@@ -92,6 +93,7 @@ export function Products({
       const body = await res.json().catch(() => ({}));
       const ok = res.ok && (body.deleted === true || body.deleted === 'true');
       if (ok) {
+        if (deletingId === editId) setEditId(null);
         refresh();
         onProductChanged?.();
         showToast(t.products.deletedSuccess);
@@ -109,6 +111,11 @@ export function Products({
 
   return (
     <div className="grid grid-cols-1 gap-4 lg:grid-cols-[1fr_420px] min-w-0 overflow-x-hidden">
+      {/* Overlay to close mobile action menu on outside click */}
+      {actionMenuId && (
+        <div className="fixed inset-0 z-40" onClick={() => setActionMenuId(null)} />
+      )}
+
       <Card className="h-fit min-w-0">
         <CardHeader className="flex flex-col gap-4 pb-6">
           <div className="space-y-1.5">
@@ -116,7 +123,9 @@ export function Products({
               {t.products.title}
             </div>
             <div className="text-sm text-zinc-500 dark:text-zinc-400">
-              {t.products.subtitle}
+              {!loading && products.length > 0
+                ? `${products.length}${hasMore ? '+' : ''} ${t.products.productsLoaded}`
+                : t.products.subtitle}
             </div>
           </div>
           <ProductFilters
@@ -130,6 +139,16 @@ export function Products({
           />
         </CardHeader>
         <CardContent className="p-0 min-w-0">
+          <div className="relative">
+            {/* Stale-data overlay: shown when re-fetching while old rows are still visible */}
+            {loading && products.length > 0 && (
+              <div className="absolute inset-0 z-10 flex items-center justify-center rounded-b-xl bg-white/70 dark:bg-zinc-950/70 backdrop-blur-[1px]">
+                <div className="flex items-center gap-2 rounded-full border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 px-3 py-1.5 shadow-md text-xs font-medium text-zinc-600 dark:text-zinc-400">
+                  <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                  {t.products.loading}
+                </div>
+              </div>
+            )}
           <div className="w-full max-w-full overflow-x-auto" style={{ WebkitOverflowScrolling: 'touch' }}>
             <table className="w-full min-w-max text-sm">
               <thead>
@@ -146,15 +165,18 @@ export function Products({
                 {loading && products.length === 0 ? (
                   <TableLoading colSpan={6} message={t.products.loading} />
                 ) : products.length === 0 ? (
-                  <TableEmpty colSpan={6} message={t.products.noProducts} />
+                  <TableEmpty
+                    colSpan={6}
+                    message={statFilter ? t.products.noProductsInFilter : t.products.noProducts}
+                  />
                 ) : (
                   products.map((p) => (
                     <tr
                       key={p.id}
-                      className={`group transition-colors ${
+                      className={`group transition-colors border-l-2 ${
                         p.id === editId
-                          ? 'bg-zinc-50 dark:bg-zinc-900'
-                          : 'hover:bg-zinc-50/50 dark:hover:bg-zinc-900/50'
+                          ? 'border-l-zinc-900 dark:border-l-zinc-100 bg-zinc-50 dark:bg-zinc-900'
+                          : 'border-l-transparent hover:bg-zinc-50/50 dark:hover:bg-zinc-900/50'
                       }`}
                     >
                       <td className="py-3 px-4 align-middle">
@@ -211,49 +233,104 @@ export function Products({
                         )}
                       </td>
                       <td className="py-3 px-4 align-middle text-right">
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          className="h-8 w-8 p-0 text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-100 transition-colors"
-                          onClick={() => setQuickStockInProduct(p)}
-                          title={t.products.quickStockIn}
-                        >
-                          <PackagePlus className="h-4 w-4" />
-                          <span className="sr-only">{t.products.quickStockIn}</span>
-                        </Button>
-                        <Button
-                          variant="ghost"
-                          className="h-8 w-8 p-0 text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-100 transition-colors"
-                          size="sm"
-                          title={p.isActive ? t.products.deactivate : t.products.activate}
-                          onClick={() => handleStatusChange(p.id)}
-                        >
-                          {p.isActive ? (
-                            <ToggleRight className="h-4 w-4" />
-                          ) : (
-                            <ToggleLeft className="h-4 w-4" />
+                        {/* Desktop: all buttons inline */}
+                        <div className="hidden sm:flex items-center justify-end">
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            className="h-8 w-8 p-0 text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-100 transition-colors"
+                            onClick={() => setQuickStockInProduct(p)}
+                            title={t.products.quickStockIn}
+                          >
+                            <PackagePlus className="h-4 w-4" />
+                            <span className="sr-only">{t.products.quickStockIn}</span>
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            className="h-8 w-8 p-0 text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-100 transition-colors"
+                            title={p.isActive ? t.products.deactivate : t.products.activate}
+                            onClick={() => handleStatusChange(p.id)}
+                          >
+                            {p.isActive ? (
+                              <ToggleRight className="h-4 w-4" />
+                            ) : (
+                              <ToggleLeft className="h-4 w-4" />
+                            )}
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            className="h-8 w-8 p-0 text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-100 transition-colors"
+                            onClick={() => setEditId(p.id)}
+                            title={t.products.editProduct}
+                          >
+                            <Pencil className="h-4 w-4" />
+                            <span className="sr-only">{t.common.edit}</span>
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            className="h-8 w-8 p-0 text-red-500 hover:text-red-600 dark:text-red-400 dark:hover:text-red-300 transition-colors"
+                            onClick={() => openDeleteDialog(p.id)}
+                            title={t.common.delete}
+                          >
+                            <Trash className="h-4 w-4" />
+                            <span className="sr-only">{t.common.delete}</span>
+                          </Button>
+                        </div>
+
+                        {/* Mobile: … dropdown menu */}
+                        <div className="sm:hidden relative">
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            className="h-8 w-8 p-0 text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-100 transition-colors"
+                            onClick={() => setActionMenuId(actionMenuId === p.id ? null : p.id)}
+                          >
+                            <MoreHorizontal className="h-4 w-4" />
+                            <span className="sr-only">Actions</span>
+                          </Button>
+                          {actionMenuId === p.id && (
+                            <div className="absolute right-0 top-9 z-50 w-44 rounded-xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-950 shadow-xl py-1">
+                              <button
+                                type="button"
+                                className="flex w-full items-center gap-2.5 px-3 py-2 text-sm text-zinc-700 dark:text-zinc-300 hover:bg-zinc-50 dark:hover:bg-zinc-900 transition-colors"
+                                onClick={() => { setQuickStockInProduct(p); setActionMenuId(null); }}
+                              >
+                                <PackagePlus className="h-4 w-4 text-zinc-400 shrink-0" />
+                                {t.products.quickStockIn}
+                              </button>
+                              <button
+                                type="button"
+                                className="flex w-full items-center gap-2.5 px-3 py-2 text-sm text-zinc-700 dark:text-zinc-300 hover:bg-zinc-50 dark:hover:bg-zinc-900 transition-colors"
+                                onClick={() => { void handleStatusChange(p.id); setActionMenuId(null); }}
+                              >
+                                {p.isActive
+                                  ? <ToggleRight className="h-4 w-4 text-zinc-400 shrink-0" />
+                                  : <ToggleLeft className="h-4 w-4 text-zinc-400 shrink-0" />}
+                                {p.isActive ? t.products.deactivate : t.products.activate}
+                              </button>
+                              <button
+                                type="button"
+                                className="flex w-full items-center gap-2.5 px-3 py-2 text-sm text-zinc-700 dark:text-zinc-300 hover:bg-zinc-50 dark:hover:bg-zinc-900 transition-colors"
+                                onClick={() => { setEditId(p.id); setActionMenuId(null); }}
+                              >
+                                <Pencil className="h-4 w-4 text-zinc-400 shrink-0" />
+                                {t.common.edit}
+                              </button>
+                              <div className="mx-2 my-1 h-px bg-zinc-100 dark:bg-zinc-800" />
+                              <button
+                                type="button"
+                                className="flex w-full items-center gap-2.5 px-3 py-2 text-sm text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors"
+                                onClick={() => { openDeleteDialog(p.id); setActionMenuId(null); }}
+                              >
+                                <Trash className="h-4 w-4 shrink-0" />
+                                {t.common.delete}
+                              </button>
+                            </div>
                           )}
-                        </Button>
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          className="h-8 w-8 p-0 text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-100 transition-colors"
-                          onClick={() => setEditId(p.id)}
-                          title={t.products.editProduct}
-                        >
-                          <Pencil className="h-4 w-4" />
-                          <span className="sr-only">{t.common.edit}</span>
-                        </Button>
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          className="h-8 w-8 p-0 text-red-500 hover:text-red-600 dark:text-red-400 dark:hover:text-red-300 transition-colors"
-                          onClick={() => openDeleteDialog(p.id)}
-                          title={t.common.delete}
-                        >
-                          <Trash className="h-4 w-4" />
-                          <span className="sr-only">{t.common.delete}</span>
-                        </Button>
+                        </div>
                       </td>
                     </tr>
                   ))
@@ -261,10 +338,11 @@ export function Products({
               </tbody>
             </table>
           </div>
+          </div>{/* end relative wrapper */}
 
           <LoadMoreButton
             onClick={loadMore}
-            hasMore={hasMore && products.length > 0}
+            hasMore={hasMore && products.length > 0 && !loading}
             label={t.products.loadMore}
           />
         </CardContent>
@@ -295,9 +373,11 @@ export function Products({
             initial={editId ? (selected ?? undefined) : undefined}
             onSaved={(success, errorMsg) => {
               if (success) {
+                const wasEdit = !!editId;
+                if (editId) setEditId(null);
                 refresh();
                 onProductChanged?.();
-                showToast(editId ? t.products.updatedSuccess : t.products.createdSuccess);
+                showToast(wasEdit ? t.products.updatedSuccess : t.products.createdSuccess);
               } else {
                 showToast(errorMsg || t.products.saveFailed);
               }
@@ -330,6 +410,7 @@ export function Products({
           showToast(msg);
           setIsImportModalOpen(false);
           refresh();
+          onProductChanged?.();
         }}
       />
       <ConfirmDialog
