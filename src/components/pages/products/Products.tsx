@@ -2,7 +2,7 @@
 
 import { useCallback, useMemo, useState } from 'react';
 
-import { Plus, Pencil, ToggleRight, ToggleLeft, Trash } from 'lucide-react';
+import { Plus, Pencil, ToggleRight, ToggleLeft, Trash, PackagePlus } from 'lucide-react';
 
 import { Badge } from '@/components/ui/Badge';
 import { Button } from '@/components/ui/Button';
@@ -19,8 +19,15 @@ import { useToast } from '@/hooks/useToast';
 import { ProductDto, ProductForm } from './ProductForm';
 import { ProductFilters } from './ProductFilters';
 import { ImportProductModal } from './ImportProductModal';
+import { QuickStockInModal } from './QuickStockInModal';
 
-export function Products() {
+export function Products({
+  statFilter,
+  onProductChanged,
+}: {
+  statFilter?: string;
+  onProductChanged?: () => void;
+}) {
   const [categoryId, setCategoryId] = useState('all');
   const [brandId, setBrandId] = useState('all');
   const [editId, setEditId] = useState<string | null>(null);
@@ -28,6 +35,7 @@ export function Products() {
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const [deleting, setDeleting] = useState(false);
+  const [quickStockInProduct, setQuickStockInProduct] = useState<ProductDto | null>(null);
   const { showToast, Toast } = useToast();
   const { t } = useTranslation();
 
@@ -37,12 +45,13 @@ export function Products() {
       if (search) params.append('search', search);
       if (categoryId !== 'all') params.append('categoryId', categoryId);
       if (brandId !== 'all') params.append('brandId', brandId);
+      if (statFilter) params.append('filter', statFilter);
       params.append('limit', limit.toString());
       params.append('offset', offset.toString());
       const res = await fetch(`/api/products?${params.toString()}`);
       return res.json().catch(() => []) as Promise<ProductDto[]>;
     },
-    [categoryId, brandId],
+    [categoryId, brandId, statFilter],
   );
 
   const { items: products, loading, hasMore, search, setSearch, loadMore, refresh } =
@@ -59,6 +68,8 @@ export function Products() {
       const body = await res.json().catch(() => ({}));
       const ok = res.ok && (body.status === 'success' || body.updated === true);
       if (ok) {
+        refresh();
+        onProductChanged?.();
         showToast(t.products.updatedSuccess);
       } else {
         showToast(t.products.saveFailed);
@@ -82,6 +93,7 @@ export function Products() {
       const ok = res.ok && (body.deleted === true || body.deleted === 'true');
       if (ok) {
         refresh();
+        onProductChanged?.();
         showToast(t.products.deletedSuccess);
       } else {
         showToast(t.products.deleteFailed);
@@ -201,6 +213,16 @@ export function Products() {
                       <td className="py-3 px-4 align-middle text-right">
                         <Button
                           variant="ghost"
+                          size="sm"
+                          className="h-8 w-8 p-0 text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-100 transition-colors"
+                          onClick={() => setQuickStockInProduct(p)}
+                          title={t.products.quickStockIn}
+                        >
+                          <PackagePlus className="h-4 w-4" />
+                          <span className="sr-only">{t.products.quickStockIn}</span>
+                        </Button>
+                        <Button
+                          variant="ghost"
                           className="h-8 w-8 p-0 text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-100 transition-colors"
                           size="sm"
                           title={p.isActive ? t.products.deactivate : t.products.activate}
@@ -274,18 +296,32 @@ export function Products() {
             onSaved={(success, errorMsg) => {
               if (success) {
                 refresh();
+                onProductChanged?.();
                 showToast(editId ? t.products.updatedSuccess : t.products.createdSuccess);
               } else {
                 showToast(errorMsg || t.products.saveFailed);
               }
             }}
-            onStockAdded={() => {
-              refresh();
-              showToast(t.products.quickStockInSuccess);
-            }}
           />
         </CardContent>
       </Card>
+
+      {quickStockInProduct && (
+        <QuickStockInModal
+          open
+          productId={quickStockInProduct.id}
+          productName={quickStockInProduct.name}
+          currentStock={quickStockInProduct.stock}
+          currentBuyPrice={quickStockInProduct.buyPrice}
+          onSuccess={() => {
+            setQuickStockInProduct(null);
+            refresh();
+            onProductChanged?.();
+            showToast(t.products.quickStockInSuccess);
+          }}
+          onClose={() => setQuickStockInProduct(null)}
+        />
+      )}
 
       <ImportProductModal
         open={isImportModalOpen}

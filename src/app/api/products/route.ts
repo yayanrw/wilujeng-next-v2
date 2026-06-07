@@ -1,4 +1,4 @@
-import { and, asc, eq, ilike, inArray } from 'drizzle-orm';
+import { and, asc, eq, ilike, inArray, sql } from 'drizzle-orm';
 import { z } from 'zod';
 
 import { db } from '@/db';
@@ -30,6 +30,9 @@ export async function GET(req: Request) {
   const categoryId = nonEmpty(searchParams.get('categoryId'));
   const brandId = nonEmpty(searchParams.get('brandId'));
   const exactSku = nonEmpty(searchParams.get('exactSku'));
+  const filter = nonEmpty(searchParams.get('filter')) as
+    | 'active' | 'inactive' | 'out_of_stock' | 'low_stock' | 'bxgy'
+    | null;
 
   // Fast path: exact SKU lookup for duplicate checking — no cache, minimal columns
   if (exactSku) {
@@ -49,7 +52,7 @@ export async function GET(req: Request) {
   const offset = isNaN(offsetParam) || offsetParam < 0 ? 0 : offsetParam;
 
   // Create a unique cache key based on query parameters
-  const cacheKey = `products:catalog:${search || 'all'}:${categoryId || 'all'}:${brandId || 'all'}:${limit}:${offset}`;
+  const cacheKey = `products:catalog:${search || 'all'}:${categoryId || 'all'}:${brandId || 'all'}:${filter || 'all'}:${limit}:${offset}`;
 
   // Try to get data from Redis cache first
   const cachedProducts = await getCachedData(cacheKey);
@@ -57,11 +60,25 @@ export async function GET(req: Request) {
     return json(cachedProducts);
   }
 
+  const filterCondition =
+    filter === 'active' ? eq(products.isActive, true) :
+    filter === 'inactive' ? eq(products.isActive, false) :
+    filter === 'out_of_stock' ? and(eq(products.isActive, true), eq(products.stock, 0)) :
+    filter === 'low_stock' ? and(
+      eq(products.isActive, true),
+      sql`${products.stock} > 0`,
+      sql`${products.stock} <= ${products.minStockThreshold}`,
+      sql`${products.minStockThreshold} > 0`,
+    ) :
+    filter === 'bxgy' ? sql`EXISTS (SELECT 1 FROM product_bxgy_promos WHERE product_bxgy_promos.product_id = ${products.id} AND product_bxgy_promos.active = true)` :
+    undefined;
+
   const where = and(
     search ? ilike(products.name, `%${search}%`) : undefined,
     categoryId ? eq(products.categoryId, categoryId) : undefined,
     brandId ? eq(products.brandId, brandId) : undefined,
     eq(products.isDeleted, false),
+    filterCondition,
   );
 
   const rows = await db

@@ -37,14 +37,13 @@ function playFailSound() {
   } catch { /* silently ignore if AudioContext unavailable */ }
 }
 
-import { Plus, Trash2, Dices, Camera, PackagePlus, Info, X } from 'lucide-react';
+import { Plus, Trash2, Dices, Camera, Info, X } from 'lucide-react';
 
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
 import { Textarea } from '@/components/ui/Textarea';
 import { AutocompleteInput } from '@/components/ui/AutocompleteInput';
 import { BarcodeScannerModal } from '../pos/BarcodeScannerModal';
-import { QuickStockInModal } from './QuickStockInModal';
 import { useTranslation } from '@/i18n/useTranslation';
 import { useToast } from '@/hooks/useToast';
 import { useCatalogMetaStore } from '@/stores/catalogMetaStore';
@@ -80,12 +79,10 @@ export function ProductForm({
   mode,
   initial,
   onSaved,
-  onStockAdded,
 }: {
   mode: 'create' | 'edit';
   initial?: ProductDto;
   onSaved: (success: boolean, errorMsg?: string) => void;
-  onStockAdded?: () => void;
 }) {
   const missingEdit = mode === 'edit' && !initial;
 
@@ -108,7 +105,6 @@ export function ProductForm({
   const [pending, setPending] = useState(false);
   const [submitted, setSubmitted] = useState(false);
   const [scannerOpen, setScannerOpen] = useState(false);
-  const [quickStockInOpen, setQuickStockInOpen] = useState(false);
   const [shortcutsOpen, setShortcutsOpen] = useState(false);
   const formRef = useRef<HTMLFormElement>(null);
   const skuInputRef = useRef<HTMLInputElement>(null);
@@ -270,9 +266,10 @@ export function ProductForm({
   }
 
   return (
+    <>
     <form
       ref={formRef}
-      className="flex flex-col gap-3"
+      className={`flex flex-col gap-3 transition-opacity duration-150${pending ? ' opacity-60 pointer-events-none' : ''}`}
       onKeyDown={(e) => {
         if (e.shiftKey && e.key === 'Enter') {
           e.preventDefault();
@@ -428,6 +425,11 @@ export function ProductForm({
         formRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
       }}
     >
+      {/* Loading progress bar — always reserves h-1 space, animates when pending */}
+      <div className="h-1 w-full overflow-hidden rounded-full bg-zinc-100 dark:bg-zinc-800" style={{ opacity: pending ? 1 : 0 }}>
+        <div className="h-full w-2/5 rounded-full bg-zinc-900 dark:bg-zinc-100 [animation:bar-slide_1.5s_ease-in-out_infinite]" />
+      </div>
+
       <div className="flex justify-end">
         <div className="relative">
           <button
@@ -581,107 +583,86 @@ export function ProductForm({
 
       <div className="h-px w-full bg-zinc-100 dark:bg-zinc-800 my-2" />
 
-      <div className={`grid ${mode === 'edit' ? 'grid-cols-2' : 'grid-cols-1'} gap-4`}>
-        {mode === 'edit' && (
-          <div>
-            <label className="text-xs font-semibold uppercase tracking-wider text-zinc-500 dark:text-zinc-400">
-              {t.products.buyPrice}
-            </label>
-            <div className="flex items-center gap-1 mt-1.5 rounded-md border border-zinc-200 dark:border-zinc-800 bg-zinc-100/50 dark:bg-zinc-900/50 px-3 py-2 text-sm font-medium tabular-nums text-zinc-700 dark:text-zinc-300">
-              <span className="text-zinc-400 dark:text-zinc-500 text-sm">Rp</span>
-              {(initial?.buyPrice ?? 0).toLocaleString('id-ID')}
-            </div>
-          </div>
-        )}
-        <div>
-          <label className="text-xs font-semibold uppercase tracking-wider text-zinc-500 dark:text-zinc-400">
-            {t.products.basePrice}
-          </label>
-          <div className="relative mt-1.5">
-            <span className="absolute left-3 top-1/2 -translate-y-1/2 text-zinc-500 text-sm font-medium">
-              Rp
-            </span>
-            <Input
-              ref={basePriceInputRef}
-              className="pl-9 font-medium tabular-nums"
-              inputMode="numeric"
-              value={basePrice ? String(basePrice) : ''}
-              onChange={(e) =>
-                setBasePrice(Number(e.target.value.replace(/[^0-9]/g, '')) || 0)
-              }
-              onKeyDown={(e) => {
-                if (e.key === 'Enter') {
-                  e.preventDefault();
-                  minStockInputRef.current?.focus();
-                }
-              }}
-              placeholder="0"
-            />
-          </div>
-        </div>
-      </div>
-
-      {mode === 'edit' && (
-        <div>
-          <label className="text-xs font-semibold uppercase tracking-wider text-zinc-500 dark:text-zinc-400">
-            {t.products.averageCost}
-          </label>
-          <div className="flex items-center gap-1 mt-1.5 rounded-md border border-zinc-200 dark:border-zinc-800 bg-zinc-100/50 dark:bg-zinc-900/50 px-3 py-2 text-sm font-medium tabular-nums text-zinc-700 dark:text-zinc-300">
-            <span className="text-zinc-400 dark:text-zinc-500 text-sm">Rp</span>
-            {(initial?.averageCost ?? 0).toLocaleString('id-ID')}
-          </div>
-        </div>
-      )}
-
-      <div className={`grid ${mode === 'edit' ? 'grid-cols-2' : 'grid-cols-1'} gap-4`}>
-        {mode === 'edit' && (
-          <div>
-            <label className="text-xs font-semibold uppercase tracking-wider text-zinc-500 dark:text-zinc-400">
-              {t.products.stock}
-            </label>
-            <div className="mt-1.5 rounded-md border border-zinc-200 dark:border-zinc-800 bg-zinc-100/50 dark:bg-zinc-900/50 px-3 py-2 text-sm font-medium tabular-nums text-zinc-700 dark:text-zinc-300">
-              {initial?.stock ?? 0}
-            </div>
-          </div>
-        )}
-        <div>
-          <label className="text-xs font-semibold uppercase tracking-wider text-zinc-500 dark:text-zinc-400">
-            {t.products.minStock}
-          </label>
+      <div>
+        <label className="text-xs font-semibold uppercase tracking-wider text-zinc-500 dark:text-zinc-400">
+          {t.products.basePrice}
+        </label>
+        <div className="relative mt-1.5">
+          <span className="absolute left-3 top-1/2 -translate-y-1/2 text-zinc-500 text-sm font-medium">
+            Rp
+          </span>
           <Input
-            ref={minStockInputRef}
-            className="mt-1.5 font-medium tabular-nums"
+            ref={basePriceInputRef}
+            className="pl-9 font-medium tabular-nums"
             inputMode="numeric"
-            value={String(minStockThreshold)}
+            value={basePrice ? String(basePrice) : ''}
             onChange={(e) =>
-              setMinStockThreshold(
-                Number(e.target.value.replace(/[^0-9]/g, '')) || 0,
-              )
+              setBasePrice(Number(e.target.value.replace(/[^0-9]/g, '')) || 0)
             }
             onKeyDown={(e) => {
               if (e.key === 'Enter') {
                 e.preventDefault();
-                if (mode === 'create' && initialStockEnabled) {
-                  initialStockQtyRef.current?.focus();
-                }
+                minStockInputRef.current?.focus();
               }
             }}
+            placeholder="0"
           />
         </div>
       </div>
 
-      {mode === 'edit' && initial && (
-        <Button
-          type="button"
-          variant="secondary"
-          size="sm"
-          className="w-full"
-          onClick={() => setQuickStockInOpen(true)}
-        >
-          <PackagePlus className="h-4 w-4" />
-          {t.products.quickStockIn}
-        </Button>
+      {mode === 'edit' && (
+        <div className="grid grid-cols-3 gap-3 rounded-lg bg-zinc-50 dark:bg-zinc-900/60 border border-zinc-100 dark:border-zinc-800/60 px-3 py-2.5">
+          <div className="min-w-0">
+            <div className="text-[10px] font-semibold uppercase tracking-wider text-zinc-400 dark:text-zinc-500 truncate">
+              {t.products.buyPrice}
+            </div>
+            <div className="mt-0.5 text-sm font-semibold tabular-nums text-zinc-700 dark:text-zinc-300 truncate">
+              Rp {(initial?.buyPrice ?? 0).toLocaleString('id-ID')}
+            </div>
+          </div>
+          <div className="min-w-0">
+            <div className="text-[10px] font-semibold uppercase tracking-wider text-zinc-400 dark:text-zinc-500 truncate">
+              {t.products.averageCost}
+            </div>
+            <div className="mt-0.5 text-sm font-semibold tabular-nums text-zinc-700 dark:text-zinc-300 truncate">
+              Rp {(initial?.averageCost ?? 0).toLocaleString('id-ID')}
+            </div>
+          </div>
+          <div className="min-w-0">
+            <div className="text-[10px] font-semibold uppercase tracking-wider text-zinc-400 dark:text-zinc-500">
+              {t.products.stock}
+            </div>
+            <div className="mt-0.5 text-sm font-semibold tabular-nums text-zinc-700 dark:text-zinc-300">
+              {initial?.stock ?? 0}
+            </div>
+          </div>
+        </div>
       )}
+
+      <div>
+        <label className="text-xs font-semibold uppercase tracking-wider text-zinc-500 dark:text-zinc-400">
+          {t.products.minStock}
+        </label>
+        <Input
+          ref={minStockInputRef}
+          className="mt-1.5 font-medium tabular-nums"
+          inputMode="numeric"
+          value={String(minStockThreshold)}
+          onChange={(e) =>
+            setMinStockThreshold(
+              Number(e.target.value.replace(/[^0-9]/g, '')) || 0,
+            )
+          }
+          onKeyDown={(e) => {
+            if (e.key === 'Enter') {
+              e.preventDefault();
+              if (mode === 'create' && initialStockEnabled) {
+                initialStockQtyRef.current?.focus();
+              }
+            }
+          }}
+        />
+      </div>
 
       <div className="h-px w-full bg-zinc-100 dark:bg-zinc-800 my-2" />
 
@@ -729,8 +710,8 @@ export function ProductForm({
                     ref={initialStockQtyRef}
                     className="mt-1 h-8 text-sm tabular-nums"
                     inputMode="numeric"
-                    value={initialStockQty > 0 ? String(initialStockQty) : ''}
-                    placeholder="1"
+                    value=""
+                    placeholder="0"
                     onChange={(e) =>
                       setInitialStockQty(Number(e.target.value.replace(/[^0-9]/g, '')) || 0)
                     }
@@ -1180,37 +1161,24 @@ export function ProductForm({
         {pending ? t.common.saving : t.products.saveProduct}
       </Button>
 
-      <BarcodeScannerModal
-        open={scannerOpen}
-        onScan={(code) => {
-          setSku(code);
-          setScannerOpen(false);
-          if (mode === 'create') {
-            checkSku(code).then((exists) => {
-              if (!exists) nameInputRef.current?.focus();
-            });
-          }
-        }}
-        onClose={() => setScannerOpen(false)}
-        scanIntervalMs={0}
-      />
-
-      {mode === 'edit' && initial && (
-        <QuickStockInModal
-          open={quickStockInOpen}
-          productId={initial.id}
-          productName={initial.name}
-          currentStock={stock}
-          currentBuyPrice={buyPrice}
-          onSuccess={() => {
-            setQuickStockInOpen(false);
-            onStockAdded?.();
-          }}
-          onClose={() => setQuickStockInOpen(false)}
-        />
-      )}
-
-      <Toast />
     </form>
+
+    <BarcodeScannerModal
+      open={scannerOpen}
+      onScan={(code) => {
+        setSku(code);
+        setScannerOpen(false);
+        if (mode === 'create') {
+          checkSku(code).then((exists) => {
+            if (!exists) nameInputRef.current?.focus();
+          });
+        }
+      }}
+      onClose={() => setScannerOpen(false)}
+      scanIntervalMs={0}
+    />
+
+    <Toast />
+    </>
   );
 }

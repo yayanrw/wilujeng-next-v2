@@ -50,6 +50,13 @@ body {
   background-color: #a1a1aa; /* zinc-400 */
 }
 
+/* Indeterminate loading bar for form submission */
+@keyframes bar-slide {
+  0%   { transform: translateX(-100%); }
+  60%  { transform: translateX(300%); }
+  100% { transform: translateX(300%); }
+}
+
 /* Force NProgress Visibility */
 #nprogress {
   pointer-events: none;
