@@ -163,7 +163,7 @@ export function ProductForm({
 
   // Initial stock section (create mode only)
   const [initialStockEnabled, setInitialStockEnabled] = useState(false);
-  const [initialStockQty, setInitialStockQty] = useState(1);
+  const [initialStockQty, setInitialStockQty] = useState(0);
   const [initialStockBuyPrice, setInitialStockBuyPrice] = useState(0);
   const [initialStockSupplier, setInitialStockSupplier] = useState('');
   const [initialStockExpiry, setInitialStockExpiry] = useState('');
@@ -220,7 +220,7 @@ export function ProductForm({
       setPromo(null);
       setPromoEnabled(false);
       setInitialStockEnabled(false);
-      setInitialStockQty(1);
+      setInitialStockQty(0);
       setInitialStockBuyPrice(0);
       setInitialStockSupplier('');
       setInitialStockExpiry('');
@@ -411,7 +411,7 @@ export function ProductForm({
           setPromoValidTo('');
           setPromoMaxMultiplier('');
           setInitialStockEnabled(false);
-          setInitialStockQty(1);
+          setInitialStockQty(0);
           setInitialStockBuyPrice(0);
           setInitialStockSupplier('');
           setInitialStockExpiry('');
@@ -710,7 +710,7 @@ export function ProductForm({
                     ref={initialStockQtyRef}
                     className="mt-1 h-8 text-sm tabular-nums"
                     inputMode="numeric"
-                    value=""
+                    value={initialStockQty > 0 ? String(initialStockQty) : ''}
                     placeholder="0"
                     onChange={(e) =>
                       setInitialStockQty(Number(e.target.value.replace(/[^0-9]/g, '')) || 0)
