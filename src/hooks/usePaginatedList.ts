@@ -90,8 +90,7 @@ export function usePaginatedList<T>({
   useEffect(() => {
     if (isFirstRender.current) {
       isFirstRender.current = false;
-      // Return cleanup that resets the flag so React StrictMode double-invoke is handled correctly
-      return () => { isFirstRender.current = true; };
+      return; // no cleanup — returning a cleanup would reset the flag on every re-run
     }
     if (debounceTimeoutRef.current) clearTimeout(debounceTimeoutRef.current);
     setItems([]);
