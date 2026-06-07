@@ -11,6 +11,7 @@ type SearchableSelectProps = {
   options: Option[];
   allLabel: string;
   searchPlaceholder?: string;
+  noResultsText?: string;
   className?: string;
 };
 
@@ -20,6 +21,7 @@ export function SearchableSelect({
   options,
   allLabel,
   searchPlaceholder = 'Search...',
+  noResultsText,
   className,
 }: SearchableSelectProps) {
   const [isOpen, setIsOpen] = useState(false);
@@ -118,7 +120,7 @@ export function SearchableSelect({
             ))}
             {filtered.length === 0 && (
               <div className="px-2 py-1.5 text-sm text-zinc-400 dark:text-zinc-500">
-                {searchPlaceholder}…
+                {noResultsText ?? `${searchPlaceholder}…`}
               </div>
             )}
           </div>

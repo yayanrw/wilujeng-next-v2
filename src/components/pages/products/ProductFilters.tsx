@@ -1,6 +1,6 @@
 'use client';
 
-import { FileUp } from 'lucide-react';
+import { FilterX, FileUp } from 'lucide-react';
 
 import { Button } from '@/components/ui/Button';
 import { SearchInput } from '@/components/ui/SearchInput';
@@ -27,23 +27,25 @@ export function ProductFilters({
 }) {
   const { categories, brands } = useCatalogMeta();
   const { t } = useTranslation();
+  const hasActiveFilters = categoryId !== 'all' || brandId !== 'all';
 
   return (
-    <div className="flex flex-col sm:flex-row gap-3 w-full pt-2">
+    <div className="flex flex-col gap-2.5 w-full pt-2">
       <SearchInput
         placeholder={t.products.searchPlaceholder}
         value={search}
         onChange={(e) => onSearchChange(e.target.value)}
-        wrapperClassName="flex-1"
+        wrapperClassName="w-full"
       />
-      <div className="flex flex-wrap gap-3 w-full sm:w-auto sm:flex-nowrap">
+      <div className="flex items-center gap-2 flex-wrap">
         <SearchableSelect
           value={categoryId}
           onChange={onCategoryChange}
           options={categories}
           allLabel={t.common.allCategories}
           searchPlaceholder={t.common.search}
-          className="w-full sm:w-45"
+          noResultsText={t.products.noMatches}
+          className="flex-1 min-w-[120px] sm:flex-none sm:w-36"
         />
         <SearchableSelect
           value={brandId}
@@ -51,11 +53,26 @@ export function ProductFilters({
           options={brands}
           allLabel={t.common.allBrands}
           searchPlaceholder={t.common.search}
-          className="w-full sm:w-45"
+          noResultsText={t.products.noMatches}
+          className="flex-1 min-w-[120px] sm:flex-none sm:w-36"
         />
+        {hasActiveFilters && (
+          <Button
+            variant="ghost"
+            className="shrink-0 h-10 w-10 p-0 text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-300"
+            onClick={() => {
+              onCategoryChange('all');
+              onBrandChange('all');
+            }}
+            title={t.products.clearFilters}
+          >
+            <FilterX className="h-4 w-4" />
+            <span className="sr-only">{t.products.clearFilters}</span>
+          </Button>
+        )}
         <Button
           variant="secondary"
-          className="h-10 whitespace-nowrap bg-white dark:bg-zinc-950 gap-1.5"
+          className="ml-auto shrink-0 whitespace-nowrap gap-1.5"
           onClick={onImport}
         >
           <FileUp className="h-4 w-4 shrink-0" />
