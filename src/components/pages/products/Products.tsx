@@ -2,7 +2,7 @@
 
 import { useCallback, useMemo, useState } from 'react';
 
-import { Plus, Pencil, ToggleRight, ToggleLeft, Trash, PackagePlus, MoreHorizontal, Loader2 } from 'lucide-react';
+import { Plus, Pencil, ToggleRight, ToggleLeft, Trash, PackagePlus, MoreHorizontal, Loader2, ChevronUp, ChevronDown, ChevronsUpDown } from 'lucide-react';
 
 import { Badge } from '@/components/ui/Badge';
 import { Button } from '@/components/ui/Button';
@@ -21,6 +21,40 @@ import { ProductFilters } from './ProductFilters';
 import { ImportProductModal } from './ImportProductModal';
 import { QuickStockInModal } from './QuickStockInModal';
 
+type SortField = 'name' | 'basePrice' | 'stock';
+
+function SortHeader({
+  label,
+  field,
+  sortField,
+  sortDir,
+  onSort,
+}: {
+  label: string;
+  field: SortField;
+  sortField: SortField;
+  sortDir: 'asc' | 'desc';
+  onSort: (field: SortField) => void;
+}) {
+  const isActive = sortField === field;
+  return (
+    <button
+      type="button"
+      className="flex items-center gap-1 hover:text-zinc-900 dark:hover:text-zinc-100 transition-colors"
+      onClick={() => onSort(field)}
+    >
+      {label}
+      {isActive ? (
+        sortDir === 'asc'
+          ? <ChevronUp className="h-3.5 w-3.5 text-zinc-700 dark:text-zinc-300" />
+          : <ChevronDown className="h-3.5 w-3.5 text-zinc-700 dark:text-zinc-300" />
+      ) : (
+        <ChevronsUpDown className="h-3.5 w-3.5 opacity-30" />
+      )}
+    </button>
+  );
+}
+
 export function Products({
   statFilter,
   onProductChanged,
@@ -37,8 +71,19 @@ export function Products({
   const [deleting, setDeleting] = useState(false);
   const [quickStockInProduct, setQuickStockInProduct] = useState<ProductDto | null>(null);
   const [actionMenuId, setActionMenuId] = useState<string | null>(null);
+  const [sortField, setSortField] = useState<'name' | 'basePrice' | 'stock'>('name');
+  const [sortDir, setSortDir] = useState<'asc' | 'desc'>('asc');
   const { showToast, Toast } = useToast();
   const { t } = useTranslation();
+
+  const handleSort = useCallback((field: 'name' | 'basePrice' | 'stock') => {
+    if (field === sortField) {
+      setSortDir((d) => (d === 'asc' ? 'desc' : 'asc'));
+    } else {
+      setSortField(field);
+      setSortDir('asc');
+    }
+  }, [sortField]);
 
   const fetchFn = useCallback(
     async ({ search, offset, limit }: { search: string; offset: number; limit: number }) => {
@@ -47,12 +92,14 @@ export function Products({
       if (categoryId !== 'all') params.append('categoryId', categoryId);
       if (brandId !== 'all') params.append('brandId', brandId);
       if (statFilter) params.append('filter', statFilter);
+      params.append('sort', sortField);
+      params.append('order', sortDir);
       params.append('limit', limit.toString());
       params.append('offset', offset.toString());
       const res = await fetch(`/api/products?${params.toString()}`);
       return res.json().catch(() => []) as Promise<ProductDto[]>;
     },
-    [categoryId, brandId, statFilter],
+    [categoryId, brandId, statFilter, sortField, sortDir],
   );
 
   const { items: products, loading, hasMore, search, setSearch, loadMore, refresh } =
@@ -154,9 +201,15 @@ export function Products({
               <thead>
                 <tr className="border-y border-zinc-200 dark:border-zinc-800 bg-zinc-50/50 dark:bg-zinc-900/50 text-left text-zinc-500 dark:text-zinc-400">
                   <th className="py-3 px-4 font-medium">{t.products.sku}</th>
-                  <th className="py-3 px-4 font-medium">{t.products.name}</th>
-                  <th className="py-3 px-4 font-medium">{t.products.price}</th>
-                  <th className="py-3 px-4 font-medium hidden sm:table-cell">{t.products.stock}</th>
+                  <th className="py-3 px-4 font-medium">
+                    <SortHeader label={t.products.name} field="name" sortField={sortField} sortDir={sortDir} onSort={handleSort} />
+                  </th>
+                  <th className="py-3 px-4 font-medium">
+                    <SortHeader label={t.products.price} field="basePrice" sortField={sortField} sortDir={sortDir} onSort={handleSort} />
+                  </th>
+                  <th className="py-3 px-4 font-medium hidden sm:table-cell">
+                    <SortHeader label={t.products.stock} field="stock" sortField={sortField} sortDir={sortDir} onSort={handleSort} />
+                  </th>
                   <th className="py-3 px-4 font-medium hidden sm:table-cell">{t.products.active}</th>
                   <th className="py-3 px-4 font-medium text-right">{t.products.action}</th>
                 </tr>

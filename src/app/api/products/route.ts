@@ -1,4 +1,4 @@
-import { and, asc, eq, ilike, inArray, sql } from 'drizzle-orm';
+import { and, asc, desc, eq, ilike, inArray, sql } from 'drizzle-orm';
 import { z } from 'zod';
 
 import { db } from '@/db';
@@ -51,8 +51,21 @@ export async function GET(req: Request) {
     isNaN(limitParam) || limitParam <= 0 ? 50 : Math.min(limitParam, 200);
   const offset = isNaN(offsetParam) || offsetParam < 0 ? 0 : offsetParam;
 
+  // Sorting
+  const sortParam = searchParams.get('sort');
+  const sortField: 'name' | 'basePrice' | 'stock' =
+    sortParam === 'basePrice' ? 'basePrice' :
+    sortParam === 'stock' ? 'stock' :
+    'name';
+  const sortOrder = searchParams.get('order') === 'desc' ? 'desc' : 'asc';
+  const sortCol =
+    sortField === 'basePrice' ? products.basePrice :
+    sortField === 'stock' ? products.stock :
+    products.name;
+  const orderFn = sortOrder === 'desc' ? desc : asc;
+
   // Create a unique cache key based on query parameters
-  const cacheKey = `products:catalog:${search || 'all'}:${categoryId || 'all'}:${brandId || 'all'}:${filter || 'all'}:${limit}:${offset}`;
+  const cacheKey = `products:catalog:${search || 'all'}:${categoryId || 'all'}:${brandId || 'all'}:${filter || 'all'}:${sortField}:${sortOrder}:${limit}:${offset}`;
 
   // Try to get data from Redis cache first
   const cachedProducts = await getCachedData(cacheKey);
@@ -100,7 +113,7 @@ export async function GET(req: Request) {
     .innerJoin(categories, eq(products.categoryId, categories.id))
     .innerJoin(brands, eq(products.brandId, brands.id))
     .where(where)
-    .orderBy(asc(products.name))
+    .orderBy(orderFn(sortCol))
     .limit(limit)
     .offset(offset);
 
