@@ -105,6 +105,7 @@ export function ProductCatalog({
           viewMode={viewMode}
           loading={loading}
           categoryId={categoryId}
+          highlightFirst={query.trim().length > 0}
           onProductClick={handleProductClick}
         />
       </CardContent>
