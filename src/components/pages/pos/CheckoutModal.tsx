@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useRef } from 'react';
-import { User, Wallet, AlertCircle, RefreshCw } from 'lucide-react';
+import { User, Wallet, AlertCircle, RefreshCw, Loader2 } from 'lucide-react';
 
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
@@ -221,7 +221,14 @@ export function CheckoutModal({
           </button>
         </div>
 
-        <div className="p-6 space-y-6 max-h-[80vh] overflow-y-auto custom-scrollbar">
+        <div className="relative">
+        {pending && (
+          <div className="absolute inset-0 z-10 flex flex-col items-center justify-center gap-3 rounded-b-none bg-white/70 dark:bg-zinc-950/70 backdrop-blur-[2px]">
+            <Loader2 className="h-8 w-8 animate-spin text-zinc-700 dark:text-zinc-300" />
+            <span className="text-sm font-medium text-zinc-600 dark:text-zinc-400">{t.pos.processing}</span>
+          </div>
+        )}
+        <div className={`p-6 space-y-6 max-h-[80vh] overflow-y-auto custom-scrollbar transition-opacity duration-150 ${pending ? 'opacity-40 pointer-events-none select-none' : ''}`}>
 
           {/* Customer */}
           <div ref={customerSectionRef} className="space-y-3">
@@ -339,6 +346,11 @@ export function CheckoutModal({
                   placeholder="0"
                 />
               </div>
+              {!amountReceived && (
+                <p className="text-center text-xs text-zinc-400 dark:text-zinc-500">
+                  {t.pos.emptyAmountHint}
+                </p>
+              )}
 
             </div>
           )}
@@ -383,15 +395,22 @@ export function CheckoutModal({
             )}
           </div>
         </div>
+        </div>
 
         {/* Footer */}
         <div className="border-t border-zinc-100 bg-zinc-50 px-6 py-4 dark:border-zinc-800 dark:bg-zinc-900">
           <Button
-            className="w-full h-12 text-base font-semibold shadow-sm"
+            className="relative w-full h-12 text-base font-semibold shadow-sm flex items-center justify-center gap-2"
             onClick={onConfirm}
             disabled={pending || (paymentMethod === 'debt' && !customerId)}
           >
-            {confirmLabel}
+            {pending && <Loader2 className="h-4 w-4 animate-spin" />}
+            <span>{confirmLabel}</span>
+            {!pending && (
+              <kbd className="absolute right-4 rounded border border-current/20 bg-current/10 px-1.5 py-0.5 font-mono text-[10px] font-normal opacity-70">
+                ⇧↵
+              </kbd>
+            )}
           </Button>
         </div>
       </div>

@@ -189,7 +189,8 @@
     "shortcutConfirmPayment": "Konfirmasi pembayaran",
     "shortcutSelectPayment": "Pilih pembayaran",
     "shortcutFocusCustomer": "Fokus field pelanggan",
-    "shortcutFocusAmount": "Fokus field jumlah"
+    "shortcutFocusAmount": "Fokus field jumlah",
+    "emptyAmountHint": "Kosongkan untuk jumlah pas otomatis"
   },
   "products": {
     "title": "Produk",

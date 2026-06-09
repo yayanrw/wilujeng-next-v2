@@ -187,7 +187,8 @@
     "shortcutConfirmPayment": "Confirm payment",
     "shortcutSelectPayment": "Select payment",
     "shortcutFocusCustomer": "Focus customer field",
-    "shortcutFocusAmount": "Focus amount field"
+    "shortcutFocusAmount": "Focus amount field",
+    "emptyAmountHint": "Leave empty to auto-use exact amount"
   },
   "products": {
     "title": "Products",
