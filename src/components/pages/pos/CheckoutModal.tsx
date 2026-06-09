@@ -221,14 +221,12 @@ export function CheckoutModal({
           </button>
         </div>
 
-        <div className="relative">
-        {pending && (
-          <div className="absolute inset-0 z-10 flex flex-col items-center justify-center gap-3 rounded-b-none bg-white/70 dark:bg-zinc-950/70 backdrop-blur-[2px]">
-            <Loader2 className="h-8 w-8 animate-spin text-zinc-700 dark:text-zinc-300" />
-            <span className="text-sm font-medium text-zinc-600 dark:text-zinc-400">{t.pos.processing}</span>
-          </div>
-        )}
-        <div className={`p-6 space-y-6 max-h-[80vh] overflow-y-auto custom-scrollbar transition-opacity duration-150 ${pending ? 'opacity-40 pointer-events-none select-none' : ''}`}>
+        {/* Loading progress bar — always reserves h-1 space, animates when pending */}
+        <div className="h-1 w-full overflow-hidden bg-zinc-100 dark:bg-zinc-800" style={{ opacity: pending ? 1 : 0 }}>
+          <div className="h-full w-2/5 rounded-full bg-zinc-900 dark:bg-zinc-100 [animation:bar-slide_1.5s_ease-in-out_infinite]" />
+        </div>
+
+        <div className="p-6 space-y-6 max-h-[80vh] overflow-y-auto custom-scrollbar">
 
           {/* Customer */}
           <div ref={customerSectionRef} className="space-y-3">
@@ -394,7 +392,6 @@ export function CheckoutModal({
               </div>
             )}
           </div>
-        </div>
         </div>
 
         {/* Footer */}
