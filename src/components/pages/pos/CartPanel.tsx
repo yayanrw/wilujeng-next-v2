@@ -1,5 +1,6 @@
 'use client';
 
+import { forwardRef, useEffect, useImperativeHandle, useRef, useState } from 'react';
 import { Minus, Plus, Trash2, ShoppingCart, X, PauseCircle } from 'lucide-react';
 
 import { Button } from '@/components/ui/Button';
@@ -8,22 +9,82 @@ import { usePosStore } from '@/stores/posStore';
 import { formatIdr } from '@/utils/money';
 import { useTranslation } from '@/i18n/useTranslation';
 
-export function CartPanel({
-  total,
-  onCheckout,
-  onHold,
-  onClose,
+function QtyInput({
+  productId,
+  qty,
+  idx,
+  totalItems,
+  qtyRefs,
+  setQty,
 }: {
-  total: number;
-  onCheckout: () => void;
-  onHold?: () => void;
-  onClose?: () => void;
+  productId: string;
+  qty: number;
+  idx: number;
+  totalItems: number;
+  qtyRefs: React.MutableRefObject<(HTMLInputElement | null)[]>;
+  setQty: (id: string, n: number) => void;
 }) {
+  const [draft, setDraft] = useState(String(qty));
+
+  useEffect(() => {
+    setDraft(String(qty));
+  }, [qty]);
+
+  function commit(val: string) {
+    const n = parseInt(val, 10);
+    if (!isNaN(n) && n >= 0) setQty(productId, n);
+    else setDraft(String(qty));
+  }
+
+  return (
+    <input
+      ref={(el) => { qtyRefs.current[idx] = el; }}
+      type="text"
+      inputMode="numeric"
+      className="w-10 text-center text-sm font-medium tabular-nums bg-white dark:bg-zinc-950 border-x border-zinc-200 dark:border-zinc-800 h-8 focus:outline-none focus:bg-zinc-50 dark:focus:bg-zinc-900 transition-colors"
+      value={draft}
+      onChange={(e) => setDraft(e.target.value.replace(/[^0-9]/g, ''))}
+      onFocus={(e) => e.target.select()}
+      onBlur={() => commit(draft)}
+      onKeyDown={(e) => {
+        if (e.key === 'Escape') { e.preventDefault(); setDraft(''); }
+        else if (e.key === 'Enter') { e.preventDefault(); commit(draft); e.currentTarget.blur(); }
+        else if (e.key === 'Tab') {
+          e.preventDefault();
+          if (e.shiftKey) {
+            qtyRefs.current[idx - 1]?.focus();
+          } else {
+            qtyRefs.current[idx + 1]?.focus();
+          }
+        }
+      }}
+    />
+  );
+}
+
+export const CartPanel = forwardRef<
+  { focusLastQty: () => void },
+  {
+    total: number;
+    onCheckout: () => void;
+    onHold?: () => void;
+    onClose?: () => void;
+  }
+>(function CartPanel({ total, onCheckout, onHold, onClose }, ref) {
   const items = usePosStore((s) => s.items);
   const setQty = usePosStore((s) => s.setQty);
   const removeItem = usePosStore((s) => s.removeItem);
   const clear = usePosStore((s) => s.clear);
   const { t } = useTranslation();
+
+  const qtyRefs = useRef<(HTMLInputElement | null)[]>([]);
+
+  useImperativeHandle(ref, () => ({
+    focusLastQty: () => {
+      const last = qtyRefs.current[items.length - 1];
+      last?.focus();
+    },
+  }));
 
   return (
     <Card className="flex flex-col h-full overflow-hidden border-zinc-200 dark:border-zinc-800 shadow-sm">
@@ -71,7 +132,7 @@ export function CartPanel({
       </CardHeader>
 
       <div className="flex-1 overflow-y-auto bg-zinc-50/50 dark:bg-zinc-900/50 p-4 space-y-3 min-h-0 custom-scrollbar">
-        {items.map((i) => (
+        {items.map((i, idx) => (
           <div
             key={i.productId}
             className="flex flex-col gap-3 rounded-xl border border-zinc-200 dark:border-zinc-800/75 bg-white dark:bg-zinc-950 p-3 shadow-sm transition-all hover:shadow-md"
@@ -104,9 +165,14 @@ export function CartPanel({
                 >
                   <Minus className="h-3.5 w-3.5" />
                 </button>
-                <div className="w-10 text-center text-sm font-medium tabular-nums bg-white dark:bg-zinc-950 border-x border-zinc-200 dark:border-zinc-800 flex items-center justify-center h-8">
-                  {i.qty}
-                </div>
+                <QtyInput
+                  productId={i.productId}
+                  qty={i.qty}
+                  idx={idx}
+                  totalItems={items.length}
+                  qtyRefs={qtyRefs}
+                  setQty={setQty}
+                />
                 <button
                   type="button"
                   className="flex h-8 w-8 items-center justify-center text-zinc-500 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-50 hover:bg-zinc-200 dark:hover:bg-zinc-700 transition-colors rounded-r-md active:bg-zinc-300"
@@ -173,4 +239,4 @@ export function CartPanel({
       </div>
     </Card>
   );
-}
+});
