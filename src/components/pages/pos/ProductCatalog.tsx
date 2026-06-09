@@ -62,15 +62,17 @@ export function ProductCatalog({
   function handleEnter(q: string) {
     const trimmed = q.trim().toLowerCase();
     if (!trimmed) return;
-    const exact = results.find((r) => r.sku.toLowerCase() === trimmed);
-    if (!exact) return;
-    if (exact.stock <= 0) {
-      onToast(`${t.pos.cannotAdd} ${exact.name}, ${t.pos.outOfStock}`);
+    const match =
+      results.find((r) => r.sku.toLowerCase() === trimmed) ?? results[0];
+    if (!match) return;
+    if (match.stock <= 0) {
+      onToast(`${t.pos.cannotAdd} ${match.name}, ${t.pos.outOfStock}`);
       return;
     }
-    addProduct(exact, 1);
-    onToast(`${exact.name} ${t.pos.added}`);
+    addProduct(match, 1);
+    onToast(`${match.name} ${t.pos.added}`);
     setQuery('');
+    inputRef.current?.focus();
   }
 
   function handleProductClick(p: ProductWithMeta) {
