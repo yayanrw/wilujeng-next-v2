@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef } from 'react';
 import { User, Wallet, AlertCircle, RefreshCw } from 'lucide-react';
 
 import { Button } from '@/components/ui/Button';
@@ -124,16 +124,38 @@ export function CheckoutModal({
   const addCustomer = useCustomerStore((s) => s.addCustomer);
 
   const amountInputRef = useRef<HTMLInputElement>(null);
+  const customerInputRef = useRef<HTMLInputElement>(null);
   const customerSectionRef = useRef<HTMLDivElement>(null);
 
   const { t } = useTranslation();
 
-  // Auto-focus amount input when modal opens on cash
+  // Auto-focus amount input when modal opens
   useEffect(() => {
-    if (!open || paymentMethod !== 'cash') return;
+    if (!open) return;
     const timer = setTimeout(() => amountInputRef.current?.focus(), 50);
     return () => clearTimeout(timer);
   }, [open]);
+
+  // Local keyboard shortcuts: Alt+1 customer, Alt+2-5 payment methods, Alt+6 amount, Shift+Enter confirm
+  useEffect(() => {
+    if (!open) return;
+    function handleKeyDown(e: KeyboardEvent) {
+      if (e.altKey) {
+        if (e.key === '1') { e.preventDefault(); customerInputRef.current?.focus(); return; }
+        if (e.key === '2') { e.preventDefault(); onPaymentMethodChange('cash'); return; }
+        if (e.key === '3') { e.preventDefault(); onPaymentMethodChange('qris'); return; }
+        if (e.key === '4') { e.preventDefault(); onPaymentMethodChange('transfer'); return; }
+        if (e.key === '5') { e.preventDefault(); onPaymentMethodChange('debt'); return; }
+        if (e.key === '6') { e.preventDefault(); amountInputRef.current?.focus(); return; }
+      }
+      if (e.shiftKey && e.key === 'Enter') {
+        e.preventDefault();
+        if (!pending) onConfirm();
+      }
+    }
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [open, pending, onPaymentMethodChange, onConfirm]);
 
   async function handleCreateCustomer(name: string) {
     const res = await fetch('/api/customers', {
@@ -209,6 +231,7 @@ export function CheckoutModal({
             </label>
             <div className="space-y-2">
               <CustomerPicker
+                ref={customerInputRef}
                 value={customerId}
                 onChange={setCustomerId}
                 onCreate={(name) => { void handleCreateCustomer(name); }}
@@ -253,7 +276,7 @@ export function CheckoutModal({
                       ? 'border-white/30 text-white/50 dark:border-zinc-900/30 dark:text-zinc-900/50'
                       : 'border-zinc-200 dark:border-zinc-700 text-zinc-400 dark:text-zinc-500'
                   }`}>
-                    {idx + 1}
+                    ⌥{idx + 2}
                   </kbd>
                 </button>
               ))}
@@ -317,18 +340,6 @@ export function CheckoutModal({
                 />
               </div>
 
-              <div className="grid grid-cols-4 gap-2">
-                {[1000, 2000, 5000, 10000, 20000, 50000, 100000].map((v) => (
-                  <button
-                    key={v}
-                    type="button"
-                    className="rounded-lg border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-950 py-2 text-xs font-medium text-zinc-600 dark:text-zinc-400 transition-colors hover:border-zinc-300 hover:bg-zinc-50 dark:hover:bg-zinc-900"
-                    onClick={() => onAmountReceivedChange(amountReceived + v)}
-                  >
-                    +{formatIdr(v).replace('Rp', '').trim()}
-                  </button>
-                ))}
-              </div>
             </div>
           )}
 

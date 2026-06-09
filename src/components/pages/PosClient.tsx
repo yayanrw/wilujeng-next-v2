@@ -141,17 +141,7 @@ export function PosClient() {
       return;
     }
 
-    if (checkoutOpen) {
-      if (e.key === 'Enter') {
-        e.preventDefault();
-        if (!checkoutPending && items.length > 0) void doCheckout();
-        return;
-      }
-      const methods = ['cash', 'qris', 'transfer', 'debt'] as const;
-      const idx = ['1', '2', '3', '4'].indexOf(e.key);
-      if (idx !== -1) { e.preventDefault(); setPaymentMethod(methods[idx]); }
-      return;
-    }
+    if (checkoutOpen) return;
 
     if (anyModalOpen) return;
 
@@ -246,6 +236,9 @@ export function PosClient() {
       return;
     }
 
+    const effectiveAmountReceived =
+      paymentMethod === 'cash' && amountReceived === 0 ? total : amountReceived;
+
     setCheckoutPending(true);
     const res = await fetch('/api/pos/checkout', {
       method: 'POST',
@@ -253,7 +246,7 @@ export function PosClient() {
       body: JSON.stringify({
         items: items.map((i) => ({ productId: i.productId, qty: i.qty })),
         paymentMethod,
-        amountReceived,
+        amountReceived: effectiveAmountReceived,
         customerId: customerId ?? undefined,
         debtPaymentAmount:
           debtPaymentAmount > 0 ? debtPaymentAmount : undefined,
@@ -452,11 +445,13 @@ export function PosClient() {
               <div>
                 <div className="mb-2 text-[10px] font-bold uppercase tracking-wider text-zinc-400 dark:text-zinc-500">{t.pos.shortcutInCheckout}</div>
                 {([
-                  ['1', `${t.pos.shortcutSelectPayment} — ${t.pos.cash}`],
-                  ['2', `${t.pos.shortcutSelectPayment} — ${t.pos.qris}`],
-                  ['3', `${t.pos.shortcutSelectPayment} — ${t.pos.transfer}`],
-                  ['4', `${t.pos.shortcutSelectPayment} — ${t.pos.debt}`],
-                  ['Enter', t.pos.shortcutConfirmPayment],
+                  ['⌥1', t.pos.shortcutFocusCustomer],
+                  ['⌥2', `${t.pos.shortcutSelectPayment} — ${t.pos.cash}`],
+                  ['⌥3', `${t.pos.shortcutSelectPayment} — ${t.pos.qris}`],
+                  ['⌥4', `${t.pos.shortcutSelectPayment} — ${t.pos.transfer}`],
+                  ['⌥5', `${t.pos.shortcutSelectPayment} — ${t.pos.debt}`],
+                  ['⌥6', t.pos.shortcutFocusAmount],
+                  ['⇧↵', t.pos.shortcutConfirmPayment],
                 ] as [string, string][]).map(([kbd, label]) => (
                   <div key={kbd} className="flex items-center justify-between py-1.5">
                     <span className="text-sm text-zinc-600 dark:text-zinc-400">{label}</span>

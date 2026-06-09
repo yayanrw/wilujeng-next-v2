@@ -1,21 +1,20 @@
 'use client';
 
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { forwardRef, useEffect, useMemo, useRef, useState } from 'react';
 
 import { Input } from '@/components/ui/Input';
 import { formatIdr } from '@/utils/money';
 import { useCustomerStore } from '@/stores/customerStore';
 import { useTranslation } from '@/i18n/useTranslation';
 
-export function CustomerPicker({
-  value,
-  onChange,
-  onCreate,
-}: {
-  value: string | null;
-  onChange: (id: string | null) => void;
-  onCreate?: (name: string) => void;
-}) {
+export const CustomerPicker = forwardRef<
+  HTMLInputElement,
+  {
+    value: string | null;
+    onChange: (id: string | null) => void;
+    onCreate?: (name: string) => void;
+  }
+>(function CustomerPicker({ value, onChange, onCreate }, ref) {
   const customers = useCustomerStore((s) => s.customers);
   const [query, setQuery] = useState('');
   const [isOpen, setIsOpen] = useState(false);
@@ -118,6 +117,7 @@ export function CustomerPicker({
     <div ref={wrapperRef} className="relative flex flex-col gap-2">
       {!value && (
         <Input
+          ref={ref}
           className="text-base"
           placeholder={t.pos.searchCustomerPlaceholder}
           value={query}
@@ -216,4 +216,4 @@ export function CustomerPicker({
       )}
     </div>
   );
-}
+});

@@ -187,7 +187,9 @@
     "shortcutPrintReceipt": "Cetak struk terakhir",
     "shortcutClose": "Tutup",
     "shortcutConfirmPayment": "Konfirmasi pembayaran",
-    "shortcutSelectPayment": "Pilih pembayaran"
+    "shortcutSelectPayment": "Pilih pembayaran",
+    "shortcutFocusCustomer": "Fokus field pelanggan",
+    "shortcutFocusAmount": "Fokus field jumlah"
   },
   "products": {
     "title": "Produk",

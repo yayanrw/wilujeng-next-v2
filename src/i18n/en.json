@@ -185,7 +185,9 @@
     "shortcutPrintReceipt": "Print last receipt",
     "shortcutClose": "Close",
     "shortcutConfirmPayment": "Confirm payment",
-    "shortcutSelectPayment": "Select payment"
+    "shortcutSelectPayment": "Select payment",
+    "shortcutFocusCustomer": "Focus customer field",
+    "shortcutFocusAmount": "Focus amount field"
   },
   "products": {
     "title": "Products",
