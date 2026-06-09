@@ -371,7 +371,7 @@ export function CheckoutModal({
                       ? 'text-green-600 dark:text-green-400'
                       : 'text-zinc-500 dark:text-zinc-400'
                 }`}>
-                  {paymentMethod === 'debt' ? t.pos.debt : t.pos.change}
+                  {paymentStatus === 'debt' ? t.pos.debt : t.pos.change}
                 </div>
                 <div className="mt-1 text-2xl font-bold tracking-tight">
                   {paymentMethod === 'cash' && amountReceived === 0
