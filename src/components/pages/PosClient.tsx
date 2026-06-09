@@ -12,6 +12,7 @@ import { computePayment, type PaymentMethod } from '@/utils/checkout';
 import { formatIdr } from '@/utils/money';
 import { useTranslation } from '@/i18n/useTranslation';
 import { useToast } from '@/hooks/useToast';
+import { playSuccessSound, playFailSound } from '@/utils/sounds';
 
 import { BarcodeScannerModal } from './pos/BarcodeScannerModal';
 import { CartBottomSheet } from './pos/CartBottomSheet';
@@ -259,6 +260,7 @@ export function PosClient() {
       | null;
     setCheckoutPending(false);
     if (!res.ok) {
+      playFailSound();
       showToast(
         body && 'error' in body ? body.error.message : t.pos.checkoutFailed,
       );
@@ -266,10 +268,12 @@ export function PosClient() {
     }
 
     if (!body || !('transactionId' in body)) {
+      playFailSound();
       showToast(t.pos.checkoutFailed);
       return;
     }
 
+    playSuccessSound();
     setLastTxId(body.transactionId);
     setCheckoutOpen(false);
     setScannerOpen(false);
