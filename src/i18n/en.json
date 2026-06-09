@@ -174,7 +174,18 @@
     "discardCurrentAndRecall": "Discard current & recall",
     "currentCartConflict": "Current cart has items. What do you want to do?",
     "maxHoldsReached": "Maximum holds reached (10). Discard one first.",
-    "staleHold": "Held over 4h ago"
+    "staleHold": "Held over 4h ago",
+    "shortcutsTitle": "Keyboard Shortcuts",
+    "shortcutGlobal": "Global",
+    "shortcutInCheckout": "In Checkout",
+    "shortcutFocusSearch": "Focus search",
+    "shortcutOpenCheckout": "Open checkout",
+    "shortcutHold": "Hold transaction",
+    "shortcutOpenHeld": "Open held transactions",
+    "shortcutPrintReceipt": "Print last receipt",
+    "shortcutClose": "Close",
+    "shortcutConfirmPayment": "Confirm payment",
+    "shortcutSelectPayment": "Select payment"
   },
   "products": {
     "title": "Products",
