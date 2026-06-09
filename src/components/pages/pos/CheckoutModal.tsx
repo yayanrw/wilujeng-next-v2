@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { User, Wallet, AlertCircle, RefreshCw, HandCoins } from 'lucide-react';
+import { User, Wallet, AlertCircle, RefreshCw } from 'lucide-react';
 
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
@@ -125,40 +125,26 @@ export function CheckoutModal({
   const setCustomerId = usePosStore((s) => s.setCustomerId);
   const addCustomer = useCustomerStore((s) => s.addCustomer);
 
-  const [newCustomerName, setNewCustomerName] = useState('');
-  const [newCustomerPhone, setNewCustomerPhone] = useState('');
-  const [isCreatingCustomer, setIsCreatingCustomer] = useState(false);
   const { t } = useTranslation();
 
-  useEffect(() => {
-    if (!open) return;
-    setNewCustomerName('');
-    setNewCustomerPhone('');
-    setIsCreatingCustomer(false);
-  }, [open]);
-
-  async function createCustomerQuick() {
+  async function handleCreateCustomer(name: string) {
     const res = await fetch('/api/customers', {
       method: 'POST',
       headers: { 'content-type': 'application/json' },
-      body: JSON.stringify({ name: newCustomerName, phone: newCustomerPhone }),
+      body: JSON.stringify({ name }),
     });
     const body = (await res.json().catch(() => null)) as
       | { id: string }
       | { error: { message: string } }
       | null;
     if (!res.ok) {
-      throw new Error(
-        body && 'error' in body
-          ? body.error.message
-          : t.customers.failedToCreate,
-      );
+      onToast(body && 'error' in body ? body.error.message : t.customers.failedToCreate);
+      return;
     }
-    if (!body || !('id' in body)) throw new Error(t.customers.failedToCreate);
+    if (!body || !('id' in body)) { onToast(t.customers.failedToCreate); return; }
     setCustomerId(body.id);
-    addCustomer({ id: body.id, name: newCustomerName, phone: newCustomerPhone || null, totalDebt: 0 });
-    setNewCustomerName('');
-    setNewCustomerPhone('');
+    addCustomer({ id: body.id, name, phone: null, totalDebt: 0 });
+    onToast(t.customers.customerCreatedAndSelected);
   }
 
   if (!open) return null;
@@ -198,92 +184,27 @@ export function CheckoutModal({
         <div className="p-6 space-y-6 max-h-[80vh] overflow-y-auto custom-scrollbar">
           {/* Customer Selection Section */}
           <div className="space-y-3">
-            <div className="flex items-center justify-between">
-              <label className="flex items-center gap-2 text-sm font-semibold text-zinc-900 dark:text-zinc-50">
-                <User className="h-4 w-4 text-zinc-500 dark:text-zinc-400" />
-                {t.dashboard.customer}
-              </label>
-              {!customerId && !isCreatingCustomer && (
-                <button
-                  type="button"
-                  className="text-xs font-medium text-blue-600 hover:text-blue-700"
-                  onClick={() => setIsCreatingCustomer(true)}
-                >
-                  + {t.customers.newCustomer}
-                </button>
-              )}
-              {isCreatingCustomer && (
-                <button
-                  type="button"
-                  className="text-xs font-medium text-zinc-500 dark:text-zinc-400 hover:text-zinc-700 dark:text-zinc-300"
-                  onClick={() => setIsCreatingCustomer(false)}
-                >
-                  {t.common.cancel}
-                </button>
+            <label className="flex items-center gap-2 text-sm font-semibold text-zinc-900 dark:text-zinc-50">
+              <User className="h-4 w-4 text-zinc-500 dark:text-zinc-400" />
+              {t.dashboard.customer}
+            </label>
+            <div className="space-y-2">
+              <CustomerPicker
+                value={customerId}
+                onChange={setCustomerId}
+                onCreate={(name) => { void handleCreateCustomer(name); }}
+              />
+              {customerId && (
+                <CustomerDebtPayButton
+                  customerId={customerId}
+                  onToast={onToast}
+                  debtPaymentAmount={debtPaymentAmount}
+                  onDebtPaymentAmountChange={onDebtPaymentAmountChange}
+                  debtPaymentNote={debtPaymentNote}
+                  onDebtPaymentNoteChange={onDebtPaymentNoteChange}
+                />
               )}
             </div>
-
-            {isCreatingCustomer ? (
-              <div className="rounded-xl border border-blue-100 bg-blue-50/50 p-4 space-y-3 animate-in slide-in-from-top-2 duration-200">
-                <div className="grid grid-cols-2 gap-3">
-                  <div>
-                    <label className="text-xs font-medium text-blue-900">
-                      {t.customers.name}
-                    </label>
-                    <Input
-                      className="mt-1 bg-white dark:bg-zinc-950 border-blue-200 focus-visible:ring-blue-500"
-                      value={newCustomerName}
-                      onChange={(e) => setNewCustomerName(e.target.value)}
-                      placeholder="John Doe"
-                    />
-                  </div>
-                  <div>
-                    <label className="text-xs font-medium text-blue-900">
-                      {t.customers.phone}
-                    </label>
-                    <Input
-                      className="mt-1 bg-white dark:bg-zinc-950 border-blue-200 focus-visible:ring-blue-500"
-                      value={newCustomerPhone}
-                      onChange={(e) => setNewCustomerPhone(e.target.value)}
-                      placeholder="0812..."
-                    />
-                  </div>
-                </div>
-                <Button
-                  className="w-full bg-blue-600 hover:bg-blue-700 text-white dark:text-zinc-900"
-                  disabled={!newCustomerName.trim()}
-                  onClick={async () => {
-                    try {
-                      await createCustomerQuick();
-                      onToast(t.customers.customerCreatedAndSelected);
-                      setIsCreatingCustomer(false);
-                    } catch (e) {
-                      onToast(
-                        e instanceof Error
-                          ? e.message
-                          : t.customers.failedToCreate,
-                      );
-                    }
-                  }}
-                >
-                  {t.common.save} {t.dashboard.customer}
-                </Button>
-              </div>
-            ) : (
-              <div className="space-y-2">
-                <CustomerPicker value={customerId} onChange={setCustomerId} />
-                {customerId && (
-                  <CustomerDebtPayButton
-                    customerId={customerId}
-                    onToast={onToast}
-                    debtPaymentAmount={debtPaymentAmount}
-                    onDebtPaymentAmountChange={onDebtPaymentAmountChange}
-                    debtPaymentNote={debtPaymentNote}
-                    onDebtPaymentNoteChange={onDebtPaymentNoteChange}
-                  />
-                )}
-              </div>
-            )}
           </div>
 
           <div className="h-px bg-zinc-100 dark:bg-zinc-800" />

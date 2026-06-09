@@ -415,7 +415,9 @@
     "deleteConfirmTitle": "Hapus pelanggan",
     "deleteConfirmDesc": "Apakah Anda yakin ingin menghapus pelanggan ini? Tindakan ini akan menonaktifkan dan menyembunyikan pelanggan dari daftar.",
     "deletedSuccess": "Pelanggan dihapus",
-    "deleteFailed": "Gagal menghapus pelanggan"
+    "deleteFailed": "Gagal menghapus pelanggan",
+    "willCreateNew": "Akan dibuat sebagai baru",
+    "createNew": "Buat pelanggan baru"
   },
   "reports": {
     "title": "Laporan",
