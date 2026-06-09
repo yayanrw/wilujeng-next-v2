@@ -232,7 +232,7 @@ export function PosClient() {
 
   async function doCheckout() {
     if (!items.length) return;
-    if (payment.status === 'debt' && !customerId) {
+    if (paymentMethod === 'debt' && !customerId) {
       showToast(t.pos.selectCustomerForDebt);
       return;
     }
