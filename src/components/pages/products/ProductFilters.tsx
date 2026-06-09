@@ -35,6 +35,7 @@ export function ProductFilters({
         placeholder={t.products.searchPlaceholder}
         value={search}
         onChange={(e) => onSearchChange(e.target.value)}
+        onKeyDown={(e) => { if (e.key === 'Escape') onSearchChange(''); }}
         wrapperClassName="w-full"
         autoFocus
       />

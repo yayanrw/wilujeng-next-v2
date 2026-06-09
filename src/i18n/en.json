@@ -176,6 +176,7 @@
     "maxHoldsReached": "Maximum holds reached (10). Discard one first.",
     "staleHold": "Held over 4h ago",
     "shortcutsTitle": "Keyboard Shortcuts",
+    "shortcutFocusLastCart": "Focus last cart item qty",
     "shortcutGlobal": "Global",
     "shortcutInCheckout": "In Checkout",
     "shortcutFocusSearch": "Focus search",

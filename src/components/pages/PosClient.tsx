@@ -23,6 +23,7 @@ import { ProductCatalog } from './pos/ProductCatalog';
 
 export function PosClient() {
   const inputRef = useRef<HTMLInputElement | null>(null);
+  const cartPanelRef = useRef<{ focusLastQty: () => void }>(null);
   const [checkoutOpen, setCheckoutOpen] = useState(false);
   const [cartOpen, setCartOpen] = useState(false);
   const [scannerOpen, setScannerOpen] = useState(false);
@@ -146,6 +147,7 @@ export function PosClient() {
 
     if (anyModalOpen) return;
 
+    if (e.key === 'F1') { e.preventDefault(); cartPanelRef.current?.focusLastQty(); return; }
     if (e.key === 'F2') { e.preventDefault(); inputRef.current?.focus(); inputRef.current?.select(); return; }
     if (e.key === 'F3') { e.preventDefault(); if (items.length > 0) setCheckoutOpen(true); return; }
     if (e.key === 'F4') { e.preventDefault(); if (items.length > 0) handleHold(); return; }
@@ -232,7 +234,7 @@ export function PosClient() {
 
   async function doCheckout() {
     if (!items.length) return;
-    if (payment.status === 'debt' && !customerId) {
+    if (paymentMethod === 'debt' && !customerId) {
       showToast(t.pos.selectCustomerForDebt);
       return;
     }
@@ -346,7 +348,7 @@ export function PosClient() {
           onViewModeChange={handleViewModeChange}
         />
         <div className="hidden lg:flex lg:flex-col lg:min-h-0">
-          <CartPanel total={total} onCheckout={() => setCheckoutOpen(true)} onHold={handleHold} />
+          <CartPanel ref={cartPanelRef} total={total} onCheckout={() => setCheckoutOpen(true)} onHold={handleHold} />
         </div>
       </div>
 
@@ -432,6 +434,7 @@ export function PosClient() {
               <div>
                 <div className="mb-2 text-[10px] font-bold uppercase tracking-wider text-zinc-400 dark:text-zinc-500">{t.pos.shortcutGlobal}</div>
                 {([
+                  ['F1', t.pos.shortcutFocusLastCart],
                   ['F2', t.pos.shortcutFocusSearch],
                   ['F3', t.pos.shortcutOpenCheckout],
                   ['F4', t.pos.shortcutHold],

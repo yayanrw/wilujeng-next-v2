@@ -16,12 +16,14 @@ export function ProductList({
   viewMode,
   loading,
   categoryId,
+  highlightFirst,
   onProductClick,
 }: {
   results: ProductWithMeta[];
   viewMode: 'grid' | 'list';
   loading: boolean;
   categoryId: string;
+  highlightFirst?: boolean;
   onProductClick: (p: ProductWithMeta) => void;
 }) {
   const { t } = useTranslation();
@@ -74,17 +76,28 @@ export function ProductList({
   return (
     <>
       <div className={viewMode === 'grid' ? GRID_CLASS : LIST_CLASS}>
-        {results.map((p) => (
+        {results.map((p, idx) => {
+          const isTop = highlightFirst && idx === 0;
+          return (
           <button
             key={p.id}
             type="button"
-            className={`group relative overflow-hidden rounded-xl border border-zinc-200 bg-white text-left transition-all hover:border-zinc-300 hover:shadow-md focus:outline-none focus:ring-2 focus:ring-zinc-900 dark:border-zinc-800 dark:bg-zinc-950 dark:hover:border-zinc-700 dark:hover:shadow-zinc-900/20 dark:focus:ring-zinc-500 ${
+            className={`group relative overflow-hidden rounded-xl border text-left transition-all focus:outline-none focus:ring-2 focus:ring-zinc-900 dark:focus:ring-zinc-500 ${
+              isTop
+                ? 'border-zinc-900 dark:border-zinc-100 shadow-md bg-white dark:bg-zinc-950'
+                : 'border-zinc-200 bg-white hover:border-zinc-300 hover:shadow-md dark:border-zinc-800 dark:bg-zinc-950 dark:hover:border-zinc-700 dark:hover:shadow-zinc-900/20'
+            } ${
               viewMode === 'grid'
                 ? 'flex h-full flex-col justify-between p-4'
                 : 'flex items-center justify-between p-3'
             }`}
             onClick={() => onProductClick(p)}
           >
+            {isTop && (
+              <kbd className="absolute top-1.5 right-1.5 z-10 rounded border border-zinc-900/20 dark:border-zinc-100/20 bg-zinc-900 dark:bg-zinc-100 px-1 py-0.5 font-mono text-[9px] leading-none text-white dark:text-zinc-900 pointer-events-none">
+                ↵
+              </kbd>
+            )}
             {viewMode === 'grid' ? (
               <>
                 <div className="w-full">
@@ -172,7 +185,8 @@ export function ProductList({
               </>
             )}
           </button>
-        ))}
+          );
+        })}
       </div>
 
       {loading && results.length > 0 && (

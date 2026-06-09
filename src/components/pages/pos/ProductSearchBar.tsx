@@ -35,6 +35,7 @@ export function ProductSearchBar({
           value={query}
           onChange={(e) => onQueryChange(e.target.value)}
           onKeyDown={(e) => {
+            if (e.key === 'Escape') { onQueryChange(''); return; }
             if (e.key !== 'Enter') return;
             e.preventDefault();
             onEnter(query);
