@@ -176,7 +176,21 @@
     "discardCurrentAndRecall": "Buang saat ini & lanjutkan",
     "currentCartConflict": "Keranjang saat ini berisi item. Apa yang ingin dilakukan?",
     "maxHoldsReached": "Batas ditahan tercapai (10). Buang satu terlebih dahulu.",
-    "staleHold": "Ditahan lebih dari 4 jam"
+    "staleHold": "Ditahan lebih dari 4 jam",
+    "shortcutsTitle": "Pintasan Keyboard",
+    "shortcutGlobal": "Global",
+    "shortcutInCheckout": "Di Pembayaran",
+    "shortcutFocusSearch": "Fokus pencarian",
+    "shortcutOpenCheckout": "Buka pembayaran",
+    "shortcutHold": "Tahan transaksi",
+    "shortcutOpenHeld": "Buka transaksi ditahan",
+    "shortcutPrintReceipt": "Cetak struk terakhir",
+    "shortcutClose": "Tutup",
+    "shortcutConfirmPayment": "Konfirmasi pembayaran",
+    "shortcutSelectPayment": "Pilih pembayaran",
+    "shortcutFocusCustomer": "Fokus field pelanggan",
+    "shortcutFocusAmount": "Fokus field jumlah",
+    "emptyAmountHint": "Kosongkan untuk jumlah pas otomatis"
   },
   "products": {
     "title": "Produk",
@@ -404,7 +418,9 @@
     "deleteConfirmTitle": "Hapus pelanggan",
     "deleteConfirmDesc": "Apakah Anda yakin ingin menghapus pelanggan ini? Tindakan ini akan menonaktifkan dan menyembunyikan pelanggan dari daftar.",
     "deletedSuccess": "Pelanggan dihapus",
-    "deleteFailed": "Gagal menghapus pelanggan"
+    "deleteFailed": "Gagal menghapus pelanggan",
+    "willCreateNew": "Akan dibuat sebagai baru",
+    "createNew": "Buat pelanggan baru"
   },
   "reports": {
     "title": "Laporan",

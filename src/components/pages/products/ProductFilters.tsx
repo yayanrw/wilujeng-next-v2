@@ -36,6 +36,7 @@ export function ProductFilters({
         value={search}
         onChange={(e) => onSearchChange(e.target.value)}
         wrapperClassName="w-full"
+        autoFocus
       />
       <div className="flex items-center gap-2 flex-wrap">
         <SearchableSelect

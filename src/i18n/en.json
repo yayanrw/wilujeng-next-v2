@@ -174,7 +174,21 @@
     "discardCurrentAndRecall": "Discard current & recall",
     "currentCartConflict": "Current cart has items. What do you want to do?",
     "maxHoldsReached": "Maximum holds reached (10). Discard one first.",
-    "staleHold": "Held over 4h ago"
+    "staleHold": "Held over 4h ago",
+    "shortcutsTitle": "Keyboard Shortcuts",
+    "shortcutGlobal": "Global",
+    "shortcutInCheckout": "In Checkout",
+    "shortcutFocusSearch": "Focus search",
+    "shortcutOpenCheckout": "Open checkout",
+    "shortcutHold": "Hold transaction",
+    "shortcutOpenHeld": "Open held transactions",
+    "shortcutPrintReceipt": "Print last receipt",
+    "shortcutClose": "Close",
+    "shortcutConfirmPayment": "Confirm payment",
+    "shortcutSelectPayment": "Select payment",
+    "shortcutFocusCustomer": "Focus customer field",
+    "shortcutFocusAmount": "Focus amount field",
+    "emptyAmountHint": "Leave empty to auto-use exact amount"
   },
   "products": {
     "title": "Products",
@@ -402,7 +416,9 @@
     "deleteConfirmTitle": "Delete customer",
     "deleteConfirmDesc": "Are you sure you want to delete this customer? This action will deactivate and hide the customer from listings.",
     "deletedSuccess": "Customer deleted",
-    "deleteFailed": "Failed to delete customer"
+    "deleteFailed": "Failed to delete customer",
+    "willCreateNew": "Will be created as new",
+    "createNew": "Create new customer"
   },
   "reports": {
     "title": "Reports",
