@@ -138,12 +138,12 @@ export function PosClient() {
     const anyModalOpen = checkoutOpen || scannerOpen || cartOpen || heldCartsOpen || shortcutsOpen || clearCartConfirmOpen;
 
     if (e.key === 'Escape') {
-      if (clearCartConfirmOpen) { setClearCartConfirmOpen(false); return; }
-      if (shortcutsOpen) { setShortcutsOpen(false); return; }
-      if (checkoutOpen) { setCheckoutOpen(false); return; }
-      if (heldCartsOpen) { setHeldCartsOpen(false); return; }
-      if (cartOpen) { setCartOpen(false); return; }
-      if (scannerOpen) { setScannerOpen(false); return; }
+      if (clearCartConfirmOpen) { closeClearCartConfirm(); return; }
+      if (shortcutsOpen) { closeShortcuts(); return; }
+      if (checkoutOpen) { closeCheckout(); return; }
+      if (heldCartsOpen) { closeHeldCarts(); return; }
+      if (cartOpen) { closeCart(); return; }
+      if (scannerOpen) { closeScanner(); return; }
       return;
     }
 
@@ -253,13 +253,52 @@ export function PosClient() {
 
   function handleClearCart() {
     if (items.length === 0) { showToast(t.pos.cartAlreadyEmpty); return; }
+    // Move focus out of the search bar while the confirm dialog is open.
+    inputRef.current?.blur();
     setClearCartConfirmOpen(true);
+  }
+
+  // Refocus the search bar after a modal/dialog closes. rAF lets the overlay
+  // unmount and any internal focus-restore settle before we grab focus back.
+  function focusSearchBar() {
+    requestAnimationFrame(() => inputRef.current?.focus());
+  }
+
+  function closeClearCartConfirm() {
+    setClearCartConfirmOpen(false);
+    focusSearchBar();
   }
 
   function doClearCart() {
     clear();
-    setClearCartConfirmOpen(false);
-    inputRef.current?.focus();
+    closeClearCartConfirm();
+  }
+
+  function closeCheckout() {
+    setCheckoutOpen(false);
+    setDebtPaymentAmount(0);
+    setDebtPaymentNote('');
+    focusSearchBar();
+  }
+
+  function closeHeldCarts() {
+    setHeldCartsOpen(false);
+    focusSearchBar();
+  }
+
+  function closeScanner() {
+    setScannerOpen(false);
+    focusSearchBar();
+  }
+
+  function closeCart() {
+    setCartOpen(false);
+    focusSearchBar();
+  }
+
+  function closeShortcuts() {
+    setShortcutsOpen(false);
+    focusSearchBar();
   }
 
   async function doCheckout() {
@@ -412,13 +451,13 @@ export function PosClient() {
 
       <HeldCartsModal
         open={heldCartsOpen}
-        onClose={() => setHeldCartsOpen(false)}
+        onClose={closeHeldCarts}
       />
 
       <BarcodeScannerModal
         open={scannerOpen}
         onScan={handleBarcodeScan}
-        onClose={() => setScannerOpen(false)}
+        onClose={closeScanner}
         isMobile={isMobile}
         totalQty={totalQty}
         total={total}
@@ -428,21 +467,21 @@ export function PosClient() {
       <CartBottomSheet
         open={cartOpen}
         total={total}
-        onClose={() => setCartOpen(false)}
+        onClose={closeCart}
         onCheckout={() => {
           setCartOpen(false);
           setCheckoutOpen(true);
         }}
         onHold={() => {
           handleHold();
-          setCartOpen(false);
+          closeCart();
         }}
       />
 
       {shortcutsOpen && (
         <div
           className="fixed inset-0 z-[150] grid place-items-center bg-black/60 p-4 backdrop-blur-sm"
-          onClick={() => setShortcutsOpen(false)}
+          onClick={closeShortcuts}
         >
           <div
             className="w-full max-w-sm overflow-hidden rounded-2xl bg-white dark:bg-zinc-950 shadow-2xl animate-in fade-in zoom-in-95 duration-200"
@@ -456,7 +495,7 @@ export function PosClient() {
               <button
                 type="button"
                 className="rounded-full p-1.5 text-zinc-400 hover:bg-zinc-200 dark:hover:bg-zinc-700 hover:text-zinc-600 dark:text-zinc-400 transition-colors"
-                onClick={() => setShortcutsOpen(false)}
+                onClick={closeShortcuts}
               >
                 <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -510,7 +549,7 @@ export function PosClient() {
         <ModalFrame
           title={t.pos.clearCartTitle}
           icon={<AlertTriangle className="h-5 w-5 text-red-600 dark:text-red-400" />}
-          onClose={() => setClearCartConfirmOpen(false)}
+          onClose={closeClearCartConfirm}
           maxWidth="sm"
           zIndex={140}
         >
@@ -518,7 +557,7 @@ export function PosClient() {
             {t.pos.clearCartMessage}
           </p>
           <div className="mt-5 flex justify-end gap-2">
-            <Button variant="secondary" onClick={() => setClearCartConfirmOpen(false)}>
+            <Button variant="secondary" onClick={closeClearCartConfirm}>
               {t.common.cancel}
             </Button>
             <Button variant="danger" onClick={doClearCart} className="flex items-center gap-1.5">
@@ -539,11 +578,7 @@ export function PosClient() {
           payment.status === 'debt' ? payment.outstandingDebt : payment.change
         }
         pending={checkoutPending}
-        onClose={() => {
-          setCheckoutOpen(false);
-          setDebtPaymentAmount(0);
-          setDebtPaymentNote('');
-        }}
+        onClose={closeCheckout}
         onPaymentMethodChange={setPaymentMethod}
         onAmountReceivedChange={setAmountReceived}
         onConfirm={doCheckout}
