@@ -1,4 +1,4 @@
-import { and, asc, desc, eq, ilike, inArray, sql } from 'drizzle-orm';
+import { and, asc, desc, eq, ilike, inArray, or, sql } from 'drizzle-orm';
 import { z } from 'zod';
 
 import { db } from '@/db';
@@ -87,7 +87,7 @@ export async function GET(req: Request) {
     undefined;
 
   const where = and(
-    search ? ilike(products.name, `%${search}%`) : undefined,
+    search ? or(ilike(products.name, `%${search}%`), ilike(products.sku, `%${search}%`)) : undefined,
     categoryId ? eq(products.categoryId, categoryId) : undefined,
     brandId ? eq(products.brandId, brandId) : undefined,
     eq(products.isDeleted, false),

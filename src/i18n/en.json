@@ -194,7 +194,7 @@
   "products": {
     "title": "Products",
     "subtitle": "Manage your product catalog and pricing",
-    "searchPlaceholder": "Search products...",
+    "searchPlaceholder": "Search by name or SKU...",
     "newProduct": "New Product",
     "sku": "SKU",
     "name": "Name",
