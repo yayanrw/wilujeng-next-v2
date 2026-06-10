@@ -42,6 +42,7 @@ Seluruh pencarian dan filter kategori dilakukan **client-side** menggunakan data
 | Hutang Penuh | metode 'hutang' & `amount_received = 0` | `status='hutang'`, `outstanding_debt = total_amount`; wajib customer |
 | Lunas | `amount_received >= total_amount` | `status='lunas'`, `change = received - total` |
 
+- **Default Amount Received:** Untuk metode non-hutang (`tunai`, `qris`, `transfer`), jika `amount_received = 0` maka otomatis dianggap `= total_amount` (bayar lunas). Field input nominal hanya muncul untuk `tunai`; QRIS & Transfer selalu menyelesaikan pembayaran penuh.
 - **Hutang Logic:** Wajib pilih pelanggan terdaftar; tombol "Add Pelanggan Baru" jika belum ada
 - **Pay Debt Inline:** Kasir dapat melunasi hutang pelanggan langsung dari modal Checkout (sebagian atau penuh) + field catatan
 

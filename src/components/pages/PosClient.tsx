@@ -238,8 +238,10 @@ export function PosClient() {
       return;
     }
 
+    // QRIS, transfer and cash all settle in full; only `debt` is deferred.
+    // For these methods an unset amount means "pay exact total".
     const effectiveAmountReceived =
-      paymentMethod === 'cash' && amountReceived === 0 ? total : amountReceived;
+      paymentMethod !== 'debt' && amountReceived === 0 ? total : amountReceived;
 
     setCheckoutPending(true);
     const res = await fetch('/api/pos/checkout', {
