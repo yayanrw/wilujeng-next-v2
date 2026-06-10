@@ -136,7 +136,7 @@ export function CheckoutModal({
     return () => clearTimeout(timer);
   }, [open]);
 
-  // Local keyboard shortcuts: Alt+1 customer, Alt+2-5 payment methods, Alt+6 amount, Shift+Enter confirm
+  // Local keyboard shortcuts: Alt+1 customer, Alt+2-5 payment methods, Alt+6 amount, Enter confirm
   useEffect(() => {
     if (!open) return;
     function handleKeyDown(e: KeyboardEvent) {
@@ -148,7 +148,10 @@ export function CheckoutModal({
         if (e.key === '5') { e.preventDefault(); onPaymentMethodChange('debt'); return; }
         if (e.key === '6') { e.preventDefault(); amountInputRef.current?.focus(); return; }
       }
-      if (e.shiftKey && e.key === 'Enter') {
+      // Plain Enter confirms — but let the customer picker handle its own Enter
+      // (selecting/creating a customer) without triggering a checkout.
+      if (e.key === 'Enter' && !e.shiftKey) {
+        if (document.activeElement === customerInputRef.current) return;
         e.preventDefault();
         if (!pending) onConfirm();
       }
@@ -405,7 +408,7 @@ export function CheckoutModal({
             <span>{confirmLabel}</span>
             {!pending && (
               <kbd className="absolute right-4 rounded border border-current/20 bg-current/10 px-1.5 py-0.5 font-mono text-[10px] font-normal opacity-70">
-                ⇧↵
+                ↵
               </kbd>
             )}
           </Button>

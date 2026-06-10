@@ -21,12 +21,14 @@ export function ProductCatalog({
   inputRef,
   onToast,
   onCameraClick,
+  onRequestCheckout,
   viewMode = 'grid',
   onViewModeChange,
 }: {
   inputRef: React.RefObject<HTMLInputElement | null>;
   onToast: (m: string) => void;
   onCameraClick?: () => void;
+  onRequestCheckout?: () => void;
   viewMode?: 'grid' | 'list';
   onViewModeChange?: (mode: 'grid' | 'list') => void;
 }) {
@@ -93,6 +95,7 @@ export function ProductCatalog({
           query={query}
           onQueryChange={setQuery}
           onEnter={handleEnter}
+          onEmptyEnter={onRequestCheckout}
           onCameraClick={onCameraClick}
           viewMode={viewMode}
           onViewModeChange={onViewModeChange}

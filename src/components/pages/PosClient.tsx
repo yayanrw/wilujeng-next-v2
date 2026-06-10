@@ -2,9 +2,10 @@
 
 import { useEffect, useMemo, useRef, useState } from 'react';
 
-import { Printer, ShoppingCart, PauseCircle, Info } from 'lucide-react';
+import { Printer, ShoppingCart, PauseCircle, Info, Trash2, AlertTriangle } from 'lucide-react';
 
 import { Button } from '@/components/ui/Button';
+import { ModalFrame } from '@/components/ui/ModalFrame';
 import { usePosStore } from '@/stores/posStore';
 import { useCatalogStore } from '@/stores/catalogStore';
 import { useCustomerStore, type CustomerRow } from '@/stores/customerStore';
@@ -29,6 +30,7 @@ export function PosClient() {
   const [scannerOpen, setScannerOpen] = useState(false);
   const [heldCartsOpen, setHeldCartsOpen] = useState(false);
   const [shortcutsOpen, setShortcutsOpen] = useState(false);
+  const [clearCartConfirmOpen, setClearCartConfirmOpen] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
   const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>('cash');
@@ -46,6 +48,7 @@ export function PosClient() {
   const customerId = usePosStore((s) => s.customerId);
   const holds = usePosStore((s) => s.holds);
   const clear = usePosStore((s) => s.clear);
+  const removeItem = usePosStore((s) => s.removeItem);
   const holdCurrentCart = usePosStore((s) => s.holdCurrentCart);
   const addProduct = usePosStore((s) => s.addProduct);
 
@@ -132,14 +135,21 @@ export function PosClient() {
   // Keyboard shortcuts — ref keeps handler always current without re-registering
   const kbHandlerRef = useRef<(e: KeyboardEvent) => void>(() => {});
   kbHandlerRef.current = (e: KeyboardEvent) => {
-    const anyModalOpen = checkoutOpen || scannerOpen || cartOpen || heldCartsOpen || shortcutsOpen;
+    const anyModalOpen = checkoutOpen || scannerOpen || cartOpen || heldCartsOpen || shortcutsOpen || clearCartConfirmOpen;
 
     if (e.key === 'Escape') {
+      if (clearCartConfirmOpen) { setClearCartConfirmOpen(false); return; }
       if (shortcutsOpen) { setShortcutsOpen(false); return; }
       if (checkoutOpen) { setCheckoutOpen(false); return; }
       if (heldCartsOpen) { setHeldCartsOpen(false); return; }
       if (cartOpen) { setCartOpen(false); return; }
       if (scannerOpen) { setScannerOpen(false); return; }
+      return;
+    }
+
+    // Clear-cart confirm dialog: Enter confirms, everything else is blocked while open
+    if (clearCartConfirmOpen) {
+      if (e.key === 'Enter') { e.preventDefault(); doClearCart(); }
       return;
     }
 
@@ -149,14 +159,15 @@ export function PosClient() {
 
     if (e.key === 'F1') { e.preventDefault(); cartPanelRef.current?.focusLastQty(); return; }
     if (e.key === 'F2') { e.preventDefault(); inputRef.current?.focus(); inputRef.current?.select(); return; }
-    if (e.key === 'F3') { e.preventDefault(); if (items.length > 0) setCheckoutOpen(true); return; }
-    if (e.key === 'F4') { e.preventDefault(); if (items.length > 0) handleHold(); return; }
-    if (e.key === 'F5') { e.preventDefault(); setHeldCartsOpen(true); return; }
-    if (e.key === 'F6') {
+    if (e.key === 'F3') { e.preventDefault(); if (items.length > 0) handleHold(); return; }
+    if (e.key === 'F4') { e.preventDefault(); setHeldCartsOpen(true); return; }
+    if (e.key === 'F5') {
       e.preventDefault();
       if (lastTxId) window.open(`/receipt/${lastTxId}`, '_blank', 'noopener,noreferrer');
       return;
     }
+    if (e.key === 'F6') { e.preventDefault(); handleRemoveLast(); return; }
+    if (e.key === 'F7') { e.preventDefault(); handleClearCart(); return; }
   };
 
   useEffect(() => {
@@ -232,6 +243,25 @@ export function PosClient() {
     else inputRef.current?.focus();
   }
 
+  function handleRemoveLast() {
+    if (items.length === 0) { showToast(t.pos.cartAlreadyEmpty); return; }
+    const last = items[items.length - 1];
+    removeItem(last.productId);
+    showToast(t.pos.lastItemRemoved);
+    inputRef.current?.focus();
+  }
+
+  function handleClearCart() {
+    if (items.length === 0) { showToast(t.pos.cartAlreadyEmpty); return; }
+    setClearCartConfirmOpen(true);
+  }
+
+  function doClearCart() {
+    clear();
+    setClearCartConfirmOpen(false);
+    inputRef.current?.focus();
+  }
+
   async function doCheckout() {
     if (!items.length) return;
     if (paymentMethod === 'debt' && !customerId) {
@@ -239,8 +269,10 @@ export function PosClient() {
       return;
     }
 
+    // QRIS, transfer and cash all settle in full; only `debt` is deferred.
+    // For these methods an unset amount means "pay exact total".
     const effectiveAmountReceived =
-      paymentMethod === 'cash' && amountReceived === 0 ? total : amountReceived;
+      paymentMethod !== 'debt' && amountReceived === 0 ? total : amountReceived;
 
     setCheckoutPending(true);
     const res = await fetch('/api/pos/checkout', {
@@ -344,6 +376,7 @@ export function PosClient() {
           inputRef={inputRef}
           onToast={showToast}
           onCameraClick={() => setScannerOpen(true)}
+          onRequestCheckout={() => { if (items.length > 0) setCheckoutOpen(true); }}
           viewMode={viewMode}
           onViewModeChange={handleViewModeChange}
         />
@@ -436,10 +469,12 @@ export function PosClient() {
                 {([
                   ['F1', t.pos.shortcutFocusLastCart],
                   ['F2', t.pos.shortcutFocusSearch],
-                  ['F3', t.pos.shortcutOpenCheckout],
-                  ['F4', t.pos.shortcutHold],
-                  ['F5', t.pos.shortcutOpenHeld],
-                  ['F6', t.pos.shortcutPrintReceipt],
+                  ['↵', t.pos.shortcutOpenCheckout],
+                  ['F3', t.pos.shortcutHold],
+                  ['F4', t.pos.shortcutOpenHeld],
+                  ['F5', t.pos.shortcutPrintReceipt],
+                  ['F6', t.pos.shortcutRemoveLast],
+                  ['F7', t.pos.shortcutClearCart],
                   ['Esc', t.pos.shortcutClose],
                 ] as [string, string][]).map(([kbd, label]) => (
                   <div key={kbd} className="flex items-center justify-between py-1.5">
@@ -458,7 +493,7 @@ export function PosClient() {
                   ['⌥4', `${t.pos.shortcutSelectPayment} — ${t.pos.transfer}`],
                   ['⌥5', `${t.pos.shortcutSelectPayment} — ${t.pos.debt}`],
                   ['⌥6', t.pos.shortcutFocusAmount],
-                  ['⇧↵', t.pos.shortcutConfirmPayment],
+                  ['↵', t.pos.shortcutConfirmPayment],
                 ] as [string, string][]).map(([kbd, label]) => (
                   <div key={kbd} className="flex items-center justify-between py-1.5">
                     <span className="text-sm text-zinc-600 dark:text-zinc-400">{label}</span>
@@ -469,6 +504,29 @@ export function PosClient() {
             </div>
           </div>
         </div>
+      )}
+
+      {clearCartConfirmOpen && (
+        <ModalFrame
+          title={t.pos.clearCartTitle}
+          icon={<AlertTriangle className="h-5 w-5 text-red-600 dark:text-red-400" />}
+          onClose={() => setClearCartConfirmOpen(false)}
+          maxWidth="sm"
+          zIndex={140}
+        >
+          <p className="text-sm text-zinc-600 dark:text-zinc-400">
+            {t.pos.clearCartMessage}
+          </p>
+          <div className="mt-5 flex justify-end gap-2">
+            <Button variant="secondary" onClick={() => setClearCartConfirmOpen(false)}>
+              {t.common.cancel}
+            </Button>
+            <Button variant="danger" onClick={doClearCart} className="flex items-center gap-1.5">
+              <Trash2 className="h-4 w-4" />
+              {t.pos.shortcutClearCart}
+            </Button>
+          </div>
+        </ModalFrame>
       )}
 
       <CheckoutModal
