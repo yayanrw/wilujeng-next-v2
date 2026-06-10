@@ -149,7 +149,6 @@ export function PosClient() {
 
     if (e.key === 'F1') { e.preventDefault(); cartPanelRef.current?.focusLastQty(); return; }
     if (e.key === 'F2') { e.preventDefault(); inputRef.current?.focus(); inputRef.current?.select(); return; }
-    if (e.key === 'F3') { e.preventDefault(); if (items.length > 0) setCheckoutOpen(true); return; }
     if (e.key === 'F4') { e.preventDefault(); if (items.length > 0) handleHold(); return; }
     if (e.key === 'F5') { e.preventDefault(); setHeldCartsOpen(true); return; }
     if (e.key === 'F6') {
@@ -344,6 +343,7 @@ export function PosClient() {
           inputRef={inputRef}
           onToast={showToast}
           onCameraClick={() => setScannerOpen(true)}
+          onRequestCheckout={() => { if (items.length > 0) setCheckoutOpen(true); }}
           viewMode={viewMode}
           onViewModeChange={handleViewModeChange}
         />
@@ -436,7 +436,7 @@ export function PosClient() {
                 {([
                   ['F1', t.pos.shortcutFocusLastCart],
                   ['F2', t.pos.shortcutFocusSearch],
-                  ['F3', t.pos.shortcutOpenCheckout],
+                  ['↵', t.pos.shortcutOpenCheckout],
                   ['F4', t.pos.shortcutHold],
                   ['F5', t.pos.shortcutOpenHeld],
                   ['F6', t.pos.shortcutPrintReceipt],
@@ -458,7 +458,7 @@ export function PosClient() {
                   ['⌥4', `${t.pos.shortcutSelectPayment} — ${t.pos.transfer}`],
                   ['⌥5', `${t.pos.shortcutSelectPayment} — ${t.pos.debt}`],
                   ['⌥6', t.pos.shortcutFocusAmount],
-                  ['⇧↵', t.pos.shortcutConfirmPayment],
+                  ['↵', t.pos.shortcutConfirmPayment],
                 ] as [string, string][]).map(([kbd, label]) => (
                   <div key={kbd} className="flex items-center justify-between py-1.5">
                     <span className="text-sm text-zinc-600 dark:text-zinc-400">{label}</span>

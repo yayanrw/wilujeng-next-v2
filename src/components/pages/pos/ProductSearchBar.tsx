@@ -10,6 +10,7 @@ export function ProductSearchBar({
   query,
   onQueryChange,
   onEnter,
+  onEmptyEnter,
   onCameraClick,
   viewMode = 'grid',
   onViewModeChange,
@@ -18,6 +19,7 @@ export function ProductSearchBar({
   query: string;
   onQueryChange: (q: string) => void;
   onEnter: (q: string) => void;
+  onEmptyEnter?: () => void;
   onCameraClick?: () => void;
   viewMode?: 'grid' | 'list';
   onViewModeChange?: (mode: 'grid' | 'list') => void;
@@ -38,6 +40,7 @@ export function ProductSearchBar({
             if (e.key === 'Escape') { onQueryChange(''); return; }
             if (e.key !== 'Enter') return;
             e.preventDefault();
+            if (query.trim() === '') { onEmptyEnter?.(); return; }
             onEnter(query);
           }}
         />
