@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { PackagePlus, X } from 'lucide-react';
 
 import { Button } from '@/components/ui/Button';
@@ -31,7 +31,7 @@ export function QuickStockInModal({
   const { t } = useTranslation();
   const { suppliers } = useCatalogMeta();
   const addSupplier = useCatalogMetaStore((s) => s.addSupplier);
-  const [qty, setQty] = useState(1);
+  const [qty, setQty] = useState(0);
   const [unitBuyPrice, setUnitBuyPrice] = useState(currentBuyPrice);
   const [supplierName, setSupplierName] = useState('');
   const [expiryDate, setExpiryDate] = useState('');
@@ -39,16 +39,35 @@ export function QuickStockInModal({
   const [pending, setPending] = useState(false);
   const [error, setError] = useState('');
 
+  const formRef = useRef<HTMLFormElement>(null);
+  const qtyRef = useRef<HTMLInputElement>(null);
+  const buyPriceRef = useRef<HTMLInputElement>(null);
+  const supplierRef = useRef<HTMLInputElement>(null);
+  const expiryRef = useRef<HTMLInputElement>(null);
+  const noteRef = useRef<HTMLTextAreaElement>(null);
+
   useEffect(() => {
     if (open) {
-      setQty(1);
+      setQty(0);
       setUnitBuyPrice(currentBuyPrice);
       setSupplierName('');
       setExpiryDate('');
       setNote('');
       setError('');
+      setTimeout(() => qtyRef.current?.focus(), 50);
     }
   }, [open, currentBuyPrice]);
+
+  // Esc to close, Shift+Enter to submit
+  useEffect(() => {
+    if (!open) return;
+    function handleKeyDown(e: KeyboardEvent) {
+      if (e.key === 'Escape') { e.stopPropagation(); onClose(); return; }
+      if (e.shiftKey && e.key === 'Enter') { e.preventDefault(); formRef.current?.requestSubmit(); }
+    }
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [open, onClose]);
 
   if (!open) return null;
 
@@ -117,7 +136,12 @@ export function QuickStockInModal({
           </button>
         </div>
 
-        <form onSubmit={handleSubmit} className="p-5 space-y-4">
+        {/* Progress bar */}
+        <div className="h-1 w-full overflow-hidden bg-zinc-100 dark:bg-zinc-800" style={{ opacity: pending ? 1 : 0 }}>
+          <div className="h-full w-2/5 rounded-full bg-zinc-900 dark:bg-zinc-100 [animation:bar-slide_1.5s_ease-in-out_infinite]" />
+        </div>
+
+        <form ref={formRef} onSubmit={handleSubmit} className="p-5 space-y-4">
           <div className="flex items-center justify-between rounded-lg bg-zinc-50 dark:bg-zinc-900 px-3 py-2 text-sm border border-zinc-100 dark:border-zinc-800">
             <span className="text-zinc-500 dark:text-zinc-400">
               {t.products.quickStockInCurrent}
@@ -132,13 +156,16 @@ export function QuickStockInModal({
               {t.stock.qty} *
             </label>
             <Input
+              ref={qtyRef}
               className="mt-1.5 font-medium tabular-nums"
               inputMode="numeric"
-              value={String(qty)}
-              onChange={(e) =>
-                setQty(Number(e.target.value.replace(/[^0-9]/g, '')) || 0)
-              }
-              autoFocus
+              value={qty || ''}
+              placeholder="0"
+              onChange={(e) => setQty(Number(e.target.value.replace(/[^0-9]/g, '')) || 0)}
+              onFocus={(e) => e.target.select()}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter') { e.preventDefault(); buyPriceRef.current?.focus(); }
+              }}
             />
           </div>
 
@@ -151,21 +178,23 @@ export function QuickStockInModal({
                 Rp
               </span>
               <Input
+                ref={buyPriceRef}
                 className="pl-9 font-medium tabular-nums"
                 inputMode="numeric"
                 value={unitBuyPrice ? String(unitBuyPrice) : ''}
-                onChange={(e) =>
-                  setUnitBuyPrice(
-                    Number(e.target.value.replace(/[^0-9]/g, '')) || 0,
-                  )
-                }
+                onChange={(e) => setUnitBuyPrice(Number(e.target.value.replace(/[^0-9]/g, '')) || 0)}
+                onFocus={(e) => e.target.select()}
                 placeholder="0"
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter') { e.preventDefault(); supplierRef.current?.focus(); }
+                }}
               />
             </div>
           </div>
 
           <div>
             <AutocompleteInput
+              ref={supplierRef}
               label={t.stock.supplier}
               value={supplierName}
               onChange={setSupplierName}
@@ -173,6 +202,7 @@ export function QuickStockInModal({
               placeholder={t.products.quickStockInSupplierPlaceholder}
               noMatchText={t.products.noMatches}
               createHintText={t.products.willCreateNew}
+              onNext={() => expiryRef.current?.focus()}
             />
           </div>
 
@@ -181,10 +211,14 @@ export function QuickStockInModal({
               {t.stock.expiryDate}
             </label>
             <Input
+              ref={expiryRef}
               type="date"
               className="mt-1.5"
               value={expiryDate}
               onChange={(e) => setExpiryDate(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter') { e.preventDefault(); noteRef.current?.focus(); }
+              }}
             />
           </div>
 
@@ -193,6 +227,7 @@ export function QuickStockInModal({
               {t.stock.notes}
             </label>
             <Textarea
+              ref={noteRef}
               className="mt-1.5"
               value={note}
               onChange={(e) => setNote(e.target.value)}
@@ -217,10 +252,15 @@ export function QuickStockInModal({
             </Button>
             <Button
               type="submit"
-              className="flex-1"
+              className="flex-1 gap-1.5"
               disabled={pending || qty <= 0}
             >
               {pending ? t.common.saving : t.products.quickStockIn}
+              {!pending && (
+                <kbd className="rounded border border-current/20 bg-current/10 px-1 py-0.5 font-mono text-[9px] font-normal opacity-70">
+                  ⇧↵
+                </kbd>
+              )}
             </Button>
           </div>
         </form>
