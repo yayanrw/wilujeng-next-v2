@@ -46,6 +46,26 @@ Seluruh pencarian dan filter kategori dilakukan **client-side** menggunakan data
 - **Hutang Logic:** Wajib pilih pelanggan terdaftar; tombol "Add Pelanggan Baru" jika belum ada
 - **Pay Debt Inline:** Kasir dapat melunasi hutang pelanggan langsung dari modal Checkout (sebagian atau penuh) + field catatan
 
+## Keyboard Shortcuts
+
+Handler global terdaftar di `PosClient.tsx` (nonaktif saat modal lain terbuka).
+
+| Tombol | Aksi |
+|---|---|
+| `F1` | Fokus qty item terakhir di keranjang |
+| `F2` | Fokus pencarian produk |
+| `Enter` (saat pencarian kosong) | Buka modal Checkout |
+| `F3` | Tahan transaksi (hold) |
+| `F4` | Buka transaksi ditahan (held carts) |
+| `F5` | Cetak struk terakhir |
+| `F6` | Hapus item terakhir di keranjang |
+| `F7` | Kosongkan seluruh keranjang (**dengan dialog konfirmasi**) |
+| `Esc` | Tutup modal aktif |
+
+- **F6 / F7** hanya berlaku jika keranjang tidak kosong; jika kosong tampilkan toast.
+- **F7** membuka dialog konfirmasi (`ModalFrame`); `Enter` mengonfirmasi, `Esc`/Batal membatalkan. `clear()` mereset item **dan** customer.
+- Di modal Checkout: `⌥1` fokus pelanggan, `⌥2–5` pilih metode bayar, `⌥6` fokus nominal, `Enter` konfirmasi.
+
 ## Post-Transaction
 
 - Toast sukses

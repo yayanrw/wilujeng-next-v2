@@ -189,6 +189,12 @@
     "shortcutSelectPayment": "Select payment",
     "shortcutFocusCustomer": "Focus customer field",
     "shortcutFocusAmount": "Focus amount field",
+    "shortcutRemoveLast": "Remove last cart item",
+    "shortcutClearCart": "Clear cart",
+    "clearCartTitle": "Clear cart?",
+    "clearCartMessage": "All items in the current cart will be removed. This cannot be undone.",
+    "cartAlreadyEmpty": "Cart is already empty",
+    "lastItemRemoved": "Removed last item",
     "emptyAmountHint": "Leave empty to auto-use exact amount"
   },
   "products": {
