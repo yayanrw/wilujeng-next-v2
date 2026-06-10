@@ -196,7 +196,7 @@
   "products": {
     "title": "Produk",
     "subtitle": "Kelola katalog produk dan harga Anda",
-    "searchPlaceholder": "Cari produk...",
+    "searchPlaceholder": "Cari nama atau SKU...",
     "newProduct": "Produk Baru",
     "sku": "SKU",
     "name": "Nama",
