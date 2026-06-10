@@ -126,13 +126,18 @@ export function CheckoutModal({
   const amountInputRef = useRef<HTMLInputElement>(null);
   const customerInputRef = useRef<HTMLInputElement>(null);
   const customerSectionRef = useRef<HTMLDivElement>(null);
+  const modalContentRef = useRef<HTMLDivElement>(null);
 
   const { t } = useTranslation();
 
-  // Auto-focus amount input when modal opens
+  // Auto-focus when modal opens: amount input for cash, otherwise the modal
+  // container so Enter-to-confirm works without a double-submit on a button.
   useEffect(() => {
     if (!open) return;
-    const timer = setTimeout(() => amountInputRef.current?.focus(), 50);
+    const timer = setTimeout(
+      () => (amountInputRef.current ?? modalContentRef.current)?.focus(),
+      50,
+    );
     return () => clearTimeout(timer);
   }, [open]);
 
@@ -148,10 +153,16 @@ export function CheckoutModal({
         if (e.key === '5') { e.preventDefault(); onPaymentMethodChange('debt'); return; }
         if (e.key === '6') { e.preventDefault(); amountInputRef.current?.focus(); return; }
       }
-      // Plain Enter confirms — but let the customer picker handle its own Enter
-      // (selecting/creating a customer) without triggering a checkout.
+      // Plain Enter confirms — but only when focus is already inside the modal.
+      // This prevents the keystroke that OPENED the modal (focus is still on the
+      // POS search bar at that instant) from immediately confirming the payment.
+      // Auto-repeat (holding Enter) is ignored, and the customer picker keeps its
+      // own Enter for selecting/creating a customer.
       if (e.key === 'Enter' && !e.shiftKey) {
-        if (document.activeElement === customerInputRef.current) return;
+        if (e.repeat) return;
+        const active = document.activeElement;
+        if (active === customerInputRef.current) return;
+        if (!modalContentRef.current?.contains(active)) return;
         e.preventDefault();
         if (!pending) onConfirm();
       }
@@ -201,7 +212,9 @@ export function CheckoutModal({
       onClick={onClose}
     >
       <div
-        className="w-full max-w-lg overflow-hidden rounded-2xl bg-white dark:bg-zinc-950 shadow-2xl animate-in fade-in zoom-in-95 duration-200"
+        ref={modalContentRef}
+        tabIndex={-1}
+        className="w-full max-w-lg overflow-hidden rounded-2xl bg-white dark:bg-zinc-950 shadow-2xl animate-in fade-in zoom-in-95 duration-200 outline-none"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header */}
