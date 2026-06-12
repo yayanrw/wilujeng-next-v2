@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useMemo, useState } from 'react';
+import { useRouter } from 'next/navigation';
 import * as LucideIcons from 'lucide-react';
 
 import { Button } from '@/components/ui/Button';
@@ -27,6 +28,7 @@ const iconOptions = [
 ] as const;
 
 export function BrandingSettings() {
+  const router = useRouter();
   const [branding, setBranding] = useState<Branding | null>(null);
   const [pending, setPending] = useState(false);
   const { showToast, Toast } = useToast();
@@ -82,6 +84,7 @@ export function BrandingSettings() {
               }
               showToast(t.common.saved);
               await loadBranding();
+              router.refresh();
             }}
           >
             <div>

@@ -1,4 +1,7 @@
+import type { Metadata } from 'next';
 import { db } from '@/db';
+
+export const metadata: Metadata = { title: 'Profile' };
 import { users } from '@/db/schema';
 import { eq } from 'drizzle-orm';
 import { requireSession } from '@/lib/server-session';
