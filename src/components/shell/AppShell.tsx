@@ -132,6 +132,23 @@ export function AppShell({
     },
   ];
 
+  const currentMenuName = navItems.find((i) => pathname === i.href)?.label;
+
+  useEffect(() => {
+    document.title = currentMenuName ? `${storeName} - ${currentMenuName}` : storeName;
+  }, [storeName, currentMenuName]);
+
+  useEffect(() => {
+    let link = document.querySelector<HTMLLinkElement>("link[rel~='icon']");
+    if (!link) {
+      link = document.createElement('link');
+      link.rel = 'icon';
+      document.head.appendChild(link);
+    }
+    link.href = `/favicons/favicon-${storeIconName}.svg`;
+    link.type = 'image/svg+xml';
+  }, [storeIconName]);
+
   const IconComponent =
     (
       Icons as unknown as Record<
