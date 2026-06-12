@@ -67,7 +67,8 @@
     "settings": "Settings",
     "signOut": "Sign out",
     "signedIn": "Signed in as",
-    "profile": "Profile"
+    "profile": "Profile",
+    "skuChecker": "SKU Check"
   },
   "dashboard": {
     "title": "Dashboard",
@@ -519,5 +520,20 @@
     "passwordsDoNotMatch": "Passwords do not match",
     "newPassword": "New Password",
     "confirmPassword": "Confirm Password"
+  },
+  "skuChecker": {
+    "title": "SKU Checker",
+    "subtitle": "Verify a product's price and tier pricing by SKU or barcode scan",
+    "placeholder": "Enter SKU or scan barcode...",
+    "check": "Check",
+    "notFound": "Product not found",
+    "basePrice": "Base Price",
+    "buyPrice": "Buy Price",
+    "stock": "Stock",
+    "tierPricing": "Tier Pricing",
+    "minQty": "Min Qty",
+    "pricePerUnit": "Price / unit",
+    "active": "Active",
+    "inactive": "Inactive"
   }
 }

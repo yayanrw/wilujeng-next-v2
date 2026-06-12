@@ -67,7 +67,8 @@
     "settings": "Pengaturan",
     "signOut": "Keluar",
     "signedIn": "Masuk sebagai",
-    "profile": "Profil"
+    "profile": "Profil",
+    "skuChecker": "Cek SKU"
   },
   "dashboard": {
     "title": "Dasbor",
@@ -521,5 +522,20 @@
     "passwordsDoNotMatch": "Kata sandi tidak cocok",
     "newPassword": "Kata Sandi Baru",
     "confirmPassword": "Konfirmasi Kata Sandi"
+  },
+  "skuChecker": {
+    "title": "Cek SKU",
+    "subtitle": "Cek harga dan harga tier produk berdasarkan SKU atau scan barcode",
+    "placeholder": "Masukkan SKU atau scan barcode...",
+    "check": "Cek",
+    "notFound": "Produk tidak ditemukan",
+    "basePrice": "Harga Dasar",
+    "buyPrice": "Harga Beli",
+    "stock": "Stok",
+    "tierPricing": "Harga Tier",
+    "minQty": "Min Qty",
+    "pricePerUnit": "Harga / unit",
+    "active": "Aktif",
+    "inactive": "Tidak Aktif"
   }
 }
