@@ -132,6 +132,12 @@ export function AppShell({
     },
   ];
 
+  const currentMenuName = navItems.find((i) => pathname === i.href)?.label;
+
+  useEffect(() => {
+    document.title = currentMenuName ? `${storeName} - ${currentMenuName}` : storeName;
+  }, [storeName, currentMenuName]);
+
   const IconComponent =
     (
       Icons as unknown as Record<
