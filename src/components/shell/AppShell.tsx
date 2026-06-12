@@ -12,6 +12,7 @@ import {
   LayoutDashboard,
   LogOut,
   Package,
+  ScanLine,
   Settings,
   ShoppingCart,
   Users,
@@ -112,6 +113,11 @@ export function AppShell({
       label: t.nav.stock,
       icon: <Package className="h-4 w-4" />,
       badge: lowStockCount > 0 ? lowStockCount : undefined,
+    },
+    {
+      href: '/sku-checker',
+      label: t.nav.skuChecker,
+      icon: <ScanLine className="h-4 w-4" />,
     },
     {
       href: '/customers',
