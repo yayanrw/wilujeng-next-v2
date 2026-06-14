@@ -23,8 +23,10 @@ export async function GET(req: Request) {
 
   const { searchParams } = new URL(req.url);
   const search = (searchParams.get('search') ?? '').trim();
+  const limit = Math.min(parseInt(searchParams.get('limit') || '50', 10), 100);
+  const offset = parseInt(searchParams.get('offset') || '0', 10);
 
-  const cacheKey = `suppliers:list:${search || 'all'}`;
+  const cacheKey = `suppliers:list:${search || 'all'}:${limit}:${offset}`;
   const cachedData = await getCachedData(cacheKey);
 
   if (cachedData) {
@@ -41,7 +43,8 @@ export async function GET(req: Request) {
     .from(suppliers)
     .where(search ? ilike(suppliers.name, `%${search}%`) : undefined)
     .orderBy(asc(suppliers.name))
-    .limit(50);
+    .limit(limit)
+    .offset(offset);
 
   await setCachedData(cacheKey, rows);
   return json(rows);

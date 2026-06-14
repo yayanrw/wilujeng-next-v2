@@ -327,7 +327,13 @@
     "categoriesSubtitle": "Kelola dan atur kategori Anda",
     "categoriesLoading": "Memuat kategori...",
     "searchCategoriesPlaceholder": "Cari kategori...",
-    "noCategories": "Tidak ada kategori ditemukan."
+    "noCategories": "Tidak ada kategori ditemukan.",
+    "suppliersLoaded": "pemasok dimuat",
+    "suppliersSubtitle": "Kelola dan atur pemasok Anda",
+    "suppliersLoading": "Memuat pemasok...",
+    "searchSuppliersPlaceholder": "Cari pemasok...",
+    "noSuppliers": "Tidak ada pemasok ditemukan.",
+    "supplierDeletedSuccess": "Pemasok berhasil dihapus"
   },
   "stock": {
     "title": "Manajemen Stok",

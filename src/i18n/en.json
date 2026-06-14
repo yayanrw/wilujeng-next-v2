@@ -325,7 +325,13 @@
     "categoriesSubtitle": "Manage and organize your categories",
     "categoriesLoading": "Loading categories...",
     "searchCategoriesPlaceholder": "Search categories...",
-    "noCategories": "No categories found."
+    "noCategories": "No categories found.",
+    "suppliersLoaded": "suppliers loaded",
+    "suppliersSubtitle": "Manage and organize your suppliers",
+    "suppliersLoading": "Loading suppliers...",
+    "searchSuppliersPlaceholder": "Search suppliers...",
+    "noSuppliers": "No suppliers found.",
+    "supplierDeletedSuccess": "Supplier deleted"
   },
   "stock": {
     "title": "Stock Management",
