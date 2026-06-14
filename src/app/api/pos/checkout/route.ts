@@ -273,18 +273,12 @@ export async function POST(req: Request) {
 
       const deliveredEntries = [...deliveredByProduct.entries()];
 
-      // #4 Batch stock UPDATE: single CASE WHEN instead of N individual updates
-      await tx.execute(
-        sql`UPDATE products SET stock = CASE id ${sql.join(
-          deliveredEntries.map(([id, { stock, total }]) =>
-            sql`WHEN ${id}::uuid THEN ${stock - total}`,
-          ),
-          sql` `,
-        )} END, updated_at = NOW() WHERE id = ANY(ARRAY[${sql.join(
-          deliveredEntries.map(([id]) => sql`${id}::uuid`),
-          sql`, `,
-        )}])`,
-      );
+      // #4 Stock UPDATE: one typed update per product (within the transaction)
+      for (const [productId, { stock, total }] of deliveredEntries) {
+        await tx.update(products)
+          .set({ stock: stock - total, updatedAt: new Date() })
+          .where(eq(products.id, productId));
+      }
 
       // #5 Batch stockLogs INSERT: single statement instead of N inserts
       await tx.insert(stockLogs).values(
