@@ -313,7 +313,13 @@
     "shortcutAlt2": "Toggle Tier Pricing",
     "shortcutAlt3": "Toggle BxGy Promo",
     "productsLoaded": "products loaded",
-    "noProductsInFilter": "No products match this filter."
+    "noProductsInFilter": "No products match this filter.",
+    "brandDeletedSuccess": "Brand deleted",
+    "brandsLoaded": "brands loaded",
+    "brandsSubtitle": "Manage and organize your brands",
+    "brandsLoading": "Loading brands...",
+    "searchBrandsPlaceholder": "Search brands...",
+    "noBrands": "No brands found."
   },
   "stock": {
     "title": "Stock Management",

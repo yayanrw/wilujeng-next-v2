@@ -315,7 +315,13 @@
     "shortcutAlt2": "Toggle Harga Grosir",
     "shortcutAlt3": "Toggle Promo BxGy",
     "productsLoaded": "produk dimuat",
-    "noProductsInFilter": "Tidak ada produk yang sesuai filter ini."
+    "noProductsInFilter": "Tidak ada produk yang sesuai filter ini.",
+    "brandDeletedSuccess": "Merek berhasil dihapus",
+    "brandsLoaded": "merek dimuat",
+    "brandsSubtitle": "Kelola dan atur merek Anda",
+    "brandsLoading": "Memuat merek...",
+    "searchBrandsPlaceholder": "Cari merek...",
+    "noBrands": "Tidak ada merek ditemukan."
   },
   "stock": {
     "title": "Manajemen Stok",

@@ -1,188 +1,70 @@
 'use client';
 
-import { useEffect, useMemo, useState } from 'react';
-import { Trash } from 'lucide-react';
-import { useTranslation } from '@/i18n/useTranslation';
-import { ConfirmDialog } from '@/components/ui/ConfirmDialog';
-import { useToast } from '@/hooks/useToast';
 import { Card, CardContent, CardHeader } from '@/components/ui/Card';
-import { SearchInput } from '@/components/ui/SearchInput';
-import { Button } from '@/components/ui/Button';
-import { TableLoading } from '@/components/ui/TableLoading';
-import { TableEmpty } from '@/components/ui/TableEmpty';
-import { LoadMoreButton } from '@/components/ui/LoadMoreButton';
+import { ConfirmDialog } from '@/components/ui/ConfirmDialog';
+
+import { BrandProductsFilters } from './BrandProductsFilters';
+import { BrandProductsTable } from './BrandProductsTable';
+import { useBrandProducts } from './useBrandProducts';
 
 export function BrandProducts() {
-  const { t } = useTranslation();
-  const tp =
-    (t as unknown as Record<string, Record<string, string>>).products ?? {};
-
-  const [search, setSearch] = useState('');
-  const [brands, setBrands] = useState<Array<{ id: string; name: string }>>([]);
-  const [loading, setLoading] = useState(false);
-  const [deletingId, setDeletingId] = useState<string | null>(null);
-  const [confirmOpen, setConfirmOpen] = useState(false);
-  const [busy, setBusy] = useState(false);
-  const { showToast, Toast } = useToast();
-  const LIMIT = 50;
-  const [page, setPage] = useState(0);
-
-  useEffect(() => {
-    setLoading(true);
-    fetch('/api/brands')
-      .then((r) => r.json())
-      .then((data) => {
-        if (Array.isArray(data)) setBrands(data);
-      })
-      .catch(console.error)
-      .finally(() => setLoading(false));
-  }, []);
-
-  // Debounced search to match UsersSettings behaviour
-  const [debouncedSearch, setDebouncedSearch] = useState(search);
-  useEffect(() => {
-    const tId = window.setTimeout(() => setDebouncedSearch(search), 300);
-    return () => window.clearTimeout(tId);
-  }, [search]);
-
-  const filtered = useMemo(() => {
-    const q = debouncedSearch.trim().toLowerCase();
-    if (!q) return brands;
-    return brands.filter((b) => (b.name || '').toLowerCase().includes(q));
-  }, [brands, debouncedSearch]);
-
-  const display = useMemo(() => {
-    const start = page * LIMIT;
-    return filtered.slice(start, start + LIMIT);
-  }, [filtered, page]);
-
-  useEffect(() => {
-    // reset pagination when filter changes
-    setPage(0);
-  }, [debouncedSearch]);
-
-  const hasMore = filtered.length > (page + 1) * LIMIT;
-
-  function openDelete(id: string) {
-    setDeletingId(id);
-    setConfirmOpen(true);
-  }
-
-  async function confirmDelete() {
-    if (!deletingId) return;
-    setBusy(true);
-    try {
-      const res = await fetch(`/api/brands/${deletingId}`, {
-        method: 'DELETE',
-      });
-      const body = await res.json().catch(() => ({}));
-      if (!res.ok) {
-        const msg =
-          body?.message ||
-          tp.brandInUse ||
-          tp.deleteFailed ||
-          'Unable to delete';
-        showToast(msg);
-      } else {
-        setBrands((prev) => prev.filter((b) => b.id !== deletingId));
-        showToast(tp.deletedSuccess || 'Deleted');
-      }
-    } catch (err) {
-      console.error(err);
-      showToast(tp.deleteFailed || 'Delete failed');
-    } finally {
-      setBusy(false);
-      setConfirmOpen(false);
-      setDeletingId(null);
-    }
-  }
-
-  const loadMore = () => {
-    if (!hasMore) return;
-    setPage((p) => p + 1);
-  };
+  const {
+    brands,
+    loading,
+    hasMore,
+    search,
+    setSearch,
+    loadMore,
+    isDeleteDialogOpen,
+    openDeleteDialog,
+    closeDeleteDialog,
+    confirmDelete,
+    deleting,
+    t,
+    Toast,
+  } = useBrandProducts();
 
   return (
-    <Card>
-      <CardHeader>
-        <div className="text-lg font-semibold">
-          {tp.brandsTitle ?? 'Brands'}
+    <Card className="h-fit min-w-0">
+      <CardHeader className="flex flex-col gap-4 pb-6">
+        <div className="space-y-1.5">
+          <div className="text-xl font-bold tracking-tight">
+            {t.products.brandsTitle}
+          </div>
+          <div className="text-sm text-zinc-500 dark:text-zinc-400">
+            {!loading && brands.length > 0
+              ? `${brands.length}${hasMore ? '+' : ''} ${t.products.brandsLoaded}`
+              : t.products.brandsSubtitle}
+          </div>
         </div>
-        <div className="mt-3">
-          <SearchInput
-            placeholder={t.common?.search}
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-          />
-        </div>
+        <BrandProductsFilters search={search} onSearchChange={setSearch} />
       </CardHeader>
-      <CardContent className="min-w-0">
-        <div className="overflow-hidden">
-          <table className="w-full text-sm">
-            <thead className="border-y border-zinc-200 bg-zinc-50/50 dark:border-zinc-800 dark:bg-zinc-900/50">
-              <tr>
-                <th className="py-3 px-4 text-left font-medium text-zinc-900 dark:text-zinc-100">
-                  {tp.brandName ?? t.common.name}
-                </th>
-                <th className="py-3 px-4 text-right font-medium text-zinc-900 dark:text-zinc-100">
-                  {t.common.action}
-                </th>
-              </tr>
-            </thead>
-            <tbody>
-              {loading && brands.length === 0 ? (
-                <TableLoading colSpan={2} message={t.common.loading} />
-              ) : display.length === 0 ? (
-                <TableEmpty colSpan={2} message={t.common.noData} />
-              ) : (
-                display.map((b) => (
-                  <tr
-                    key={b.id}
-                    className="border-b border-zinc-200 hover:bg-zinc-50/50 dark:border-zinc-800 dark:hover:bg-zinc-900/50"
-                  >
-                    <td className="py-3 px-4 align-middle text-zinc-900 dark:text-zinc-100">
-                      {b.name}
-                    </td>
-                    <td className="py-3 px-4 text-right">
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        className="h-8 w-8 p-0 text-red-500 hover:text-red-600 dark:text-red-400 dark:hover:text-red-300 transition-colors"
-                        onClick={() => openDelete(b.id)}
-                        title={t.common.delete}
-                      >
-                        <Trash className="h-4 w-4" />
-                        <span className="sr-only">{t.common.delete}</span>
-                      </Button>
-                    </td>
-                  </tr>
-                ))
-              )}
-            </tbody>
-          </table>
-        </div>
 
-        <LoadMoreButton
-          onClick={loadMore}
+      <CardContent className="p-0 min-w-0">
+        <BrandProductsTable
+          brands={brands}
+          loading={loading}
           hasMore={hasMore}
-          label={t.settings?.loadMore ?? 'Load more'}
+          onDelete={openDeleteDialog}
+          onLoadMore={loadMore}
+          loadMoreLabel={t.common.loadMore}
+          loadingMessage={t.products.brandsLoading}
+          noDataMessage={t.products.noBrands}
+          actionLabel={t.common.action}
+          nameLabel={t.common.name}
+          deleteLabel={t.common.delete}
         />
       </CardContent>
 
       <ConfirmDialog
-        open={confirmOpen}
-        title={
-          tp.deleteConfirmTitle ?? t.products?.deleteConfirmTitle ?? 'Delete'
-        }
-        description={tp.deleteBrandConfirmDesc ?? t.products?.deleteConfirmDesc}
+        open={isDeleteDialogOpen}
+        title={t.products.deleteConfirmTitle}
+        description={t.products.deleteBrandConfirmDesc}
         confirmText={t.common.delete}
         cancelText={t.common.cancel}
-        onClose={() => {
-          setConfirmOpen(false);
-          setDeletingId(null);
-        }}
+        onClose={closeDeleteDialog}
         onConfirm={confirmDelete}
-        loading={busy}
+        loading={deleting}
       />
 
       <Toast />
