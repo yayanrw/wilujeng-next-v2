@@ -321,7 +321,13 @@
     "brandsSubtitle": "Kelola dan atur merek Anda",
     "brandsLoading": "Memuat merek...",
     "searchBrandsPlaceholder": "Cari merek...",
-    "noBrands": "Tidak ada merek ditemukan."
+    "noBrands": "Tidak ada merek ditemukan.",
+    "categoryDeletedSuccess": "Kategori berhasil dihapus",
+    "categoriesLoaded": "kategori dimuat",
+    "categoriesSubtitle": "Kelola dan atur kategori Anda",
+    "categoriesLoading": "Memuat kategori...",
+    "searchCategoriesPlaceholder": "Cari kategori...",
+    "noCategories": "Tidak ada kategori ditemukan."
   },
   "stock": {
     "title": "Manajemen Stok",

@@ -319,7 +319,13 @@
     "brandsSubtitle": "Manage and organize your brands",
     "brandsLoading": "Loading brands...",
     "searchBrandsPlaceholder": "Search brands...",
-    "noBrands": "No brands found."
+    "noBrands": "No brands found.",
+    "categoryDeletedSuccess": "Category deleted",
+    "categoriesLoaded": "categories loaded",
+    "categoriesSubtitle": "Manage and organize your categories",
+    "categoriesLoading": "Loading categories...",
+    "searchCategoriesPlaceholder": "Search categories...",
+    "noCategories": "No categories found."
   },
   "stock": {
     "title": "Stock Management",
