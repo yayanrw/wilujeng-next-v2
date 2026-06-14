@@ -1,10 +1,12 @@
 'use client';
 
+import { useState } from 'react';
 import { Plus } from 'lucide-react';
 
 import { Button } from '@/components/ui/Button';
 import { Card, CardContent, CardHeader } from '@/components/ui/Card';
 import { ConfirmDialog } from '@/components/ui/ConfirmDialog';
+import { BottomDrawer } from '@/components/ui/BottomDrawer';
 
 import { ProductForm } from './ProductForm';
 import { ProductFilters } from './ProductFilters';
@@ -32,6 +34,26 @@ export function Products({
     handleSaved,
     t, Toast,
   } = useProducts({ statFilter, onProductChanged });
+
+  const [drawerOpen, setDrawerOpen] = useState(false);
+
+  function handleTableEdit(id: string) {
+    setEditId(id);
+    // Only open drawer on mobile (below lg breakpoint)
+    if (typeof window !== 'undefined' && window.matchMedia('(max-width: 1023px)').matches) {
+      setDrawerOpen(true);
+    }
+  }
+
+  function closeDrawer() {
+    setDrawerOpen(false);
+    setEditId(null);
+  }
+
+  function handleDrawerSaved(success: boolean, errorMsg?: string) {
+    handleSaved(success, errorMsg);
+    if (success) setDrawerOpen(false);
+  }
 
   return (
     <div className="grid grid-cols-1 gap-4 lg:grid-cols-[1fr_420px] min-w-0 overflow-x-hidden">
@@ -67,7 +89,7 @@ export function Products({
             editId={editId}
             statFilter={statFilter}
             onSort={handleSort}
-            onEdit={setEditId}
+            onEdit={handleTableEdit}
             onDelete={openDeleteDialog}
             onStatusChange={handleStatusChange}
             onQuickStockIn={setQuickStockInProduct}
@@ -76,7 +98,8 @@ export function Products({
         </CardContent>
       </Card>
 
-      <Card className="min-w-0">
+      {/* Desktop: right-panel form card */}
+      <Card className="hidden lg:block min-w-0">
         <CardHeader>
           <div className="flex items-center justify-between">
             <div>
@@ -103,6 +126,29 @@ export function Products({
           />
         </CardContent>
       </Card>
+
+      {/* Mobile: FAB + bottom drawer */}
+      <button
+        type="button"
+        onClick={() => { setEditId(null); setDrawerOpen(true); }}
+        className="lg:hidden fixed bottom-6 right-6 z-30 flex h-14 w-14 items-center justify-center rounded-full bg-zinc-900 dark:bg-zinc-100 text-white dark:text-zinc-900 shadow-lg hover:bg-zinc-800 dark:hover:bg-zinc-200 transition-colors"
+        aria-label={t.products.newProduct}
+      >
+        <Plus className="h-6 w-6" />
+      </button>
+
+      <BottomDrawer
+        open={drawerOpen}
+        onClose={closeDrawer}
+        title={editId ? t.products.editProduct : t.products.newProduct}
+        subtitle={t.common.adminOnly}
+      >
+        <ProductForm
+          mode={editId ? 'edit' : 'create'}
+          initial={editId ? (selected ?? undefined) : undefined}
+          onSaved={handleDrawerSaved}
+        />
+      </BottomDrawer>
 
       {quickStockInProduct && (
         <QuickStockInModal
