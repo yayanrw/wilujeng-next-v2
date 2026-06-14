@@ -446,7 +446,12 @@
     "deleteFailed": "Failed to delete customer",
     "willCreateNew": "Will be created as new",
     "createNew": "Create new customer",
-    "nameRequired": "Name is required"
+    "nameRequired": "Name is required",
+    "statTotal": "Total Customers",
+    "statDebtors": "With Debt",
+    "statTotalDebt": "Outstanding Debt",
+    "statPoints": "Loyalty Points",
+    "statNewThisMonth": "New This Month"
   },
   "reports": {
     "title": "Reports",

@@ -8,6 +8,14 @@ import { useTranslation } from '@/i18n/useTranslation';
 
 import type { CustomerDto } from './CustomerForm';
 
+export type CustomerStats = {
+  total: number;
+  debtorCount: number;
+  totalDebt: number;
+  totalPoints: number;
+  newThisMonth: number;
+};
+
 export type CustomerSortField = 'name' | 'points' | 'totalDebt';
 
 export type CustomerDetail = {
@@ -37,6 +45,21 @@ export function useCustomers() {
     totalDebt: number;
   } | null>(null);
   const [detail, setDetail] = useState<CustomerDetail | null>(null);
+  const [stats, setStats] = useState<CustomerStats | null>(null);
+  const [statsLoading, setStatsLoading] = useState(true);
+
+  const fetchStats = useCallback(async () => {
+    try {
+      const res = await fetch('/api/customers/stats');
+      if (res.ok) setStats((await res.json()) as CustomerStats);
+    } finally {
+      setStatsLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    void fetchStats();
+  }, [fetchStats]);
 
   const handleSort = useCallback(
     (field: CustomerSortField) => {
@@ -126,6 +149,7 @@ export function useCustomers() {
       if (ok) {
         if (deletingId === editId) setEditId(null);
         refresh();
+        void fetchStats();
         showToast(t.customers.deletedSuccess);
       } else {
         showToast(t.customers.deleteFailed);
@@ -144,6 +168,7 @@ export function useCustomers() {
       if (success) {
         const wasEdit = !!editId;
         refresh();
+        void fetchStats();
         showToast(wasEdit ? t.customers.updatedSuccess : t.customers.createdSuccess);
         if (wasEdit) setEditId(null);
       } else {
@@ -165,6 +190,7 @@ export function useCustomers() {
         showToast(t.customers.paymentSuccessful);
         setPayDebtCustomer(null);
         refresh();
+        void fetchStats();
         if (editId === payDebtCustomer.id) {
           void fetch(`/api/customers/${editId}`)
             .then((r) => r.json())
@@ -205,6 +231,8 @@ export function useCustomers() {
     setPayDebtCustomer,
     handlePayDebt,
     handleSaved,
+    stats,
+    statsLoading,
     t,
     Toast,
   };

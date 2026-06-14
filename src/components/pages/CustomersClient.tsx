@@ -9,6 +9,7 @@ import { BottomDrawer } from '@/components/ui/BottomDrawer';
 import { Button } from '@/components/ui/Button';
 import { Card, CardContent, CardHeader } from '@/components/ui/Card';
 import { ConfirmDialog } from '@/components/ui/ConfirmDialog';
+import { StatCard } from '@/components/shared/StatCard';
 import { formatIdr } from '@/utils/money';
 
 import { CustomerForm } from './customers/CustomerForm';
@@ -41,6 +42,8 @@ export function CustomersClient() {
     setPayDebtCustomer,
     handlePayDebt,
     handleSaved,
+    stats,
+    statsLoading,
     t,
     Toast,
   } = useCustomers();
@@ -68,7 +71,46 @@ export function CustomersClient() {
   }
 
   return (
-    <div className="grid grid-cols-1 gap-4 lg:grid-cols-[1fr_420px] min-w-0 overflow-x-hidden">
+    <div className="flex flex-col gap-4 min-w-0 overflow-x-hidden">
+      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-2">
+        <StatCard
+          label={t.customers.statTotal}
+          value={stats?.total ?? 0}
+          tone="neutral"
+          clickable={false}
+          loading={statsLoading}
+        />
+        <StatCard
+          label={t.customers.statTotalDebt}
+          value={stats ? formatIdr(stats.totalDebt) : '—'}
+          tone={stats && stats.totalDebt > 0 ? 'danger' : 'neutral'}
+          clickable={false}
+          loading={statsLoading}
+        />
+        <StatCard
+          label={t.customers.statDebtors}
+          value={stats?.debtorCount ?? 0}
+          tone={stats && stats.debtorCount > 0 ? 'danger' : 'neutral'}
+          clickable={false}
+          loading={statsLoading}
+        />
+        <StatCard
+          label={t.customers.statPoints}
+          value={stats?.totalPoints.toLocaleString('id-ID') ?? 0}
+          tone="info"
+          clickable={false}
+          loading={statsLoading}
+        />
+        <StatCard
+          label={t.customers.statNewThisMonth}
+          value={stats?.newThisMonth ?? 0}
+          tone="success"
+          clickable={false}
+          loading={statsLoading}
+        />
+      </div>
+
+    <div className="grid grid-cols-1 gap-4 lg:grid-cols-[1fr_420px] min-w-0">
       <Card className="h-fit min-w-0">
         <CardHeader className="flex flex-col gap-4 pb-6">
           <div className="space-y-1.5">
@@ -231,6 +273,7 @@ export function CustomersClient() {
       )}
 
       <Toast />
+    </div>
     </div>
   );
 }

@@ -448,7 +448,12 @@
     "deleteFailed": "Gagal menghapus pelanggan",
     "willCreateNew": "Akan dibuat sebagai baru",
     "createNew": "Buat pelanggan baru",
-    "nameRequired": "Nama wajib diisi"
+    "nameRequired": "Nama wajib diisi",
+    "statTotal": "Total Pelanggan",
+    "statDebtors": "Punya Hutang",
+    "statTotalDebt": "Total Hutang",
+    "statPoints": "Poin Loyalitas",
+    "statNewThisMonth": "Baru Bulan Ini"
   },
   "reports": {
     "title": "Laporan",
