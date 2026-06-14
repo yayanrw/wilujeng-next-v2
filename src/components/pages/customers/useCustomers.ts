@@ -16,6 +16,8 @@ export type CustomerStats = {
   newThisMonth: number;
 };
 
+export type CustomerStatFilter = 'debt' | 'new_this_month';
+
 export type CustomerSortField = 'name' | 'points' | 'totalDebt';
 
 export type CustomerDetail = {
@@ -33,6 +35,7 @@ export function useCustomers() {
   const { showToast, Toast } = useToast();
   const { t } = useTranslation();
 
+  const [statFilter, setStatFilter] = useState<CustomerStatFilter | null>(null);
   const [sortField, setSortField] = useState<CustomerSortField>('name');
   const [sortDir, setSortDir] = useState<'asc' | 'desc'>('asc');
   const [editId, setEditId] = useState<string | null>(null);
@@ -73,6 +76,10 @@ export function useCustomers() {
     [sortField],
   );
 
+  const toggleStatFilter = useCallback((f: CustomerStatFilter) => {
+    setStatFilter((prev) => (prev === f ? null : f));
+  }, []);
+
   const fetchFn = useCallback(
     async ({
       search,
@@ -85,6 +92,7 @@ export function useCustomers() {
     }) => {
       const params = new URLSearchParams();
       if (search) params.append('search', search);
+      if (statFilter) params.append('filter', statFilter);
       params.append('sortBy', sortField);
       params.append('sortOrder', sortDir);
       params.append('limit', limit.toString());
@@ -92,7 +100,7 @@ export function useCustomers() {
       const res = await fetch(`/api/customers?${params.toString()}`);
       return res.json().catch(() => []) as Promise<CustomerDto[]>;
     },
-    [sortField, sortDir],
+    [statFilter, sortField, sortDir],
   );
 
   const {
@@ -233,6 +241,9 @@ export function useCustomers() {
     handleSaved,
     stats,
     statsLoading,
+    statFilter,
+    setStatFilter,
+    toggleStatFilter,
     t,
     Toast,
   };

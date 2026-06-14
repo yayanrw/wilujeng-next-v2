@@ -1,4 +1,4 @@
-import { asc, desc, ilike, or } from "drizzle-orm";
+import { and, asc, desc, eq, gt, gte, ilike } from "drizzle-orm";
 import { z } from "zod";
 
 import { db } from "@/db";
@@ -13,15 +13,24 @@ export async function GET(req: Request) {
   const search = (searchParams.get("search") ?? "").trim();
   const sortBy = searchParams.get("sortBy") || "name";
   const sortOrder = searchParams.get("sortOrder") || "asc";
-  
+  const filter = searchParams.get("filter");
+
   const limitParam = parseInt(searchParams.get("limit") || "50", 10);
   const offsetParam = parseInt(searchParams.get("offset") || "0", 10);
   const limit = isNaN(limitParam) || limitParam <= 0 ? 50 : Math.min(limitParam, 100);
   const offset = isNaN(offsetParam) || offsetParam < 0 ? 0 : offsetParam;
 
-  const where = search
-    ? ilike(customers.name, `%${search}%`)
-    : undefined;
+  const now = new Date();
+  const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+
+  const conditions = [
+    eq(customers.isDeleted, false),
+    ...(search ? [ilike(customers.name, `%${search}%`)] : []),
+    ...(filter === "debt" ? [gt(customers.totalDebt, 0)] : []),
+    ...(filter === "new_this_month" ? [gte(customers.createdAt, startOfMonth)] : []),
+  ];
+
+  const where = conditions.length === 1 ? conditions[0] : and(...conditions);
 
   let orderByColumn;
   switch (sortBy) {

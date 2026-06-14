@@ -44,6 +44,9 @@ export function CustomersClient() {
     handleSaved,
     stats,
     statsLoading,
+    statFilter,
+    setStatFilter,
+    toggleStatFilter,
     t,
     Toast,
   } = useCustomers();
@@ -77,8 +80,9 @@ export function CustomersClient() {
           label={t.customers.statTotal}
           value={stats?.total ?? 0}
           tone="neutral"
-          clickable={false}
+          active={statFilter === null}
           loading={statsLoading}
+          onClick={() => setStatFilter(null)}
         />
         <StatCard
           label={t.customers.statTotalDebt}
@@ -91,8 +95,9 @@ export function CustomersClient() {
           label={t.customers.statDebtors}
           value={stats?.debtorCount ?? 0}
           tone={stats && stats.debtorCount > 0 ? 'danger' : 'neutral'}
-          clickable={false}
+          active={statFilter === 'debt'}
           loading={statsLoading}
+          onClick={() => toggleStatFilter('debt')}
         />
         <StatCard
           label={t.customers.statPoints}
@@ -105,8 +110,9 @@ export function CustomersClient() {
           label={t.customers.statNewThisMonth}
           value={stats?.newThisMonth ?? 0}
           tone="success"
-          clickable={false}
+          active={statFilter === 'new_this_month'}
           loading={statsLoading}
+          onClick={() => toggleStatFilter('new_this_month')}
         />
       </div>
 
