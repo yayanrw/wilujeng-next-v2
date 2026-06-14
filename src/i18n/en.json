@@ -445,7 +445,8 @@
     "deletedSuccess": "Customer deleted",
     "deleteFailed": "Failed to delete customer",
     "willCreateNew": "Will be created as new",
-    "createNew": "Create new customer"
+    "createNew": "Create new customer",
+    "nameRequired": "Name is required"
   },
   "reports": {
     "title": "Reports",

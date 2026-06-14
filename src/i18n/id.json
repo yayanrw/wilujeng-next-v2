@@ -447,7 +447,8 @@
     "deletedSuccess": "Pelanggan dihapus",
     "deleteFailed": "Gagal menghapus pelanggan",
     "willCreateNew": "Akan dibuat sebagai baru",
-    "createNew": "Buat pelanggan baru"
+    "createNew": "Buat pelanggan baru",
+    "nameRequired": "Nama wajib diisi"
   },
   "reports": {
     "title": "Laporan",
