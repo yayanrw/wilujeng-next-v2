@@ -525,6 +525,7 @@
     "role": "Role",
     "loadingUsers": "Loading users...",
     "noUsers": "No users found.",
+    "usersLoaded": "users loaded",
     "loadMore": "Load More",
     "createUser": "Create User",
     "editUser": "Edit User",
@@ -544,7 +545,13 @@
     "saveFailed": "Failed to save user",
     "passwordsDoNotMatch": "Passwords do not match",
     "newPassword": "New Password",
-    "confirmPassword": "Confirm Password"
+    "confirmPassword": "Confirm Password",
+    "keyboardShortcuts": "Keyboard Shortcuts",
+    "shortcutNextField": "Next field",
+    "shortcutSubmit": "Submit",
+    "nameRequired": "Name is required",
+    "emailRequired": "Email is required",
+    "passwordMinLength": "Password must be at least 8 characters"
   },
   "skuChecker": {
     "title": "SKU Checker",
