@@ -551,7 +551,12 @@
     "shortcutSubmit": "Submit",
     "nameRequired": "Name is required",
     "emailRequired": "Email is required",
-    "passwordMinLength": "Password must be at least 8 characters"
+    "passwordMinLength": "Password must be at least 8 characters",
+    "statTotal": "Total Users",
+    "statAdmins": "Admins",
+    "statCashiers": "Cashiers",
+    "statNewThisMonth": "New This Month",
+    "statActiveSessions": "Active Sessions"
   },
   "skuChecker": {
     "title": "SKU Checker",

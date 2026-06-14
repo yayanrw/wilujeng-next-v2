@@ -553,7 +553,12 @@
     "shortcutSubmit": "Kirim",
     "nameRequired": "Nama wajib diisi",
     "emailRequired": "Email wajib diisi",
-    "passwordMinLength": "Kata sandi minimal 8 karakter"
+    "passwordMinLength": "Kata sandi minimal 8 karakter",
+    "statTotal": "Total Pengguna",
+    "statAdmins": "Admin",
+    "statCashiers": "Kasir",
+    "statNewThisMonth": "Baru Bulan Ini",
+    "statActiveSessions": "Sesi Aktif"
   },
   "skuChecker": {
     "title": "Cek SKU",
