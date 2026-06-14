@@ -401,6 +401,7 @@
     "debt": "Debt",
     "loading": "Loading customers...",
     "noCustomers": "No customers found.",
+    "customersLoaded": "customers loaded",
     "loadMore": "Load More Customers",
     "editCustomer": "Edit Customer",
     "createCustomer": "Create Customer",

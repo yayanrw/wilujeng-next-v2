@@ -403,6 +403,7 @@
     "debt": "Hutang",
     "loading": "Memuat pelanggan...",
     "noCustomers": "Pelanggan tidak ditemukan.",
+    "customersLoaded": "pelanggan dimuat",
     "loadMore": "Muat Lebih Banyak Pelanggan",
     "editCustomer": "Edit Pelanggan",
     "createCustomer": "Buat Pelanggan",
