@@ -40,10 +40,67 @@ export async function POST(req: Request) {
   const parsed = Schema.safeParse(body);
   if (!parsed.success) return badRequest(parsed.error.message);
 
+  // #1 Early fail: pure debt with no customer — reject before any DB call
+  if (
+    parsed.data.paymentMethod === 'debt' &&
+    parsed.data.amountReceived === 0 &&
+    !parsed.data.customerId
+  ) {
+    return badRequest('Customer is required for debt or partial payment');
+  }
+
   const productIds = [...new Set(parsed.data.items.map((i) => i.productId))];
+  const { customerId } = parsed.data;
+  const now = new Date();
 
   try {
+    // #2 + #3: Pre-transaction parallel reads — tiers, promos, and customer
+    // don't need a lock and can run concurrently before entering the transaction.
+    const [customerRow, tiers, promoRows] = await Promise.all([
+      customerId
+        ? db.query.customers.findFirst({ where: (t, { eq: eq2 }) => eq2(t.id, customerId) })
+        : Promise.resolve(null),
+      db
+        .select({
+          productId: productTiers.productId,
+          minQty: productTiers.minQty,
+          price: productTiers.price,
+        })
+        .from(productTiers)
+        .where(inArray(productTiers.productId, productIds))
+        .orderBy(asc(productTiers.minQty)),
+      db
+        .select({
+          productId: productBxgyPromos.productId,
+          buyQty: productBxgyPromos.buyQty,
+          freeQty: productBxgyPromos.freeQty,
+          maxMultiplierPerTx: productBxgyPromos.maxMultiplierPerTx,
+        })
+        .from(productBxgyPromos)
+        .where(
+          and(
+            inArray(productBxgyPromos.productId, productIds),
+            eq(productBxgyPromos.active, true),
+            gt(productBxgyPromos.freeQty, 0),
+            or(isNull(productBxgyPromos.validFrom), lte(productBxgyPromos.validFrom, now)),
+            or(isNull(productBxgyPromos.validTo), gte(productBxgyPromos.validTo, now)),
+          ),
+        ),
+    ]);
+
+    if (customerId && !customerRow) throw new Error('customer_not_found');
+
+    const tiersByProduct = new Map<string, { minQty: number; price: number }[]>();
+    for (const tier of tiers) {
+      const list = tiersByProduct.get(tier.productId) ?? [];
+      list.push({ minQty: tier.minQty, price: tier.price });
+      tiersByProduct.set(tier.productId, list);
+    }
+
+    const promoByProduct = new Map(promoRows.map((p) => [p.productId, p]));
+
     const txResult = await db.transaction(async (tx) => {
+      // Transaction lock window: products FOR UPDATE + all writes only
       const productRows = await tx
         .select({
           id: products.id,
@@ -62,52 +119,10 @@ export async function POST(req: Request) {
         throw new Error('missing_products');
       }
 
-      const tiers = await tx
-        .select({
-          productId: productTiers.productId,
-          minQty: productTiers.minQty,
-          price: productTiers.price,
-        })
-        .from(productTiers)
-        .where(inArray(productTiers.productId, productIds))
-        .orderBy(asc(productTiers.minQty));
-
-      const tiersByProduct = new Map<
-        string,
-        { minQty: number; price: number }[]
-      >();
-      for (const tier of tiers) {
-        const list = tiersByProduct.get(tier.productId) ?? [];
-        list.push({ minQty: tier.minQty, price: tier.price });
-        tiersByProduct.set(tier.productId, list);
-      }
-
-      const now = new Date();
-      const promoRows = await tx
-        .select({
-          productId: productBxgyPromos.productId,
-          buyQty: productBxgyPromos.buyQty,
-          freeQty: productBxgyPromos.freeQty,
-          maxMultiplierPerTx: productBxgyPromos.maxMultiplierPerTx,
-        })
-        .from(productBxgyPromos)
-        .where(
-          and(
-            inArray(productBxgyPromos.productId, productIds),
-            eq(productBxgyPromos.active, true),
-            gt(productBxgyPromos.freeQty, 0),
-            or(isNull(productBxgyPromos.validFrom), lte(productBxgyPromos.validFrom, now)),
-            or(isNull(productBxgyPromos.validTo), gte(productBxgyPromos.validTo, now)),
-          ),
-        );
-
-      const promoByProduct = new Map(promoRows.map((p) => [p.productId, p]));
-
       const qtyById = new Map(
         parsed.data.items.map((i) => [i.productId, i.qty] as const),
       );
 
-      // Compute free qty per item
       const freeQtyById = new Map<string, number>();
       for (const p of productRows) {
         const qtyPaid = qtyById.get(p.id) ?? 0;
@@ -124,8 +139,7 @@ export async function POST(req: Request) {
       for (const p of productRows) {
         const qty = qtyById.get(p.id) ?? 0;
         const freeQty = freeQtyById.get(p.id) ?? 0;
-        const qtyDelivered = qty + freeQty;
-        if (p.stock < qtyDelivered) {
+        if (p.stock < qty + freeQty) {
           throw new Error(`stock_insufficient:${p.name}:${p.stock}`);
         }
       }
@@ -185,28 +199,21 @@ export async function POST(req: Request) {
         amountReceived: parsed.data.amountReceived,
       });
 
-      if (payment.status === 'debt' && !parsed.data.customerId) {
+      // Partial-payment debt requires totalAmount, so this check stays here
+      if (payment.status === 'debt' && !customerId) {
         throw new Error('customer_required');
       }
 
       let debtPay = 0;
-      if (parsed.data.customerId) {
-        const customer = await tx.query.customers.findFirst({
-          where: (t, { eq: eq2 }) => eq2(t.id, parsed.data.customerId!),
-        });
-        if (!customer) throw new Error('customer_not_found');
-
-        if (
-          parsed.data.debtPaymentAmount &&
-          parsed.data.debtPaymentAmount > 0
-        ) {
-          if (parsed.data.debtPaymentAmount > customer.totalDebt) {
+      if (customerId && customerRow) {
+        if (parsed.data.debtPaymentAmount && parsed.data.debtPaymentAmount > 0) {
+          if (parsed.data.debtPaymentAmount > customerRow.totalDebt) {
             throw new Error('debt_exceeds_total');
           }
           debtPay = parsed.data.debtPaymentAmount;
 
           await tx.insert(debtPayments).values({
-            customerId: customer.id,
+            customerId: customerRow.id,
             amount: debtPay,
             method:
               parsed.data.paymentMethod !== 'debt'
@@ -219,7 +226,7 @@ export async function POST(req: Request) {
           const debtPointsAdd = Math.floor(debtPay / 1000);
           if (debtPointsAdd > 0) {
             await tx.insert(pointsLog).values({
-              customerId: customer.id,
+              customerId: customerRow.id,
               delta: debtPointsAdd,
               reason: 'debt_paid',
             });
@@ -230,7 +237,7 @@ export async function POST(req: Request) {
       const [createdTx] = await tx
         .insert(transactions)
         .values({
-          customerId: parsed.data.customerId ?? null,
+          customerId: customerId ?? null,
           userId: session.user.id,
           totalAmount,
           paymentMethod: parsed.data.paymentMethod,
@@ -253,7 +260,7 @@ export async function POST(req: Request) {
         })),
       );
 
-      // Group by productId and reduce stock by total delivered (paid + free)
+      // Group by productId and sum total delivered (paid + free)
       const deliveredByProduct = new Map<string, { stock: number; total: number }>();
       for (const i of lineItems) {
         const entry = deliveredByProduct.get(i.productId);
@@ -264,25 +271,35 @@ export async function POST(req: Request) {
         }
       }
 
-      for (const [productId, { stock, total }] of deliveredByProduct) {
-        const nextStock = stock - total;
-        await tx
-          .update(products)
-          .set({ stock: nextStock, updatedAt: new Date() })
-          .where(eq(products.id, productId));
+      const deliveredEntries = [...deliveredByProduct.entries()];
 
-        await tx.insert(stockLogs).values({
+      // #4 Batch stock UPDATE: single CASE WHEN instead of N individual updates
+      await tx.execute(
+        sql`UPDATE products SET stock = CASE id ${sql.join(
+          deliveredEntries.map(([id, { stock, total }]) =>
+            sql`WHEN ${id}::uuid THEN ${stock - total}`,
+          ),
+          sql` `,
+        )} END, updated_at = NOW() WHERE id = ANY(ARRAY[${sql.join(
+          deliveredEntries.map(([id]) => sql`${id}::uuid`),
+          sql`, `,
+        )}])`,
+      );
+
+      // #5 Batch stockLogs INSERT: single statement instead of N inserts
+      await tx.insert(stockLogs).values(
+        deliveredEntries.map(([productId, { stock, total }]) => ({
           productId,
-          type: 'out',
+          type: 'out' as const,
           qty: total,
           prevStock: stock,
-          nextStock,
+          nextStock: stock - total,
           note: `sale:${createdTx.id}`,
           transactionId: createdTx.id,
-        });
-      }
+        })),
+      );
 
-      if (parsed.data.customerId) {
+      if (customerId) {
         let pointsAdd = 0;
         if (payment.status === 'paid') {
           pointsAdd = Math.floor(totalAmount / 1000);
@@ -291,7 +308,7 @@ export async function POST(req: Request) {
 
         if (pointsAdd > 0) {
           await tx.insert(pointsLog).values({
-            customerId: parsed.data.customerId,
+            customerId,
             transactionId: createdTx.id,
             delta: pointsAdd,
             reason: 'transaction',
@@ -308,20 +325,19 @@ export async function POST(req: Request) {
             totalDebt: sql`${customers.totalDebt} + ${debtAdd} - ${debtPay}`,
             updatedAt: new Date(),
           })
-          .where(eq(customers.id, parsed.data.customerId));
+          .where(eq(customers.id, customerId));
       }
 
       return { id: createdTx.id, lineItems, totalAmount, payment };
     });
 
-    const branding = await db.query.settings.findFirst({
-      orderBy: (t) => [desc(t.updatedAt)],
-    });
-
-    await invalidateCachePattern('products:catalog:*');
-    // Invalidate POS specific caches
-    await invalidateCache('pos:catalog:all');
-    await invalidateCache('pos:stocks:all');
+    // #6 Parallel post-transaction: branding fetch + all cache invalidations
+    const [branding] = await Promise.all([
+      db.query.settings.findFirst({ orderBy: (t) => [desc(t.updatedAt)] }),
+      invalidateCachePattern('products:catalog:*'),
+      invalidateCache('pos:catalog:all'),
+      invalidateCache('pos:stocks:all'),
+    ]);
 
     return json({
       transactionId: txResult.id,
