@@ -309,6 +309,254 @@ export function useFeatures({ statFilter, onChanged }) {
 
 ---
 
+## Standard Form Pattern
+
+**Reference implementation:** `src/components/pages/products/ProductForm.tsx`
+
+Every create/edit form follows these patterns. Do not deviate.
+
+### State structure
+
+```tsx
+// Required always
+const [pending, setPending] = useState(false);      // submit in-flight
+const [submitted, setSubmitted] = useState(false);  // shows inline errors after first attempt
+
+// One ref per focusable field (for keyboard nav)
+const firstFieldRef = useRef<HTMLInputElement>(null);
+const secondFieldRef = useRef<HTMLInputElement>(null);
+
+// Primary validation gate
+const canSave = useMemo(
+  () => Boolean(field1.trim() && field2.trim()),
+  [field1, field2],
+);
+```
+
+### Sync state on edit selection
+
+When the user clicks a different row to edit, sync all fields via `useEffect`:
+
+```tsx
+useEffect(() => {
+  if (mode === 'edit' && initial) {
+    setField1(initial.field1);
+    setField2(initial.field2);
+    fetchRelatedData(initial.id);
+  } else if (mode === 'create') {
+    setField1('');
+    setField2('');
+  }
+  setSubmitted(false);
+}, [initial, mode]);
+```
+
+### Loading bar
+
+Always include the progress bar as the **first child** of `<form>`. It always reserves `h-1` space — no layout shift.
+
+```tsx
+<div className="h-1 w-full overflow-hidden rounded-full bg-zinc-100 dark:bg-zinc-800" style={{ opacity: pending ? 1 : 0 }}>
+  <div className="h-full w-2/5 rounded-full bg-zinc-900 dark:bg-zinc-100 [animation:bar-slide_1.5s_ease-in-out_infinite]" />
+</div>
+```
+
+### Form disable during submit
+
+Apply directly to `<form>` — blocks all interaction while the request is in-flight:
+
+```tsx
+<form
+  className={`flex flex-col gap-3 transition-opacity duration-150${pending ? ' opacity-60 pointer-events-none' : ''}`}
+  onSubmit={...}
+>
+```
+
+### Keyboard navigation
+
+Every text/number input must handle `Enter` to move focus to the next field. Apply to `<form>` for global shortcuts:
+
+```tsx
+<form
+  onKeyDown={(e) => {
+    if (e.shiftKey && e.key === 'Enter') {
+      e.preventDefault();
+      formRef.current?.requestSubmit();  // Shift+Enter → submit
+    }
+    if (e.altKey && e.key === '1') {
+      e.preventDefault();
+      setSectionEnabled((v) => !v);     // Alt+N → toggle optional section
+    }
+  }}
+>
+  <Input
+    onKeyDown={(e) => {
+      if (e.key === 'Enter') { e.preventDefault(); nextFieldRef.current?.focus(); }
+    }}
+  />
+```
+
+### Shortcuts popup
+
+Include an info button (`<Info>` icon) in the top-right of the form that reveals a shortcut reference panel. Always show:
+- `Enter` → next field
+- `⇧ Enter` → submit
+- `⌥ N` → toggle each optional section
+
+```tsx
+<div className="flex justify-end">
+  <div className="relative">
+    <button type="button" onClick={() => setShortcutsOpen((v) => !v)}
+      className="flex items-center gap-1 rounded-md px-1.5 py-1 text-xs text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-300 hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors">
+      <Info className="h-3.5 w-3.5" />
+    </button>
+    {shortcutsOpen && (
+      <div className="absolute right-0 top-8 z-50 w-64 rounded-xl border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-950 shadow-xl p-3 animate-in fade-in slide-in-from-top-2 duration-150">
+        {/* shortcut rows */}
+      </div>
+    )}
+  </div>
+</div>
+```
+
+### Field layout
+
+```tsx
+{/* Required fields — full width */}
+<div>
+  <label className="text-xs font-semibold uppercase tracking-wider text-zinc-500 dark:text-zinc-400">
+    {t.feature.fieldLabel}
+  </label>
+  <Input ref={fieldRef} value={field} onChange={...} onKeyDown={enterToNext} className="mt-1.5" />
+  {submitted && !field.trim() && (
+    <p className="mt-1 text-xs text-red-500 dark:text-red-400">{t.feature.fieldRequired}</p>
+  )}
+</div>
+
+{/* Two equal columns */}
+<div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+  <div className="space-y-1.5">...</div>
+  <div className="space-y-1.5">...</div>
+</div>
+
+{/* Currency input with Rp prefix */}
+<div className="relative mt-1.5">
+  <span className="absolute left-3 top-1/2 -translate-y-1/2 text-zinc-500 text-sm font-medium">Rp</span>
+  <Input className="pl-9 font-medium tabular-nums" inputMode="numeric" ... />
+</div>
+
+{/* Section divider */}
+<div className="h-px w-full bg-zinc-100 dark:bg-zinc-800 my-2" />
+```
+
+### Collapsible optional sections
+
+Toggle sections use a full-width button with a custom toggle switch. Auto-focus first field inside when opened:
+
+```tsx
+// Auto-focus first field when section opens
+useEffect(() => {
+  if (sectionEnabled) setTimeout(() => firstSectionFieldRef.current?.focus(), 0);
+}, [sectionEnabled]);
+
+// Section wrapper
+<div className="rounded-xl border border-zinc-200 dark:border-zinc-800 bg-zinc-50/50 dark:bg-zinc-900/50 p-4 space-y-4">
+  <button type="button" className="flex w-full items-center justify-between gap-3"
+    onClick={() => setSectionEnabled((v) => !v)}>
+    <div className="text-left">
+      <div className="flex items-center gap-1.5 text-sm font-semibold text-zinc-900 dark:text-zinc-100">
+        {t.feature.sectionTitle}
+        <kbd className="inline-flex items-center rounded border border-zinc-300 dark:border-zinc-600 px-1 py-0.5 text-[10px] font-mono text-zinc-400 dark:text-zinc-500">⌥N</kbd>
+      </div>
+      <div className="text-xs text-zinc-500 dark:text-zinc-400">{t.feature.sectionDesc}</div>
+    </div>
+    {/* Toggle switch */}
+    <span role="switch" aria-checked={sectionEnabled}
+      className={`relative inline-flex h-5 w-9 shrink-0 rounded-full border-2 border-transparent transition-colors ${sectionEnabled ? 'bg-zinc-900 dark:bg-zinc-100' : 'bg-zinc-200 dark:bg-zinc-700'}`}>
+      <span className={`pointer-events-none inline-block h-4 w-4 transform rounded-full bg-white shadow transition-transform ${sectionEnabled ? 'translate-x-4' : 'translate-x-0'} ${sectionEnabled ? 'dark:bg-zinc-900' : ''}`} />
+    </span>
+  </button>
+  {sectionEnabled && (
+    <div className="flex flex-col gap-3">
+      {/* section fields */}
+    </div>
+  )}
+</div>
+```
+
+### Submit button
+
+Always full-width, `h-12`, at the bottom of the form:
+
+```tsx
+<Button
+  type="submit"
+  disabled={pending || !canSave}
+  className="mt-4 h-12 text-base font-semibold shadow-sm w-full"
+>
+  {pending ? t.common.saving : t.feature.saveItem}
+</Button>
+```
+
+### onSubmit pattern
+
+```tsx
+onSubmit={async (e) => {
+  e.preventDefault();
+  setSubmitted(true);
+  if (!canSave) return;                       // primary validation gate
+  if (sectionEnabled && sectionQty < 1) return; // section-level validation
+
+  setPending(true);
+  const res = await fetch(url, { method, body: JSON.stringify(payload) });
+  const body = await res.json().catch(() => null);
+  setPending(false);
+
+  if (!res.ok) {
+    playFailSound();
+    onSaved(false, body?.error?.message ?? 'Save failed');
+    return;
+  }
+
+  // Reset on create, keep state on edit
+  if (mode === 'create') {
+    setField('');
+    setSubmitted(false);
+  }
+
+  playSuccessSound();
+  onSaved(true);
+  firstFieldRef.current?.focus();             // return focus to top
+}}
+```
+
+### Sound feedback
+
+Always play sounds on terminal states — **never** on intermediate steps:
+
+```tsx
+import { playSuccessSound, playFailSound } from '@/utils/sounds';
+
+// On success → playSuccessSound()
+// On failure → playFailSound()
+```
+
+### Rules
+
+- **Loading bar first** — always first child inside `<form>`, always reserves `h-1` space
+- **`submitted` before `canSave`** — set `submitted=true` before checking, so errors appear immediately
+- **Refs for every field** — each input gets its own `ref`; `Enter` moves focus to the next ref
+- **`Shift+Enter` submits** — universal across all forms, wired at `<form onKeyDown>`
+- **`Alt+N` per section** — each optional section gets a numbered shortcut; show all in the shortcuts popup
+- **Collapsible sections** — use toggle-switch pattern; auto-focus first field on open
+- **Currency fields** — `inputMode="numeric"`, strip non-digits via `replace(/[^0-9]/g, '')`, prefix `Rp` absolutely-positioned inside the input
+- **Inline errors** — show only after `submitted === true`; use `text-xs text-red-500 dark:text-red-400 mt-1`
+- **Dividers** — `<div className="h-px w-full bg-zinc-100 dark:bg-zinc-800 my-2" />` between logical field groups
+- **Form disabled on pending** — `opacity-60 pointer-events-none` on `<form>` itself
+- **Sound on save/fail** — `playSuccessSound` / `playFailSound` from `@/utils/sounds`
+
+---
+
 ## PRD Navigation
 
 | Working on… | Read this PRD file |

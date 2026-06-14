@@ -403,6 +403,7 @@
     "debt": "Hutang",
     "loading": "Memuat pelanggan...",
     "noCustomers": "Pelanggan tidak ditemukan.",
+    "customersLoaded": "pelanggan dimuat",
     "loadMore": "Muat Lebih Banyak Pelanggan",
     "editCustomer": "Edit Pelanggan",
     "createCustomer": "Buat Pelanggan",
@@ -446,7 +447,13 @@
     "deletedSuccess": "Pelanggan dihapus",
     "deleteFailed": "Gagal menghapus pelanggan",
     "willCreateNew": "Akan dibuat sebagai baru",
-    "createNew": "Buat pelanggan baru"
+    "createNew": "Buat pelanggan baru",
+    "nameRequired": "Nama wajib diisi",
+    "statTotal": "Total Pelanggan",
+    "statDebtors": "Punya Hutang",
+    "statTotalDebt": "Total Hutang",
+    "statPoints": "Poin Loyalitas",
+    "statNewThisMonth": "Baru Bulan Ini"
   },
   "reports": {
     "title": "Laporan",
@@ -520,6 +527,7 @@
     "role": "Peran",
     "loadingUsers": "Memuat pengguna...",
     "noUsers": "Pengguna tidak ditemukan.",
+    "usersLoaded": "pengguna dimuat",
     "loadMore": "Muat Lebih Banyak",
     "createUser": "Buat Pengguna",
     "editUser": "Edit Pengguna",
@@ -539,7 +547,18 @@
     "saveFailed": "Gagal menyimpan pengguna",
     "passwordsDoNotMatch": "Kata sandi tidak cocok",
     "newPassword": "Kata Sandi Baru",
-    "confirmPassword": "Konfirmasi Kata Sandi"
+    "confirmPassword": "Konfirmasi Kata Sandi",
+    "keyboardShortcuts": "Pintasan Keyboard",
+    "shortcutNextField": "Field berikutnya",
+    "shortcutSubmit": "Kirim",
+    "nameRequired": "Nama wajib diisi",
+    "emailRequired": "Email wajib diisi",
+    "passwordMinLength": "Kata sandi minimal 8 karakter",
+    "statTotal": "Total Pengguna",
+    "statAdmins": "Admin",
+    "statCashiers": "Kasir",
+    "statNewThisMonth": "Baru Bulan Ini",
+    "statActiveSessions": "Sesi Aktif"
   },
   "skuChecker": {
     "title": "Cek SKU",

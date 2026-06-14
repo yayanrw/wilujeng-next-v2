@@ -1,4 +1,4 @@
-import { asc, desc, eq, ilike, or } from 'drizzle-orm';
+import { and, desc, eq, gte, ilike, or } from 'drizzle-orm';
 import { z } from 'zod';
 
 import { db } from '@/db';
@@ -17,15 +17,22 @@ export async function GET(req: Request) {
 
   const url = new URL(req.url);
   const search = url.searchParams.get('search') || '';
+  const role = url.searchParams.get('role') || '';
+  const filter = url.searchParams.get('filter') || '';
   const limit = Math.min(
     parseInt(url.searchParams.get('limit') || '20', 10),
     100,
   );
   const offset = parseInt(url.searchParams.get('offset') || '0', 10);
 
-  const filters = search
-    ? or(ilike(users.name, `%${search}%`), ilike(users.email, `%${search}%`))
-    : undefined;
+  const now = new Date();
+  const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+
+  const conditions = [
+    search ? or(ilike(users.name, `%${search}%`), ilike(users.email, `%${search}%`)) : undefined,
+    role === 'admin' || role === 'cashier' ? eq(users.role, role) : undefined,
+    filter === 'new_this_month' ? gte(users.createdAt, startOfMonth) : undefined,
+  ].filter(Boolean);
 
   const rows = await db
     .select({
@@ -36,7 +43,7 @@ export async function GET(req: Request) {
       createdAt: users.createdAt,
     })
     .from(users)
-    .where(filters)
+    .where(conditions.length ? and(...(conditions as Parameters<typeof and>)) : undefined)
     .orderBy(desc(users.createdAt))
     .limit(limit)
     .offset(offset);

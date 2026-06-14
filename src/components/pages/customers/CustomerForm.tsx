@@ -1,7 +1,8 @@
 'use client';
 
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 
+import { playFailSound, playSuccessSound } from '@/utils/sounds';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
 import { useTranslation } from '@/i18n/useTranslation';
@@ -34,9 +35,16 @@ export function CustomerForm({
   const [points, setPoints] = useState(initial?.points ?? 0);
   const [totalDebt, setTotalDebt] = useState(initial?.totalDebt ?? 0);
   const [pending, setPending] = useState(false);
+  const [submitted, setSubmitted] = useState(false);
   const { t } = useTranslation();
 
-  // Sync state when initial customer changes
+  const formRef = useRef<HTMLFormElement>(null);
+  const nameRef = useRef<HTMLInputElement>(null);
+  const phoneRef = useRef<HTMLInputElement>(null);
+  const addressRef = useRef<HTMLInputElement>(null);
+  const debtRef = useRef<HTMLInputElement>(null);
+  const pointsRef = useRef<HTMLInputElement>(null);
+
   useEffect(() => {
     if (mode === 'edit' && initial) {
       setName(initial.name);
@@ -51,6 +59,7 @@ export function CustomerForm({
       setPoints(0);
       setTotalDebt(0);
     }
+    setSubmitted(false);
   }, [initial, mode]);
 
   const canSave = useMemo(() => name.trim().length > 0, [name]);
@@ -65,10 +74,19 @@ export function CustomerForm({
 
   return (
     <form
-      className="flex flex-col gap-5"
+      ref={formRef}
+      className={`flex flex-col gap-4 transition-opacity duration-150${pending ? ' opacity-60 pointer-events-none' : ''}`}
+      onKeyDown={(e) => {
+        if (e.shiftKey && e.key === 'Enter') {
+          e.preventDefault();
+          formRef.current?.requestSubmit();
+        }
+      }}
       onSubmit={async (e) => {
         e.preventDefault();
+        setSubmitted(true);
         if (!canSave) return;
+
         setPending(true);
 
         const payload: Record<string, unknown> = {
@@ -101,6 +119,7 @@ export function CustomerForm({
         setPending(false);
 
         if (!res.ok) {
+          playFailSound();
           onSaved(false, body?.error?.message ?? 'Save failed');
           return;
         }
@@ -111,22 +130,45 @@ export function CustomerForm({
           setAddress('');
           setPoints(0);
           setTotalDebt(0);
+          setSubmitted(false);
         }
 
+        playSuccessSound();
         onSaved(true);
+        nameRef.current?.focus();
       }}
     >
+      {/* Loading progress bar — always reserves h-1 space */}
+      <div
+        className="h-1 w-full overflow-hidden rounded-full bg-zinc-100 dark:bg-zinc-800"
+        style={{ opacity: pending ? 1 : 0 }}
+      >
+        <div className="h-full w-2/5 rounded-full bg-zinc-900 dark:bg-zinc-100 [animation:bar-slide_1.5s_ease-in-out_infinite]" />
+      </div>
+
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div>
           <label className="text-xs font-semibold uppercase tracking-wider text-zinc-500 dark:text-zinc-400">
             {t.customers.name}
           </label>
           <Input
+            ref={nameRef}
             value={name}
             onChange={(e) => setName(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter') {
+                e.preventDefault();
+                phoneRef.current?.focus();
+              }
+            }}
             placeholder="John Doe"
             className="mt-1.5 font-medium"
           />
+          {submitted && !name.trim() && (
+            <p className="mt-1 text-xs text-red-500 dark:text-red-400">
+              {t.customers.nameRequired}
+            </p>
+          )}
         </div>
 
         <div>
@@ -134,8 +176,15 @@ export function CustomerForm({
             {t.customers.phone}
           </label>
           <Input
+            ref={phoneRef}
             value={phone}
             onChange={(e) => setPhone(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter') {
+                e.preventDefault();
+                addressRef.current?.focus();
+              }
+            }}
             placeholder="08123456789"
             className="mt-1.5 font-mono text-sm"
           />
@@ -147,8 +196,16 @@ export function CustomerForm({
           {t.customers.address}
         </label>
         <Input
+          ref={addressRef}
           value={address}
           onChange={(e) => setAddress(e.target.value)}
+          onKeyDown={(e) => {
+            if (e.key === 'Enter') {
+              e.preventDefault();
+              if (mode === 'create') debtRef.current?.focus();
+              else pointsRef.current?.focus();
+            }
+          }}
           placeholder="123 Main St"
           className="mt-1.5"
         />
@@ -167,11 +224,14 @@ export function CustomerForm({
               Rp
             </span>
             <Input
+              ref={debtRef}
               className="pl-9 font-medium tabular-nums"
               inputMode="numeric"
               value={totalDebt ? String(totalDebt) : ''}
               onChange={(e) =>
-                setTotalDebt(Number(e.target.value.replace(/[^0-9]/g, '')) || 0)
+                setTotalDebt(
+                  Number(e.target.value.replace(/[^0-9]/g, '')) || 0,
+                )
               }
               placeholder="0"
             />
@@ -186,6 +246,7 @@ export function CustomerForm({
           </label>
           <div className="flex gap-2 mt-1.5">
             <Input
+              ref={pointsRef}
               type="number"
               min="0"
               value={String(points)}
@@ -208,25 +269,31 @@ export function CustomerForm({
         </div>
       )}
 
-      <div className="flex items-center justify-end gap-3 mt-4 pt-4 border-t border-zinc-100 dark:border-zinc-800">
-        {onCancel && (
-          <Button
-            type="button"
-            variant="ghost"
-            onClick={onCancel}
-            disabled={pending}
-          >
-            {t.common.cancel}
-          </Button>
-        )}
-        <Button type="submit" disabled={pending || !canSave}>
-          {pending
-            ? t.common.saving
-            : mode === 'create'
-              ? t.customers.createCustomer
-              : t.common.saveChanges}
+      <div className="h-px w-full bg-zinc-100 dark:bg-zinc-800 my-1" />
+
+      {onCancel && (
+        <Button
+          type="button"
+          variant="ghost"
+          onClick={onCancel}
+          disabled={pending}
+          className="w-full"
+        >
+          {t.common.cancel}
         </Button>
-      </div>
+      )}
+
+      <Button
+        type="submit"
+        disabled={pending || !canSave}
+        className="h-12 text-base font-semibold shadow-sm w-full"
+      >
+        {pending
+          ? t.common.saving
+          : mode === 'create'
+            ? t.customers.createCustomer
+            : t.common.saveChanges}
+      </Button>
     </form>
   );
 }

@@ -401,6 +401,7 @@
     "debt": "Debt",
     "loading": "Loading customers...",
     "noCustomers": "No customers found.",
+    "customersLoaded": "customers loaded",
     "loadMore": "Load More Customers",
     "editCustomer": "Edit Customer",
     "createCustomer": "Create Customer",
@@ -444,7 +445,13 @@
     "deletedSuccess": "Customer deleted",
     "deleteFailed": "Failed to delete customer",
     "willCreateNew": "Will be created as new",
-    "createNew": "Create new customer"
+    "createNew": "Create new customer",
+    "nameRequired": "Name is required",
+    "statTotal": "Total Customers",
+    "statDebtors": "With Debt",
+    "statTotalDebt": "Outstanding Debt",
+    "statPoints": "Loyalty Points",
+    "statNewThisMonth": "New This Month"
   },
   "reports": {
     "title": "Reports",
@@ -518,6 +525,7 @@
     "role": "Role",
     "loadingUsers": "Loading users...",
     "noUsers": "No users found.",
+    "usersLoaded": "users loaded",
     "loadMore": "Load More",
     "createUser": "Create User",
     "editUser": "Edit User",
@@ -537,7 +545,18 @@
     "saveFailed": "Failed to save user",
     "passwordsDoNotMatch": "Passwords do not match",
     "newPassword": "New Password",
-    "confirmPassword": "Confirm Password"
+    "confirmPassword": "Confirm Password",
+    "keyboardShortcuts": "Keyboard Shortcuts",
+    "shortcutNextField": "Next field",
+    "shortcutSubmit": "Submit",
+    "nameRequired": "Name is required",
+    "emailRequired": "Email is required",
+    "passwordMinLength": "Password must be at least 8 characters",
+    "statTotal": "Total Users",
+    "statAdmins": "Admins",
+    "statCashiers": "Cashiers",
+    "statNewThisMonth": "New This Month",
+    "statActiveSessions": "Active Sessions"
   },
   "skuChecker": {
     "title": "SKU Checker",
