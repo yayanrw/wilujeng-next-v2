@@ -12,17 +12,29 @@ import { useUsers } from './useUsers';
 
 export function UsersSettings() {
   const {
-    users, loading, hasMore, search, setSearch, loadMore,
-    editId, setEditId, selected,
-    stats, statsLoading, statFilter, setStatFilter, toggleStatFilter,
+    users,
+    loading,
+    hasMore,
+    search,
+    setSearch,
+    loadMore,
+    editId,
+    setEditId,
+    selected,
+    stats,
+    statsLoading,
+    statFilter,
+    setStatFilter,
+    toggleStatFilter,
     handleSaved,
-    t, Toast,
+    t,
+    Toast,
   } = useUsers();
 
   return (
     <div className="flex flex-col gap-4 min-w-0 overflow-x-hidden">
       {/* Stat cards */}
-      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-2">
+      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-2 m-1">
         <StatCard
           label={t.settings.statTotal}
           value={stats?.total ?? 0}
@@ -69,7 +81,9 @@ export function UsersSettings() {
         <Card className="h-fit min-w-0">
           <CardHeader className="flex flex-col gap-4 pb-6">
             <div className="space-y-1.5">
-              <div className="text-xl font-bold tracking-tight">{t.settings.userManagement}</div>
+              <div className="text-xl font-bold tracking-tight">
+                {t.settings.userManagement}
+              </div>
               <div className="text-sm text-zinc-500 dark:text-zinc-400">
                 {!loading && users.length > 0
                   ? `${users.length}${hasMore ? '+' : ''} ${t.settings.usersLoaded}`
@@ -102,7 +116,11 @@ export function UsersSettings() {
                 </div>
               </div>
               {editId && (
-                <Button variant="secondary" size="sm" onClick={() => setEditId(null)}>
+                <Button
+                  variant="secondary"
+                  size="sm"
+                  onClick={() => setEditId(null)}
+                >
                   <Plus className="h-3 w-3 mr-1" /> {t.settings.newUser}
                 </Button>
               )}

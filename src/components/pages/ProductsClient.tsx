@@ -21,7 +21,9 @@ type ProductStats = {
 };
 
 export function ProductsClient() {
-  const [tab, setTab] = useState<'products' | 'brands' | 'categories' | 'suppliers'>('products');
+  const [tab, setTab] = useState<
+    'products' | 'brands' | 'categories' | 'suppliers'
+  >('products');
   const [statFilter, setStatFilter] = useState<StatFilter | null>(null);
   const [stats, setStats] = useState<ProductStats | null>(null);
   const [statsLoading, setStatsLoading] = useState(true);
@@ -30,13 +32,15 @@ export function ProductsClient() {
   const fetchStats = useCallback(async () => {
     try {
       const res = await fetch('/api/products/stats');
-      if (res.ok) setStats(await res.json() as ProductStats);
+      if (res.ok) setStats((await res.json()) as ProductStats);
     } finally {
       setStatsLoading(false);
     }
   }, []);
 
-  useEffect(() => { void fetchStats(); }, [fetchStats]);
+  useEffect(() => {
+    void fetchStats();
+  }, [fetchStats]);
 
   function toggleFilter(f: StatFilter) {
     setStatFilter((prev) => (prev === f ? null : f));
@@ -50,7 +54,7 @@ export function ProductsClient() {
 
       {/* Stats cards — shown only on the products tab */}
       {tab === 'products' && (
-        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-2">
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-2 mx-1">
           <StatCard
             label={t.products.statActive}
             value={stats?.totalActive ?? 0}
@@ -102,23 +106,25 @@ export function ProductsClient() {
       )}
 
       <div className="flex gap-2 min-w-0">
-        {(['products', 'brands', 'categories', 'suppliers'] as const).map((tTab) => (
-          <button
-            key={tTab}
-            type="button"
-            className={
-              tTab === tab
-                ? 'rounded-full bg-zinc-900 px-4 py-2 text-sm text-white dark:bg-zinc-100 dark:text-zinc-900'
-                : 'rounded-full border border-zinc-200 bg-white px-4 py-2 text-sm hover:bg-zinc-50 dark:border-zinc-800 dark:bg-zinc-950 dark:text-zinc-400 dark:hover:bg-zinc-900'
-            }
-            onClick={() => {
-              setTab(tTab);
-              if (tTab !== 'products') setStatFilter(null);
-            }}
-          >
-            {t.products?.[tTab]}
-          </button>
-        ))}
+        {(['products', 'brands', 'categories', 'suppliers'] as const).map(
+          (tTab) => (
+            <button
+              key={tTab}
+              type="button"
+              className={
+                tTab === tab
+                  ? 'rounded-full bg-zinc-900 px-4 py-2 text-sm text-white dark:bg-zinc-100 dark:text-zinc-900'
+                  : 'rounded-full border border-zinc-200 bg-white px-4 py-2 text-sm hover:bg-zinc-50 dark:border-zinc-800 dark:bg-zinc-950 dark:text-zinc-400 dark:hover:bg-zinc-900'
+              }
+              onClick={() => {
+                setTab(tTab);
+                if (tTab !== 'products') setStatFilter(null);
+              }}
+            >
+              {t.products?.[tTab]}
+            </button>
+          ),
+        )}
       </div>
 
       {tab === 'products' && (
