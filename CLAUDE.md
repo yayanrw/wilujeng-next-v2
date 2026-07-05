@@ -5,7 +5,6 @@
 
 - **PRD** → `docs/prd/` (feature specs, API contracts, DB schema, business rules)
 - **Design System** → `DESIGN_SYSTEM.md` (components, colors, spacing, i18n rules)
-- **Knowledge Graph** → `graphify-out/graph.json` (run `/graphify` to regenerate)
 
 ---
 
@@ -575,17 +574,6 @@ import { playSuccessSound, playFailSound } from '@/utils/sounds';
 | Roles & permission matrix | `docs/prd/02-roles.md` |
 
 Full index: `docs/prd/README.md`
-
----
-
-## Codebase Knowledge Graph
-
-Run `/graphify` to build or refresh the graph. Outputs go to `graphify-out/`:
-
-- `graph.json` — query with `/graphify query "<question>"`
-- `graph.html` — open in browser for visual exploration
-
-Regenerate after: new files added, major refactors, or cross-module analysis.
 
 ---
 
