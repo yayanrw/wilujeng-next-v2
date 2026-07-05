@@ -10,12 +10,7 @@ import {
   transactionItems,
 } from '@/db/schema';
 import { json, requireApiSession } from '@/server/api-helpers';
-
-function startOfDay(d: Date) {
-  const x = new Date(d);
-  x.setHours(0, 0, 0, 0);
-  return x;
-}
+import { dayBoundsUtc, localDateStr } from '@/utils/timezone';
 
 export async function GET(req: Request) {
   const { response } = await requireApiSession(req);
@@ -25,9 +20,7 @@ export async function GET(req: Request) {
   const filter = url.searchParams.get('filter') || 'daily'; // daily, weekly, monthly
 
   const now = new Date();
-  const start = startOfDay(now);
-  const end = new Date(start);
-  end.setDate(end.getDate() + 1);
+  const { start, end } = dayBoundsUtc(localDateStr(now));
 
   // Determine chart date range based on filter
   const chartEnd = new Date(end);
@@ -48,7 +41,7 @@ export async function GET(req: Request) {
   // Fetch PNL chart data
   const pnlChartDataRaw = await db
     .select({
-      date: sql<string>`to_char(${transactions.createdAt}, ${sql.raw(`'${groupByFormat}'`)})`,
+      date: sql<string>`to_char(${transactions.createdAt} AT TIME ZONE 'UTC' AT TIME ZONE 'Asia/Jakarta', ${sql.raw(`'${groupByFormat}'`)})`,
       sales: sql<number>`coalesce(sum(${transactionItems.subtotal}), 0)`,
       cogs: sql<number>`coalesce(sum(${transactionItems.qty} * coalesce(${transactionItems.unitBuyPrice}, ${products.buyPrice})), 0)`,
     })
@@ -66,10 +59,10 @@ export async function GET(req: Request) {
       ),
     )
     .groupBy(
-      sql`to_char(${transactions.createdAt}, ${sql.raw(`'${groupByFormat}'`)})`,
+      sql`to_char(${transactions.createdAt} AT TIME ZONE 'UTC' AT TIME ZONE 'Asia/Jakarta', ${sql.raw(`'${groupByFormat}'`)})`,
     )
     .orderBy(
-      sql`to_char(${transactions.createdAt}, ${sql.raw(`'${groupByFormat}'`)})`,
+      sql`to_char(${transactions.createdAt} AT TIME ZONE 'UTC' AT TIME ZONE 'Asia/Jakarta', ${sql.raw(`'${groupByFormat}'`)})`,
     );
 
   const pnlChartData = pnlChartDataRaw.map((row) => ({

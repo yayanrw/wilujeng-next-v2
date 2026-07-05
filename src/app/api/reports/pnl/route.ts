@@ -3,13 +3,10 @@ import { and, eq, gte, lte, sql } from "drizzle-orm";
 import { db } from "@/db";
 import { products, transactionItems, transactions } from "@/db/schema";
 import { badRequest, json, requireApiRole } from "@/server/api-helpers";
+import { dayBoundsUtc } from "@/utils/timezone";
 
-function parseDate(dateStr: string) {
-  const m = /^\d{4}-\d{2}-\d{2}$/.exec(dateStr);
-  if (!m) return null;
-  const d = new Date(`${dateStr}T00:00:00`);
-  if (Number.isNaN(d.getTime())) return null;
-  return d;
+function isValidDay(dateStr: string) {
+  return /^\d{4}-\d{2}-\d{2}$/.test(dateStr);
 }
 
 export async function GET(req: Request) {
@@ -20,11 +17,12 @@ export async function GET(req: Request) {
   const fromStr = searchParams.get("from");
   const toStr = searchParams.get("to");
   if (!fromStr || !toStr) return badRequest("Missing from/to");
-  const from = parseDate(fromStr);
-  const to = parseDate(toStr);
-  if (!from || !to) return badRequest("Invalid from/to");
-  const toEnd = new Date(to);
-  toEnd.setDate(toEnd.getDate() + 1);
+  if (!isValidDay(fromStr) || !isValidDay(toStr)) return badRequest("Invalid from/to");
+  const { start: from } = dayBoundsUtc(fromStr);
+  const { end: toEnd } = dayBoundsUtc(toStr);
+  if (Number.isNaN(from.getTime()) || Number.isNaN(toEnd.getTime())) {
+    return badRequest("Invalid from/to");
+  }
 
   const [row] = await db
     .select({

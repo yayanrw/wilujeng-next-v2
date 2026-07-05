@@ -3,13 +3,10 @@ import { and, desc, eq, gte, lte } from "drizzle-orm";
 import { db } from "@/db";
 import { customers, transactions } from "@/db/schema";
 import { badRequest, json, requireApiRole } from "@/server/api-helpers";
+import { dayBoundsUtc } from "@/utils/timezone";
 
-function parseDay(dateStr: string) {
-  const m = /^\d{4}-\d{2}-\d{2}$/.exec(dateStr);
-  if (!m) return null;
-  const d = new Date(`${dateStr}T00:00:00`);
-  if (Number.isNaN(d.getTime())) return null;
-  return d;
+function isValidDay(dateStr: string) {
+  return /^\d{4}-\d{2}-\d{2}$/.test(dateStr);
 }
 
 export async function GET(req: Request) {
@@ -20,10 +17,9 @@ export async function GET(req: Request) {
   const dateStr = searchParams.get("date");
   const methodStr = searchParams.get("method");
   if (!dateStr) return badRequest("Missing date");
-  const start = parseDay(dateStr);
-  if (!start) return badRequest("Invalid date");
-  const end = new Date(start);
-  end.setDate(end.getDate() + 1);
+  if (!isValidDay(dateStr)) return badRequest("Invalid date");
+  const { start, end } = dayBoundsUtc(dateStr);
+  if (Number.isNaN(start.getTime())) return badRequest("Invalid date");
 
   const filters = [
     gte(transactions.createdAt, start),

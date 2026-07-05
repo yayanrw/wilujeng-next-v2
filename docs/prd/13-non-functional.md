@@ -43,6 +43,12 @@
 - Transaksi & mutasi stok atomik (DB transaction)
 - Stok tidak boleh negatif
 
+## Timezone
+
+- Semua kolom `createdAt`/`updatedAt` di DB tersimpan sebagai `timestamp` tanpa timezone, berisi instant UTC
+- Semua filter "hari ini" / rentang tanggal (Dashboard, Reports) dihitung terhadap **Asia/Jakarta (WIB, UTC+7, tanpa DST)**, bukan timezone server/proses
+- Util bersama: `src/utils/timezone.ts` — `localDateStr()` (tanggal WIB hari ini) & `dayBoundsUtc(dateStr)` (batas UTC untuk satu hari kalender WIB). Pakai ini, jangan hitung boundary tanggal manual dengan `new Date()`/`setHours`
+
 ## Accessibility
 
 - Navigasi keyboard

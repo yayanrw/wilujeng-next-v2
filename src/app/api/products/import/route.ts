@@ -96,6 +96,12 @@ export async function POST(req: Request) {
           continue;
         }
 
+        if (!categoryName || !brandName) {
+          errors.push(`Row ${rowNum}: Missing Category or Brand`);
+          errorCount++;
+          continue;
+        }
+
         if (
           isNaN(basePrice) ||
           isNaN(buyPrice) ||
