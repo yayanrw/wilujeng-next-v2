@@ -389,7 +389,8 @@
     "requestFailed": "Permintaan gagal",
     "errorOccurred": "Terjadi kesalahan, silakan coba lagi",
     "qtyMin1": "Kuantitas minimal 1",
-    "noteTooLong": "Catatan maksimal 200 karakter"
+    "noteTooLong": "Catatan maksimal 200 karakter",
+    "productRequired": "Pilih produk terlebih dahulu"
   },
   "customers": {
     "title": "Pelanggan",

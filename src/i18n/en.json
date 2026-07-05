@@ -387,7 +387,8 @@
     "requestFailed": "Request failed",
     "errorOccurred": "An error occurred, please try again",
     "qtyMin1": "Quantity must be at least 1",
-    "noteTooLong": "Note must be 200 characters or less"
+    "noteTooLong": "Note must be 200 characters or less",
+    "productRequired": "Please select a product"
   },
   "customers": {
     "title": "Customers",
