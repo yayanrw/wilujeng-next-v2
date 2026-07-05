@@ -390,7 +390,15 @@
     "errorOccurred": "Terjadi kesalahan, silakan coba lagi",
     "qtyMin1": "Kuantitas minimal 1",
     "noteTooLong": "Catatan maksimal 200 karakter",
-    "productRequired": "Pilih produk terlebih dahulu"
+    "productRequired": "Pilih produk terlebih dahulu",
+    "transactionRequired": "Pilih transaksi asal terlebih dahulu",
+    "qtyExceedsStock": "Kuantitas melebihi stok tersedia",
+    "currentStock": "Stok saat ini",
+    "systemStock": "Stok sistem",
+    "difference": "Selisih",
+    "noDifference": "Sesuai",
+    "allTypes": "Semua tipe",
+    "searchTransaction": "Cari transaksi berdasarkan ID atau pelanggan"
   },
   "customers": {
     "title": "Pelanggan",

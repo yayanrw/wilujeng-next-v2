@@ -21,6 +21,8 @@ export function ProductPicker({
 
   const products = useCatalogStore((s) => s.products);
   const setProducts = useCatalogStore((s) => s.setProducts);
+  const stocks = useCatalogStore((s) => s.stocks);
+  const updateStocks = useCatalogStore((s) => s.updateStocks);
 
   // Hydrate catalog once if another page (e.g. POS) hasn't already
   useEffect(() => {
@@ -36,6 +38,21 @@ export function ProductPicker({
       cancelled = true;
     };
   }, [products.length, setProducts]);
+
+  // Hydrate stock levels once so callers can show/validate stock
+  useEffect(() => {
+    if (Object.keys(stocks).length > 0) return;
+    let cancelled = false;
+    fetch('/api/pos/products/stocks')
+      .then((r) => r.json())
+      .then((data: { id: string; stock: number }[]) => {
+        if (!cancelled) updateStocks(data);
+      })
+      .catch(() => {});
+    return () => {
+      cancelled = true;
+    };
+  }, [stocks, updateStocks]);
 
   const selectedProduct = useMemo(
     () => (value ? products.find((p) => p.id === value) ?? null : null),
@@ -99,6 +116,11 @@ export function ProductPicker({
             </div>
             <div className="text-xs text-zinc-500 dark:text-zinc-400">
               {selectedProduct?.sku ?? ''}
+              {value in stocks ? (
+                <span className="ml-2 tabular-nums">
+                  {t.stock.systemStock}: {stocks[value]}
+                </span>
+              ) : null}
             </div>
           </div>
           <button
@@ -130,8 +152,15 @@ export function ProductPicker({
                 }}
               >
                 <span className="min-w-0 truncate">{o.name}</span>
-                <span className="shrink-0 font-mono text-xs text-zinc-500 dark:text-zinc-400">
-                  {o.sku}
+                <span className="flex shrink-0 items-center gap-2">
+                  <span className="font-mono text-xs text-zinc-500 dark:text-zinc-400">
+                    {o.sku}
+                  </span>
+                  {o.id in stocks ? (
+                    <span className="tabular-nums text-xs text-zinc-400 dark:text-zinc-500">
+                      {stocks[o.id]}
+                    </span>
+                  ) : null}
                 </span>
               </button>
             ))

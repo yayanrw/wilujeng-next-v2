@@ -388,7 +388,15 @@
     "errorOccurred": "An error occurred, please try again",
     "qtyMin1": "Quantity must be at least 1",
     "noteTooLong": "Note must be 200 characters or less",
-    "productRequired": "Please select a product"
+    "productRequired": "Please select a product",
+    "transactionRequired": "Please select the origin transaction",
+    "qtyExceedsStock": "Quantity exceeds available stock",
+    "currentStock": "Current stock",
+    "systemStock": "System stock",
+    "difference": "Difference",
+    "noDifference": "Matches",
+    "allTypes": "All types",
+    "searchTransaction": "Search transaction by ID or customer"
   },
   "customers": {
     "title": "Customers",
