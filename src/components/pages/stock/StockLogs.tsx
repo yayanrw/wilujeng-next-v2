@@ -35,7 +35,8 @@ interface StockLogsProps {
   onDateToChange: (date: string) => void;
   filterProductId: string | null;
   onFilterProductIdChange: (id: string | null) => void;
-  onApplyFilter: () => void;
+  type: string;
+  onTypeChange: (type: string) => void;
   onLoadMore: () => void;
   onViewDetail: (logId: string) => void;
 }
@@ -50,7 +51,8 @@ export function StockLogs({
   onDateToChange,
   filterProductId,
   onFilterProductIdChange,
-  onApplyFilter,
+  type,
+  onTypeChange,
   onLoadMore,
   onViewDetail,
 }: StockLogsProps) {
@@ -73,10 +75,10 @@ export function StockLogs({
               {t.reports.from}
             </label>
             <Input
+              type="date"
               className="h-9 w-40 text-sm"
               value={dateFrom}
               onChange={(e) => onDateFromChange(e.target.value)}
-              placeholder="YYYY-MM-DD"
             />
           </div>
           <div>
@@ -84,11 +86,26 @@ export function StockLogs({
               {t.reports.to}
             </label>
             <Input
+              type="date"
               className="h-9 w-40 text-sm"
               value={dateTo}
               onChange={(e) => onDateToChange(e.target.value)}
-              placeholder="YYYY-MM-DD"
             />
+          </div>
+          <div>
+            <label className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-zinc-500 dark:text-zinc-400">
+              {t.stock.type}
+            </label>
+            <select
+              className="h-9 rounded-lg border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-950 px-3 text-sm"
+              value={type}
+              onChange={(e) => onTypeChange(e.target.value)}
+            >
+              <option value="">{t.stock.allTypes}</option>
+              <option value="in">{t.stock.in}</option>
+              <option value="out">{t.stock.out}</option>
+              <option value="opname">{t.stock.opname}</option>
+            </select>
           </div>
           <div className="w-50">
             <label className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-zinc-500 dark:text-zinc-400">
@@ -100,18 +117,15 @@ export function StockLogs({
               className="h-9"
             />
           </div>
-          <Button
-            variant="secondary"
-            className="h-9 px-4 font-medium shadow-sm"
-            onClick={onApplyFilter}
-            disabled={loadingLogs}
-          >
-            {loadingLogs ? t.stock.filtering : t.stock.applyFilter}
-          </Button>
         </div>
       </div>
 
-      <div className="overflow-x-auto">
+      <div className="relative overflow-x-auto">
+        {loadingLogs && logs.length > 0 && (
+          <div className="absolute inset-0 z-10 flex items-start justify-center bg-white/50 dark:bg-zinc-950/50 backdrop-blur-[1px] pt-10">
+            <div className="h-6 w-6 animate-spin rounded-full border-2 border-zinc-300 border-t-zinc-900 dark:border-zinc-700 dark:border-t-zinc-100" />
+          </div>
+        )}
         <table className="w-full text-sm">
           <thead>
             <tr className="border-y border-zinc-200 dark:border-zinc-800 bg-zinc-50/50 dark:bg-zinc-900/50 text-left text-zinc-500 dark:text-zinc-400">
@@ -125,7 +139,9 @@ export function StockLogs({
               <th className="py-3 px-4 font-medium text-right">
                 {t.stock.balance}
               </th>
-              <th className="py-3 px-4 font-medium">{t.stock.notes}</th>
+              <th className="hidden sm:table-cell py-3 px-4 font-medium">
+                {t.stock.notes}
+              </th>
               <th className="py-3 px-4 font-medium">{t.reports.date}</th>
               <th className="py-3 px-4 font-medium text-right">
                 {t.common.action}
@@ -195,7 +211,7 @@ export function StockLogs({
                     </div>
                   </td>
                   <td
-                    className="py-3 px-4 align-middle max-w-50 truncate text-zinc-600 dark:text-zinc-400"
+                    className="hidden sm:table-cell py-3 px-4 align-middle max-w-50 truncate text-zinc-600 dark:text-zinc-400"
                     title={l.note ?? ''}
                   >
                     {l.note ?? '-'}

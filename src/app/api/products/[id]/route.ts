@@ -17,20 +17,29 @@ const TierSchema = z.object({
   price: z.number().int().min(1),
 });
 
-const UpdateSchema = z.object({
-  sku: z.string().min(1).max(80).optional(),
-  name: z.string().min(1).max(120).optional(),
-  categoryId: z.string().uuid().optional().nullable(),
-  categoryName: z.string().min(1).max(80).optional(),
-  brandId: z.string().uuid().optional().nullable(),
-  brandName: z.string().min(1).max(80).optional(),
-  basePrice: z.number().int().min(0).optional(),
-  buyPrice: z.number().int().min(0).optional(),
-  stock: z.number().int().min(0).optional(),
-  minStockThreshold: z.number().int().min(0).optional(),
-  tiers: z.array(TierSchema).optional(),
-  isActive: z.boolean().optional(),
-});
+const UpdateSchema = z
+  .object({
+    sku: z.string().min(1).max(80).optional(),
+    name: z.string().min(1).max(120).optional(),
+    categoryId: z.string().uuid().optional().nullable(),
+    categoryName: z.string().min(1).max(80).optional(),
+    brandId: z.string().uuid().optional().nullable(),
+    brandName: z.string().min(1).max(80).optional(),
+    basePrice: z.number().int().min(0).optional(),
+    buyPrice: z.number().int().min(0).optional(),
+    stock: z.number().int().min(0).optional(),
+    minStockThreshold: z.number().int().min(0).optional(),
+    tiers: z.array(TierSchema).optional(),
+    isActive: z.boolean().optional(),
+  })
+  .refine((d) => !(d.categoryId === null && !d.categoryName), {
+    message: 'categoryId cannot be cleared without a categoryName',
+    path: ['categoryName'],
+  })
+  .refine((d) => !(d.brandId === null && !d.brandName), {
+    message: 'brandId cannot be cleared without a brandName',
+    path: ['brandName'],
+  });
 
 async function ensureCategoryId(input: {
   categoryId?: string | null;

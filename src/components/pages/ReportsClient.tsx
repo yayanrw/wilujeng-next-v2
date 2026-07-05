@@ -13,6 +13,7 @@ import { formatIdr } from '@/utils/money';
 import { SalesDetailModal } from './reports/SalesDetailModal';
 import { ReceivableDetailModal } from './reports/ReceivableDetailModal';
 import { useTranslation } from '@/i18n/useTranslation';
+import { localDateStr } from '@/utils/timezone';
 
 type Tab = 'sales' | 'stock' | 'receivables' | 'pnl' | 'suppliers';
 
@@ -51,7 +52,7 @@ type SupplierRow = {
 
 export function ReportsClient() {
   const [tab, setTab] = useState<Tab>('sales');
-  const todayStr = useMemo(() => new Date().toISOString().slice(0, 10), []);
+  const todayStr = useMemo(() => localDateStr(), []);
   const [date, setDate] = useState(todayStr);
   const [paymentMethod, setPaymentMethod] = useState('all');
   const [from, setFrom] = useState(todayStr);

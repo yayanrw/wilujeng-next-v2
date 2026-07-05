@@ -65,7 +65,8 @@ export function StockClient() {
               onDateToChange={logs.setDateTo}
               filterProductId={logs.filterProductId}
               onFilterProductIdChange={logs.setFilterProductId}
-              onApplyFilter={logs.applyFilter}
+              type={logs.type}
+              onTypeChange={logs.setType}
               onLoadMore={logs.loadMore}
               onViewDetail={setSelectedLogId}
             />

@@ -21,6 +21,7 @@ export function useStockLogs(enabled: boolean) {
   const [dateFrom, setDateFrom] = useState(today);
   const [dateTo, setDateTo] = useState(today);
   const [filterProductId, setFilterProductId] = useState<string | null>(null);
+  const [type, setType] = useState('');
 
   const load = useCallback(
     async (targetPage: number, append: boolean) => {
@@ -32,6 +33,7 @@ export function useStockLogs(enabled: boolean) {
         if (dateFrom) params.append('from', dateFrom);
         if (dateTo) params.append('to', dateTo);
         if (filterProductId) params.append('productId', filterProductId);
+        if (type) params.append('type', type);
 
         const res = await fetch(`/api/stock/logs?${params.toString()}`);
         const body = (await res.json().catch(() => [])) as StockLog[];
@@ -49,19 +51,24 @@ export function useStockLogs(enabled: boolean) {
         setLoading(false);
       }
     },
-    [dateFrom, dateTo, filterProductId],
+    [dateFrom, dateTo, filterProductId, type],
   );
 
-  // Keep the latest `load` reachable without making the auto-load effect
-  // depend on filter values (which would reload on every keystroke).
+  // Keep the latest `load` reachable without re-triggering the auto-apply
+  // effect when `load`'s identity changes.
   const loadRef = useRef(load);
   loadRef.current = load;
 
+  // Auto-apply: refetch (debounced) whenever the tab opens or a filter
+  // changes. No manual Apply button.
   useEffect(() => {
     if (!enabled) return;
-    setPage(0);
-    void loadRef.current(0, false);
-  }, [enabled]);
+    const timer = setTimeout(() => {
+      setPage(0);
+      void loadRef.current(0, false);
+    }, 400);
+    return () => clearTimeout(timer);
+  }, [enabled, dateFrom, dateTo, filterProductId, type]);
 
   const loadMore = useCallback(() => {
     if (loading || !hasMore) return;
@@ -69,11 +76,6 @@ export function useStockLogs(enabled: boolean) {
     setPage(next);
     void load(next, true);
   }, [loading, hasMore, page, load]);
-
-  const applyFilter = useCallback(() => {
-    setPage(0);
-    void load(0, false);
-  }, [load]);
 
   return {
     logs,
@@ -85,7 +87,8 @@ export function useStockLogs(enabled: boolean) {
     setDateTo,
     filterProductId,
     setFilterProductId,
+    type,
+    setType,
     loadMore,
-    applyFilter,
   };
 }

@@ -164,19 +164,28 @@ const TierSchema = z.object({
   price: z.number().int().min(1),
 });
 
-const CreateSchema = z.object({
-  sku: z.string().min(1).max(80),
-  name: z.string().min(1).max(120),
-  categoryId: z.string().uuid().optional(),
-  categoryName: z.string().min(1).max(80).optional(),
-  brandId: z.string().uuid().optional(),
-  brandName: z.string().min(1).max(80).optional(),
-  basePrice: z.number().int().min(0),
-  buyPrice: z.number().int().min(0).optional().default(0),
-  stock: z.number().int().min(0).optional().default(0),
-  minStockThreshold: z.number().int().min(0).optional().default(0),
-  tiers: z.array(TierSchema).optional().default([]),
-});
+const CreateSchema = z
+  .object({
+    sku: z.string().min(1).max(80),
+    name: z.string().min(1).max(120),
+    categoryId: z.string().uuid().optional(),
+    categoryName: z.string().min(1).max(80).optional(),
+    brandId: z.string().uuid().optional(),
+    brandName: z.string().min(1).max(80).optional(),
+    basePrice: z.number().int().min(0),
+    buyPrice: z.number().int().min(0).optional().default(0),
+    stock: z.number().int().min(0).optional().default(0),
+    minStockThreshold: z.number().int().min(0).optional().default(0),
+    tiers: z.array(TierSchema).optional().default([]),
+  })
+  .refine((d) => d.categoryId || d.categoryName, {
+    message: 'categoryId or categoryName is required',
+    path: ['categoryName'],
+  })
+  .refine((d) => d.brandId || d.brandName, {
+    message: 'brandId or brandName is required',
+    path: ['brandName'],
+  });
 
 async function ensureCategoryId(input: {
   categoryId?: string;
