@@ -9,9 +9,12 @@
 
 ## Stock Masuk (IN)
 
-- Fields: Produk (autocomplete), Qty, Harga Beli, Supplier (autocomplete + Type to Create), Tanggal Kadaluarsa (date picker), Note
-- Supplier di-cache Redis; Type to Create otomatis membuat supplier baru dan menyimpan `supplier_id` pada log
-- Auto-reset form + Toast sukses/gagal
+- **Alur bulk (scan-based)**: header shared Supplier (autocomplete + Type to Create) + Note diisi sekali untuk seluruh kiriman. Produk ditambahkan lewat search/scan (kamera barcode, exact SKU match) — produk baru → baris baru (qty 1, harga beli prefill dari `buyPrice` produk); scan/pilih produk yang sudah ada di list → qty baris itu +1 (tanpa baris duplikat)
+- Tiap baris: qty & harga beli editable manual, tombol hapus baris, tanggal kadaluarsa opsional (disembunyikan di belakang toggle per baris)
+- Footer menampilkan ringkasan `{jumlah produk} · {total unit}` dan submit tunggal untuk seluruh baris
+- Supplier di-cache Redis; Type to Create otomatis membuat supplier baru dan menyimpan `supplier_id` pada seluruh log dalam batch
+- Submit sukses → toast + reset seluruh baris/supplier/note; submit gagal → baris tetap ada agar user bisa retry tanpa mengulang scan
+- Form single-item (`QuickStockInModal` di halaman Produk) tetap memakai endpoint single `/api/stock/in` untuk koreksi cepat 1 produk
 
 ## Stock Keluar (OUT)
 
@@ -31,7 +34,8 @@
 
 ## API
 
-- `POST /api/stock/in` → `{product_id, qty, unit_buy_price, supplier_id?, supplier_name?, expiry_date?, note?}` → `200 {prev_stock, next_stock, average_cost, supplier_id}` — `average_cost` adalah HPP rata-rata baru hasil moving average
+- `POST /api/stock/in` → `{product_id, qty, unit_buy_price, supplier_id?, supplier_name?, expiry_date?, note?}` → `200 {prev_stock, next_stock, average_cost, supplier_id}` — `average_cost` adalah HPP rata-rata baru hasil moving average; single-item, dipakai `QuickStockInModal`
+- `POST /api/stock/in/bulk` → `{items: [{product_id, qty, unit_buy_price, expiry_date?}] (1-100), supplier_id?, supplier_name?, note?}` → `200 {items: [{product_id, prev_stock, next_stock, average_cost}], count, total_qty, supplier_id}` — satu transaksi DB untuk seluruh item; item invalid (produk tidak ditemukan) me-rollback seluruh batch; dipakai alur bulk Stock IN
 - `POST /api/stock/out` → `{product_id, qty, type, note?, transaction_id?, return_reason?}` → `200 {next_stock}`
 - `POST /api/stock/opname` → `{product_id, qty, note?}` → `200 {prev_stock, next_stock}`
 - `GET /api/stock/logs?from&to&type&productId&limit&offset` → daftar log (staff)

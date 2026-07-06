@@ -398,6 +398,14 @@
     "difference": "Selisih",
     "noDifference": "Sesuai",
     "allTypes": "Semua tipe",
+    "scanOrSearch": "Scan barcode atau cari produk untuk menambah",
+    "scanBarcode": "Scan barcode",
+    "productsCount": "produk",
+    "unitsCount": "unit",
+    "removeRow": "Hapus baris",
+    "bulkSubmit": "Kirim Semua",
+    "bulkEmpty": "Tambahkan minimal satu produk",
+    "showExpiry": "Tambah tanggal kedaluwarsa",
     "searchTransaction": "Cari transaksi berdasarkan ID atau pelanggan"
   },
   "customers": {

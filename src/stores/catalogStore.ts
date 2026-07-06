@@ -6,6 +6,7 @@ export type CatalogProduct = {
   name: string;
   categoryId: string | null;
   basePrice: number;
+  buyPrice: number;
   tiers: { minQty: number; price: number }[];
 };
 

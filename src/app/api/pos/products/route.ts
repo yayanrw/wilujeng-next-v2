@@ -27,6 +27,7 @@ export async function GET(req: Request) {
       name: products.name,
       basePrice: products.basePrice,
       categoryId: products.categoryId,
+      buyPrice: products.buyPrice,
     })
     .from(products)
     .where(and(eq(products.isDeleted, false), eq(products.isActive, true)))
