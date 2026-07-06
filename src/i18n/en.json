@@ -396,7 +396,15 @@
     "difference": "Difference",
     "noDifference": "Matches",
     "allTypes": "All types",
-    "searchTransaction": "Search transaction by ID or customer"
+    "searchTransaction": "Search transaction by ID or customer",
+    "scanOrSearch": "Scan barcode or search product to add",
+    "scanBarcode": "Scan barcode",
+    "productsCount": "products",
+    "unitsCount": "units",
+    "removeRow": "Remove row",
+    "bulkSubmit": "Submit All",
+    "bulkEmpty": "Add at least one product",
+    "showExpiry": "Add expiry date"
   },
   "customers": {
     "title": "Customers",
