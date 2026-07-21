@@ -1,5 +1,6 @@
 import { and, asc, desc, eq, gt, gte, inArray, isNull, lte, or, sql } from 'drizzle-orm';
 import { z } from 'zod';
+import { after } from 'next/server';
 
 import { db } from '@/db';
 import {
@@ -17,6 +18,7 @@ import { badRequest, json, requireApiSession } from '@/server/api-helpers';
 import { computePayment, type PaymentMethod } from '@/utils/checkout';
 import { getTierPrice } from '@/utils/tier-pricing';
 import { invalidateCache, invalidateCachePattern } from '@/lib/redis';
+import { normalizePhone, buildReceiptMessage, sendWhatsappMessage } from '@/lib/whatsapp';
 
 const ItemSchema = z.object({
   productId: z.string().uuid(),
@@ -30,6 +32,7 @@ const Schema = z.object({
   customerId: z.string().uuid().optional(),
   debtPaymentAmount: z.number().int().min(0).optional(),
   debtPaymentNote: z.string().optional(),
+  sendWhatsapp: z.boolean().optional().default(false),
 });
 
 export async function POST(req: Request) {
@@ -322,7 +325,14 @@ export async function POST(req: Request) {
           .where(eq(customers.id, customerId));
       }
 
-      return { id: createdTx.id, lineItems, totalAmount, payment };
+      return {
+        id: createdTx.id,
+        createdAt: createdTx.createdAt,
+        lineItems,
+        totalAmount,
+        payment,
+        debtPay,
+      };
     });
 
     // #6 Parallel post-transaction: branding fetch + all cache invalidations
@@ -333,6 +343,53 @@ export async function POST(req: Request) {
       invalidateCache('pos:stocks:all'),
     ]);
 
+    const printable = {
+      storeName: branding?.storeName ?? 'SimplePOS Pro',
+      storeIconName: branding?.storeIconName ?? 'Store',
+      storeAddress: branding?.storeAddress ?? '',
+      storePhone: branding?.storePhone ?? '',
+      receiptFooter:
+        branding?.receiptFooter ?? 'Terima kasih telah berbelanja',
+      items: txResult.lineItems.map((i) => ({
+        sku: i.sku,
+        name: i.name,
+        qty: i.qty,
+        unitPrice: i.unitPrice,
+        subtotal: i.subtotal,
+        isFree: i.isFree,
+      })),
+      totals: {
+        totalAmount: txResult.totalAmount,
+        amountReceived: parsed.data.amountReceived,
+        change: txResult.payment.change,
+      },
+    };
+
+    // Fire-and-forget: never let the WA gateway affect the sale or its latency.
+    const waPhone = parsed.data.sendWhatsapp
+      ? normalizePhone(customerRow?.phone)
+      : null;
+    if (waPhone) {
+      const remainingDebt = customerRow
+        ? customerRow.totalDebt + txResult.payment.outstandingDebt - txResult.debtPay
+        : null;
+      const message = buildReceiptMessage({
+        printable,
+        txId: txResult.id,
+        createdAt: txResult.createdAt,
+        paymentMethod: parsed.data.paymentMethod,
+        totalAmount: txResult.totalAmount,
+        amountReceived: parsed.data.amountReceived,
+        change: txResult.payment.change,
+        outstandingDebt: txResult.payment.outstandingDebt,
+        remainingDebt,
+      });
+      after(async () => {
+        const ok = await sendWhatsappMessage(waPhone, message);
+        if (!ok) console.error(`WA receipt failed for tx ${txResult.id}`);
+      });
+    }
+
     return json({
       transactionId: txResult.id,
       totalAmount: txResult.totalAmount,
@@ -340,27 +397,7 @@ export async function POST(req: Request) {
       change: txResult.payment.change,
       status: txResult.payment.status,
       outstandingDebt: txResult.payment.outstandingDebt,
-      printable: {
-        storeName: branding?.storeName ?? 'SimplePOS Pro',
-        storeIconName: branding?.storeIconName ?? 'Store',
-        storeAddress: branding?.storeAddress ?? '',
-        storePhone: branding?.storePhone ?? '',
-        receiptFooter:
-          branding?.receiptFooter ?? 'Terima kasih telah berbelanja',
-        items: txResult.lineItems.map((i) => ({
-          sku: i.sku,
-          name: i.name,
-          qty: i.qty,
-          unitPrice: i.unitPrice,
-          subtotal: i.subtotal,
-          isFree: i.isFree,
-        })),
-        totals: {
-          totalAmount: txResult.totalAmount,
-          amountReceived: parsed.data.amountReceived,
-          change: txResult.payment.change,
-        },
-      },
+      printable,
     });
   } catch (error: unknown) {
     const msg = error instanceof Error ? error.message : 'Transaction failed';

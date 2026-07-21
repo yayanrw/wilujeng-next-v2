@@ -84,6 +84,12 @@ function CustomerDebtPayButton({
 
 const PAYMENT_METHODS = ['cash', 'qris', 'transfer', 'debt'] as const;
 
+function maskPhone(phone: string): string {
+  const digits = phone.replace(/\D/g, '');
+  if (digits.length <= 6) return digits;
+  return `${digits.slice(0, 4)}••••${digits.slice(-4)}`;
+}
+
 export function CheckoutModal({
   open,
   total,
@@ -101,6 +107,8 @@ export function CheckoutModal({
   onDebtPaymentAmountChange,
   debtPaymentNote,
   onDebtPaymentNoteChange,
+  sendWhatsapp,
+  onSendWhatsappChange,
 }: {
   open: boolean;
   total: number;
@@ -118,15 +126,20 @@ export function CheckoutModal({
   onDebtPaymentAmountChange?: (n: number) => void;
   debtPaymentNote?: string;
   onDebtPaymentNoteChange?: (s: string) => void;
+  sendWhatsapp?: boolean;
+  onSendWhatsappChange?: (v: boolean) => void;
 }) {
   const customerId = usePosStore((s) => s.customerId);
   const setCustomerId = usePosStore((s) => s.setCustomerId);
   const addCustomer = useCustomerStore((s) => s.addCustomer);
+  const customers = useCustomerStore((s) => s.customers);
+  const customerPhone = customers.find((c) => c.id === customerId)?.phone ?? null;
 
   const amountInputRef = useRef<HTMLInputElement>(null);
   const customerInputRef = useRef<HTMLInputElement>(null);
   const customerSectionRef = useRef<HTMLDivElement>(null);
   const modalContentRef = useRef<HTMLDivElement>(null);
+  const waToggleRef = useRef<HTMLButtonElement>(null);
 
   const { t } = useTranslation();
 
@@ -152,16 +165,19 @@ export function CheckoutModal({
         if (e.key === '4') { e.preventDefault(); onPaymentMethodChange('transfer'); return; }
         if (e.key === '5') { e.preventDefault(); onPaymentMethodChange('debt'); return; }
         if (e.key === '6') { e.preventDefault(); amountInputRef.current?.focus(); return; }
+        if (e.key === '7' && onSendWhatsappChange) { e.preventDefault(); onSendWhatsappChange(!sendWhatsapp); return; }
       }
       // Plain Enter confirms — but only when focus is already inside the modal.
       // This prevents the keystroke that OPENED the modal (focus is still on the
       // POS search bar at that instant) from immediately confirming the payment.
-      // Auto-repeat (holding Enter) is ignored, and the customer picker keeps its
-      // own Enter for selecting/creating a customer.
+      // Auto-repeat (holding Enter) is ignored, the customer picker keeps its own
+      // Enter for selecting/creating a customer, and the WA toggle keeps its own
+      // Enter/Space for flipping instead of submitting the sale.
       if (e.key === 'Enter' && !e.shiftKey) {
         if (e.repeat) return;
         const active = document.activeElement;
         if (active === customerInputRef.current) return;
+        if (active === waToggleRef.current) return;
         if (!modalContentRef.current?.contains(active)) return;
         e.preventDefault();
         if (!pending) onConfirm();
@@ -169,7 +185,7 @@ export function CheckoutModal({
     }
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [open, pending, onPaymentMethodChange, onConfirm]);
+  }, [open, pending, onPaymentMethodChange, onConfirm, sendWhatsapp, onSendWhatsappChange]);
 
   async function handleCreateCustomer(name: string) {
     const res = await fetch('/api/customers', {
@@ -266,6 +282,39 @@ export function CheckoutModal({
                   debtPaymentNote={debtPaymentNote}
                   onDebtPaymentNoteChange={onDebtPaymentNoteChange}
                 />
+              )}
+              {customerId && !customerPhone && (
+                <p className="text-xs text-zinc-400 dark:text-zinc-500">
+                  {t.pos.waNoPhone}
+                </p>
+              )}
+              {customerId && customerPhone && onSendWhatsappChange && (
+                <button
+                  ref={waToggleRef}
+                  type="button"
+                  onClick={() => onSendWhatsappChange(!sendWhatsapp)}
+                  className="flex w-full items-center justify-between gap-2 rounded-lg border border-zinc-200 dark:border-zinc-800 px-3 py-2"
+                >
+                  <div className="flex items-center gap-1.5 text-xs font-medium text-zinc-700 dark:text-zinc-300">
+                    {t.pos.waSendReceipt} · {maskPhone(customerPhone)}
+                    <kbd className="inline-flex items-center rounded border border-zinc-300 dark:border-zinc-600 px-1 py-0.5 text-[9px] font-mono text-zinc-400 dark:text-zinc-500">⌥7</kbd>
+                  </div>
+                  <span
+                    role="switch"
+                    aria-checked={!!sendWhatsapp}
+                    className={`relative inline-flex h-5 w-9 shrink-0 rounded-full border-2 border-transparent transition-colors ${
+                      sendWhatsapp
+                        ? 'bg-zinc-900 dark:bg-zinc-100'
+                        : 'bg-zinc-200 dark:bg-zinc-700'
+                    }`}
+                  >
+                    <span
+                      className={`pointer-events-none inline-block h-4 w-4 transform rounded-full bg-white shadow transition-transform ${
+                        sendWhatsapp ? 'translate-x-4' : 'translate-x-0'
+                      } ${sendWhatsapp ? 'dark:bg-zinc-900' : ''}`}
+                    />
+                  </span>
+                </button>
               )}
             </div>
           </div>

@@ -192,13 +192,16 @@
     "shortcutSelectPayment": "Pilih pembayaran",
     "shortcutFocusCustomer": "Fokus field pelanggan",
     "shortcutFocusAmount": "Fokus field jumlah",
+    "shortcutSendWhatsapp": "Nyalakan/matikan nota WA",
     "shortcutRemoveLast": "Hapus item terakhir di keranjang",
     "shortcutClearCart": "Kosongkan keranjang",
     "clearCartTitle": "Kosongkan keranjang?",
     "clearCartMessage": "Semua item di keranjang saat ini akan dihapus. Tindakan ini tidak dapat dibatalkan.",
     "cartAlreadyEmpty": "Keranjang sudah kosong",
     "lastItemRemoved": "Item terakhir dihapus",
-    "emptyAmountHint": "Kosongkan untuk jumlah pas otomatis"
+    "emptyAmountHint": "Kosongkan untuk jumlah pas otomatis",
+    "waSendReceipt": "Kirim nota ke WhatsApp",
+    "waNoPhone": "Pelanggan belum punya nomor WA"
   },
   "products": {
     "title": "Produk",

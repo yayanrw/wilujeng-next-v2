@@ -40,6 +40,7 @@ export function PosClient() {
   const [refreshKey, setRefreshKey] = useState(0);
   const [debtPaymentAmount, setDebtPaymentAmount] = useState<number>(0);
   const [debtPaymentNote, setDebtPaymentNote] = useState<string>('');
+  const [sendWhatsapp, setSendWhatsapp] = useState(true);
   const cartBarRef = useRef<HTMLDivElement>(null);
   const { t } = useTranslation();
   const { showToast, Toast } = useToast();
@@ -278,6 +279,7 @@ export function PosClient() {
     setCheckoutOpen(false);
     setDebtPaymentAmount(0);
     setDebtPaymentNote('');
+    setSendWhatsapp(true);
     focusSearchBar();
   }
 
@@ -325,6 +327,7 @@ export function PosClient() {
         debtPaymentAmount:
           debtPaymentAmount > 0 ? debtPaymentAmount : undefined,
         debtPaymentNote: debtPaymentNote.trim() || undefined,
+        sendWhatsapp,
       }),
     });
     const body = (await res.json().catch(() => null)) as
@@ -355,6 +358,7 @@ export function PosClient() {
     setAmountReceived(0);
     setDebtPaymentAmount(0);
     setDebtPaymentNote('');
+    setSendWhatsapp(true);
     setPaymentMethod('cash');
     setRefreshKey((k) => k + 1);
     inputRef.current?.focus();
@@ -532,6 +536,7 @@ export function PosClient() {
                   ['⌥4', `${t.pos.shortcutSelectPayment} — ${t.pos.transfer}`],
                   ['⌥5', `${t.pos.shortcutSelectPayment} — ${t.pos.debt}`],
                   ['⌥6', t.pos.shortcutFocusAmount],
+                  ['⌥7', t.pos.shortcutSendWhatsapp],
                   ['↵', t.pos.shortcutConfirmPayment],
                 ] as [string, string][]).map(([kbd, label]) => (
                   <div key={kbd} className="flex items-center justify-between py-1.5">
@@ -587,6 +592,8 @@ export function PosClient() {
         onDebtPaymentAmountChange={setDebtPaymentAmount}
         debtPaymentNote={debtPaymentNote}
         onDebtPaymentNoteChange={setDebtPaymentNote}
+        sendWhatsapp={sendWhatsapp}
+        onSendWhatsappChange={setSendWhatsapp}
       />
     </div>
   );

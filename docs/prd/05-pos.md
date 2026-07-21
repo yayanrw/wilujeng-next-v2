@@ -45,6 +45,13 @@ Seluruh pencarian dan filter kategori dilakukan **client-side** menggunakan data
 - **Default Amount Received:** Untuk metode non-hutang (`tunai`, `qris`, `transfer`), jika `amount_received = 0` maka otomatis dianggap `= total_amount` (bayar lunas). Field input nominal hanya muncul untuk `tunai`; QRIS & Transfer selalu menyelesaikan pembayaran penuh.
 - **Hutang Logic:** Wajib pilih pelanggan terdaftar; tombol "Add Pelanggan Baru" jika belum ada
 - **Pay Debt Inline:** Kasir dapat melunasi hutang pelanggan langsung dari modal Checkout (sebagian atau penuh) + field catatan
+- **Kirim Nota via WhatsApp:** Toggle di section Customer, hanya muncul jika ada pelanggan terpilih
+  - Tidak ada pelanggan (walk-in) → toggle tidak ditampilkan
+  - Pelanggan terpilih tanpa nomor telepon → pesan info "Pelanggan belum punya nomor WA", tanpa toggle
+  - Pelanggan terpilih dengan nomor telepon → toggle switch, **default ON**, label nomor di-mask (`0812••••3456`), shortcut `⌥7`
+  - Nomor dinormalisasi ke format `62xxxxxxxxxx` sebelum dikirim (`normalizePhone` di `src/lib/whatsapp.ts`); nomor yang tidak valid membatalkan pengiriman secara diam-diam
+  - Pengiriman **fire-and-forget** via `after()` (Next.js) setelah response checkout dikirim — gagal kirim WA tidak pernah menggagalkan transaksi, tidak menambah latensi checkout
+  - Template nota (teks penuh, tanpa link — halaman `/receipt/[id]` butuh login) di-hardcode di `buildReceiptMessage()`; varian hutang menampilkan baris "Sisa hutang" dan total hutang berjalan
 
 ## Keyboard Shortcuts
 
@@ -64,7 +71,7 @@ Handler global terdaftar di `PosClient.tsx` (nonaktif saat modal lain terbuka).
 
 - **F6 / F7** hanya berlaku jika keranjang tidak kosong; jika kosong tampilkan toast.
 - **F7** membuka dialog konfirmasi (`ModalFrame`); `Enter` mengonfirmasi, `Esc`/Batal membatalkan. `clear()` mereset item **dan** customer.
-- Di modal Checkout: `⌥1` fokus pelanggan, `⌥2–5` pilih metode bayar, `⌥6` fokus nominal, `Enter` konfirmasi.
+- Di modal Checkout: `⌥1` fokus pelanggan, `⌥2–5` pilih metode bayar, `⌥6` fokus nominal, `⌥7` toggle kirim nota WhatsApp, `Enter` konfirmasi.
 
 ## Post-Transaction
 
@@ -76,6 +83,7 @@ Handler global terdaftar di `PosClient.tsx` (nonaktif saat modal lain terbuka).
 
 - `GET /api/pos/search?query=&categoryId=&limit=&offset=` → `200 [{id, sku, name, price, stock, categoryId, categoryName, tiers[]}]`
 - `GET /api/pos/promos?product_ids=[]` → `200 [{productId, buyQty, freeQty, validFrom, validTo, maxMultiplierPerTx}]`
-- `POST /api/pos/checkout` → `{items:[{product_id, qty}], payment_method, amount_received?, customer_id?}`
+- `POST /api/pos/checkout` → `{items:[{product_id, qty}], payment_method, amount_received?, customer_id?, send_whatsapp?}`
   - Response: `200 {transaction_id, total_amount, paid_amount, change, status, outstanding_debt, printable:{store, items, totals, footer}}`
+  - `send_whatsapp=true` + pelanggan dengan nomor valid → nota terkirim di background via `sendWhatsappMessage()` (`src/lib/whatsapp.ts`), tidak memengaruhi response
   - Error: `400/409` untuk stok tidak cukup

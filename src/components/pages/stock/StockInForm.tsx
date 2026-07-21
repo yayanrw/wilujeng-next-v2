@@ -116,10 +116,9 @@ export function StockInForm({
       ref={formRef}
       className={`flex flex-col gap-6 transition-opacity duration-150${pending ? ' opacity-60 pointer-events-none' : ''}`}
       onKeyDown={(e) => {
-        if (e.shiftKey && e.key === 'Enter') {
-          e.preventDefault();
-          formRef.current?.requestSubmit();
-        }
+        if (e.key !== 'Enter') return;
+        e.preventDefault();
+        if (e.shiftKey) formRef.current?.requestSubmit();
       }}
       onSubmit={(e) => {
         e.preventDefault();

@@ -100,6 +100,16 @@ export function ProductPicker({
             setIsOpen(true);
           }}
           onFocus={() => setIsOpen(true)}
+          onKeyDown={(e) => {
+            if (e.key !== 'Enter') return;
+            e.preventDefault();
+            const top = options[0];
+            if (top) {
+              onChange(top.id);
+              setQuery('');
+              setIsOpen(false);
+            }
+          }}
           autoComplete="off"
         />
       ) : null}
