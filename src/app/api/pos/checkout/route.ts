@@ -385,8 +385,8 @@ export async function POST(req: Request) {
         remainingDebt,
       });
       after(async () => {
-        const ok = await sendWhatsappMessage(waPhone, message);
-        if (!ok) console.error(`WA receipt failed for tx ${txResult.id}`);
+        const { ok, error } = await sendWhatsappMessage(waPhone, message);
+        if (!ok) console.error(`WA receipt failed for tx ${txResult.id} (phone ${waPhone}): ${error}`);
       });
     }
 
