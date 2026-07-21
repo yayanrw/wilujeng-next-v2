@@ -4,6 +4,7 @@ import type { PaymentMethod } from '@/utils/checkout';
 
 const WA_API_URL = process.env.WA_API_URL || 'http://localhost:3000';
 const WA_BASIC_AUTH = process.env.WA_BASIC_AUTH ?? '';
+const WA_DEVICE_ID = process.env.WA_DEVICE_ID ?? '';
 
 /**
  * Sends a WhatsApp message via the local gateway's /send/message endpoint.
@@ -11,20 +12,22 @@ const WA_BASIC_AUTH = process.env.WA_BASIC_AUTH ?? '';
 export async function sendWhatsappMessage(
   phone: string,
   message: string,
-): Promise<boolean> {
+): Promise<{ ok: boolean; error?: string }> {
   try {
     const res = await fetch(`${WA_API_URL}/send/message`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
         Authorization: `Basic ${Buffer.from(WA_BASIC_AUTH).toString('base64')}`,
+        'X-Device-Id': WA_DEVICE_ID,
       },
       body: JSON.stringify({ phone, message }),
     });
-    return res.ok;
+    if (res.ok) return { ok: true };
+    const body = await res.text().catch(() => '');
+    return { ok: false, error: `HTTP ${res.status} ${res.statusText}${body ? ` — ${body.slice(0, 300)}` : ''}` };
   } catch (error) {
-    console.error(`Failed to send WhatsApp message to ${phone}:`, error);
-    return false;
+    return { ok: false, error: error instanceof Error ? error.message : String(error) };
   }
 }
 
